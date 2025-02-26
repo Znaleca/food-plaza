@@ -6,12 +6,26 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [roles, setRoles] = useState({
+    isAdmin: false,
+    isAffiliate: false,
+    isOffice: false,
+    isSuperAdmin: false, // Add super admin role
+  });
 
   useEffect(() => {
     const checkAuthentication = async () => {
-      const { isAuthenticated, user } = await checkAuth();
+      const { isAuthenticated, user, roles } = await checkAuth();
       setIsAuthenticated(isAuthenticated);
       setCurrentUser(user);
+      setRoles(
+        roles || {
+          isAdmin: false,
+          isAffiliate: false,
+          isOffice: false,
+          isSuperAdmin: false, // Default to false
+        }
+      );
     };
 
     checkAuthentication();
@@ -21,9 +35,11 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider
       value={{
         isAuthenticated,
-        setIsAuthenticated,
         currentUser,
+        roles,
+        setIsAuthenticated,
         setCurrentUser,
+        setRoles,
       }}
     >
       {children}

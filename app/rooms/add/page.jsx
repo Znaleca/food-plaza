@@ -4,10 +4,10 @@ import { useFormState } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import Heading from '@/components/Heading';
-import createRoom from '@/app/actions/createRoom';
+import createSpaces from '@/app/actions/createSpaces';
 
-const AddRoomPage = () => {
-  const [state, formAction] = useFormState(createRoom, {});
+const AddSpacePage = () => {
+  const [state, formAction] = useFormState(createSpaces, {});
 
   const router = useRouter();
 
@@ -21,48 +21,52 @@ const AddRoomPage = () => {
 
   return (
     <>
-      <Heading title='Add a Room' />
+      <Heading title='Add a Space' />
       <div className='bg-white shadow-lg rounded-lg p-6 w-full'>
         <form action={formAction}>
           <div className='mb-4'>
-            <label
-              htmlFor='name'
-              className='block text-gray-700 font-bold mb-2'
-            >
-              Room Name
+            <label htmlFor='name' className='block text-gray-700 font-bold mb-2'>
+              Space Name
             </label>
             <input
               type='text'
               id='name'
               name='name'
               className='border rounded w-full py-2 px-3'
-              placeholder= '(BPSU Library, Nursing Lab, CCST Office)'
+              placeholder='(Example: Sarigamit, OSA, Medina Lacson, etc.)'
               required
             />
           </div>
 
           <div className='mb-4'>
-            <label
-              htmlFor='description'
-              className='block text-gray-700 font-bold mb-2'
-            >
+            <label htmlFor='type' className='block text-gray-700 font-bold mb-2'>
+              Type
+            </label>
+            <input
+              type='text'
+              id='type'
+              name='type'
+              className='border rounded w-full py-2 px-3'
+              placeholder='(Example: Covered Court, Meeting Room, Watch Room, etc.)'
+              required
+            />
+          </div>
+
+          <div className='mb-4'>
+            <label htmlFor='description' className='block text-gray-700 font-bold mb-2'>
               Description
             </label>
             <textarea
               id='description'
               name='description'
               className='border rounded w-full h-24 py-2 px-3'
-              placeholder='For Conference and Meeting Purposes'
+              placeholder='(Example: For Conference and Meeting Purposes)'
               required
             ></textarea>
           </div>
 
-
           <div className='mb-4'>
-            <label
-              htmlFor='capacity'
-              className='block text-gray-700 font-bold mb-2'
-            >
+            <label htmlFor='capacity' className='block text-gray-700 font-bold mb-2'>
               Capacity
             </label>
             <input
@@ -70,54 +74,38 @@ const AddRoomPage = () => {
               id='capacity'
               name='capacity'
               className='border rounded w-full py-2 px-3'
-              placeholder='Number of people the room can hold'
+              placeholder='(Indicate maximum occupancy or number can hold for events, meeting, etc.)'
               required
             />
           </div>
 
-          
+          <div className='mb-4'>
+            <label htmlFor='location' className='block text-gray-700 font-bold mb-2'>
+              Location
+            </label>
+            <input
+              type='text'
+              id='location'
+              name='location'
+              className='border rounded w-full py-2 px-3'
+              placeholder='(e.g., CAHS, CEA, etc.)'
+            />
+          </div>
 
           <div className='mb-4'>
-  <label
-    htmlFor='building'
-    className='block text-gray-700 font-bold mb-2'
-  >
-    Building
-  </label>
-  <select
-    id='building'
-    name='building'
-    className='border rounded w-full py-2 px-3'
-    required
-  >
-    <option value=''>Choose Building</option>
-    <option value='CAHS'>CAHS</option>
-    <option value='CEA'>CEA</option>
-    <option value='OLD CEA'>OLD CEA</option>
-    <option value='MEDINA LACSON'>MEDINA LACSON</option>
-    <option value='BACOMM'>BACOMM</option>
-    <option value='STS'>STS</option>
-    <option value='CBA'>CBA</option>
-    <option value='CTEC'>CTEC</option>
-    <option value='CCST'>CCST</option>
-  </select>
-</div>
-
-
-<div className='mb-4'>
-  <label
-    htmlFor='floor'
-    className='block text-gray-700 font-bold mb-2'
-  >
+  <label htmlFor='floor' className='block text-gray-700 font-bold mb-2'>
     Floor
   </label>
   <select
     id='floor'
     name='floor'
     className='border rounded w-full py-2 px-3'
-    required
+    defaultValue='' // Set initial blank value
   >
-    <option value=''>Choose Floor</option>
+    <option value='' disabled hidden>
+      (Optional)
+    </option>
+    <option value='N/A'>N/A</option>
     <option value='1F'>1F</option>
     <option value='2F'>2F</option>
     <option value='3F'>3F</option>
@@ -127,46 +115,22 @@ const AddRoomPage = () => {
   </select>
 </div>
 
+<div className='mb-4'>
+  <label htmlFor='room' className='block text-gray-700 font-bold mb-2'>
+    Room #
+  </label>
+  <input
+    type='number'
+    id='room'
+    name='room'
+    className='border rounded w-full py-2 px-3'
+    placeholder='(Optional)'
+  />
+</div>
+
 
           <div className='mb-4'>
-            <label
-              htmlFor='room'
-              className='block text-gray-700 font-bold mb-2'
-            >
-            Room #
-            </label>
-            <input
-              type='number'
-              id='room'
-              name='room'
-              className='border rounded w-full py-2 px-3'
-              placeholder='(Input Room Number)'
-              required
-            />
-          </div>
-
-          <div className='mb-4'>
-            <label
-              htmlFor='availability'
-              className='block text-gray-700 font-bold mb-2'
-            >
-              Availability
-            </label>
-            <input
-              type='text'
-              id='availability'
-              name='availability'
-              className='border rounded w-full py-2 px-3'
-              placeholder='Availability (Monday - Friday, 9am - 5pm)'
-              required
-            />
-          </div>
-
-          <div className='mb-4'>
-            <label
-              htmlFor='amenities'
-              className='block text-gray-700 font-bold mb-2'
-            >
+            <label htmlFor='amenities' className='block text-gray-700 font-bold mb-2'>
               Amenities
             </label>
             <input
@@ -175,26 +139,24 @@ const AddRoomPage = () => {
               name='amenities'
               className='border rounded w-full py-2 px-3'
               placeholder='Amenities CSV (projector, whiteboard, etc.)'
-              required
+              
             />
           </div>
 
-         
           <div className='mb-8'>
-            <label
-              htmlFor='image'
-              className='block text-gray-700 font-bold mb-2'
-            >
-              Image
-            </label>
+  <label htmlFor='image' className='block text-gray-700 font-bold mb-2'>
+    Images
+  </label>
+  <input
+    type='file'
+    id='image'
+    name='images' // Updated name to reflect multiple files
+    className='border rounded w-full py-2 px-3'
+    multiple // Enable multiple file selection
+    accept='image/*' // Restrict to image files only
+  />
+</div>
 
-            <input
-              type='file'
-              id='image'
-              name='image'
-              className='border rounded w-full py-2 px-3'
-            />
-          </div>
 
           <div className='flex flex-col gap-5'>
             <button
@@ -210,4 +172,4 @@ const AddRoomPage = () => {
   );
 };
 
-export default AddRoomPage;
+export default AddSpacePage;

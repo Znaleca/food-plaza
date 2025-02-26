@@ -6,7 +6,7 @@ import { Query } from 'node-appwrite';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 
-async function deleteRoom(roomId) {
+async function deleteSpace(roomId) {
   const sessionCookie = cookies().get('appwrite-session');
   if (!sessionCookie) {
     redirect('/login');
@@ -59,4 +59,4 @@ async function deleteRoom(roomId) {
   }
 }
 
-export default deleteRoom;
+export default deleteSpace;

@@ -1,20 +1,20 @@
 import Heading from '@/components/Heading';
-import MyRoomCard from '@/components/MyRoomCard';
-import getMyRooms from '@/app/actions/getMyRooms';
+import MySpaceCard from '@/components/MySpaceCard';
+import getMySpaces from '@/app/actions/getMySpaces';
 
-const MyRoomsPage = async () => {
-  const rooms = await getMyRooms();
+const MySpacePage = async () => {
+  const rooms = await getMySpaces();
 
   return (
     <>
-      <Heading title='My Rooms' />
+      <Heading title='My Spaces' />
       {rooms.length > 0 ? (
-        rooms.map((room) => <MyRoomCard key={room.$id} room={room} />)
+        rooms.map((room) => <MySpaceCard key={room.$id} room={room} />)
       ) : (
-        <p>You have no room listings</p>
+        <p>You have no Spaces listings</p>
       )}
     </>
   );
 };
 
-export default MyRoomsPage;
+export default MySpacePage;

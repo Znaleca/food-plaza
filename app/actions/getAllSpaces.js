@@ -1,28 +1,29 @@
+//Spaces
+
 'use server';
 
 import { createAdminClient } from '@/config/appwrite';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-async function getSingleRoom(id) {
+async function getAllSpaces() {
   try {
     const { databases } = await createAdminClient();
 
     // Fetch rooms
-    const room = await databases.getDocument(
+    const { documents: rooms } = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
-      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS,
-      id
+      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS
     );
 
     // Revalidate the cache for this path
     revalidatePath('/', 'layout');
 
-    return room;
+    return rooms;
   } catch (error) {
-    console.log('Failed to get room', error);
+    console.log('Failed to get rooms', error);
     redirect('/error');
   }
 }
 
-export default getSingleRoom;
+export default getAllSpaces;

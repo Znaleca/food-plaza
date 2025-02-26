@@ -16,7 +16,7 @@ function dateRangesOverlap(checkInA, checkOutA, checkInB, checkOutB) {
   return checkInA < checkOutB && checkOutA > checkInB;
 }
 
-async function checkRoomAvailability(roomId, checkIn, checkOut) {
+async function checkSpaceAvailability(roomId, checkIn, checkOut) {
   const sessionCookie = cookies().get('appwrite-session');
   if (!sessionCookie) {
     redirect('/login');
@@ -62,4 +62,4 @@ async function checkRoomAvailability(roomId, checkIn, checkOut) {
   }
 }
 
-export default checkRoomAvailability;
+export default checkSpaceAvailability;

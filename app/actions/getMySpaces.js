@@ -1,11 +1,12 @@
+//My Spaces
+
 'use server';
 
 import { createSessionClient } from '@/config/appwrite';
 import { cookies } from 'next/headers';
-import { Query } from 'node-appwrite';
 import { redirect } from 'next/navigation';
 
-async function getMyRooms() {
+async function getMySpaces() {
   const sessionCookie = cookies().get('appwrite-session');
   if (!sessionCookie) {
     redirect('/login');
@@ -24,7 +25,7 @@ async function getMyRooms() {
     const { documents: rooms } = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS,
-      [Query.equal('user_id', userId)]
+      
     );
 
     return rooms;
@@ -34,4 +35,4 @@ async function getMyRooms() {
   }
 }
 
-export default getMyRooms;
+export default getMySpaces;

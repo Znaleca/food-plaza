@@ -1,7 +1,7 @@
 'use client';
 import { toast } from 'react-toastify';
 import { FaTrash } from 'react-icons/fa';
-import deleteRoom from '@/app/actions/deleteRoom';
+import deleteSpace from '@/app/actions/deleteSpace';
 
 const DeleteRoomButton = ({ roomId }) => {
   const handleDelete = async () => {
@@ -11,7 +11,7 @@ const DeleteRoomButton = ({ roomId }) => {
 
     if (confirmed) {
       try {
-        const response = await deleteRoom(roomId);
+        const response = await deleteSpace(roomId);
         toast.success('Room deleted successfully!');
       } catch (error) {
         console.log('Failed to delete room', error);

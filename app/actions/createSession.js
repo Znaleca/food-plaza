@@ -40,9 +40,7 @@ async function createSession(previousState, formData) {
         
       }
 
-      return {
-        success: true,
-      }
+      
 }  
 
 export default createSession;

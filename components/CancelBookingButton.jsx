@@ -25,9 +25,9 @@ const CancelBookingButton = ({ bookingId }) => {
   return (
     <button
       onClick={handleCancelClick}
-      className='bg-red-500 text-white px-4 py-2 rounded w-full sm:w-auto text-center hover:bg-red-700'
+      className='bg-gradient-to-r from-slate-800 to-black text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md hover:scale-105 transform transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-600'
     >
-      Cancel Booking
+      Cancel Reservation
     </button>
   );
 };
