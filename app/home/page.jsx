@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import MapView from '@/components/MapView'; 
+import MapView from 'components/MapView';
 
 const HomePage = () => {
   const router = useRouter();
@@ -13,7 +13,6 @@ const HomePage = () => {
 
   return (
     <div className=" w-full min-h-screen bg-gradient-to-br from-gray-100 to-white text-gray-900">
-      
       {/* Hero Section */}
       <div className="flex flex-col items-center justify-center h-screen text-center px-6">
         <h1 className="text-7xl md:text-8xl font-black tracking-tight leading-tight">
@@ -41,7 +40,7 @@ const HomePage = () => {
       {/* Vision and Mission Section */}
       <div className="bg-white text-center py-12">
         <h2 className="text-3xl font-bold text-red-600">VISION</h2>
-        <p className="mt-4 text-lg text-gray-600 max-w-4xl mx-auto">
+        <p className="mt-4 text-lg text-gray-600 max极-w-4xl mx-auto">
           An inclusive and sustainable University recognized for its global academic excellence by 2030.
         </p>
 

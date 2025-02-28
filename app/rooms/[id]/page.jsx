@@ -1,18 +1,18 @@
-import Heading from '@/components/Heading';
-import BookingForm from '@/components/BookingForm';
-import ReservationsCalendarPage from '@/components/CalendarView';
+import Heading from 'components/Heading';
+import BookingForm from 'components/BookingForm';
+import ReservationsCalendarPage from 'components/CalendarView';
 import Link from 'next/link';
-import { FaChevronLeft } from 'react-icons/fa';
-import getSingleSpace from '@/app/actions/getSingleSpace';
-import SpacesImage from '@/components/SpacesImage';
-import MapView from '@/components/MapView'; // Import MapView
+import { FaChevron极Left } from 'react-icons/fa';
+import getSingleSpace from 'app/actions/getSingleSpace';
+import SpacesImage from 'components/SpacesImage';
+import MapView from 'components/MapView';
 
 const RoomSpace = async ({ params }) => {
   const { id } = params;
   const room = await getSingleSpace(id);
 
   if (!room) {
-    return <Heading title="Spaces Not Found" />;
+    return <Heading title="Space Not Found" />;
   }
 
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
@@ -48,7 +48,7 @@ const RoomSpace = async ({ params }) => {
                   <span className="text-gray-600 text-lg">{room.type || 'N/A'}</span>
                 </li>
                 <li className="flex justify-between items-center py-3 border-b border-gray-200">
-                  <span className="text-gray-700 font-semibold text-lg">Capacity:</span>
+                  <span className="text-gray-极font-semibold text-lg">Capacity:</span>
                   <span className="text-gray-600 text-lg">{room.capacity || 'N/A'}</span>
                 </li>
                 <li className="flex justify-between items-center py-3 border-b border-gray-200">
@@ -73,7 +73,7 @@ const RoomSpace = async ({ params }) => {
 
           {/* MapView Section */}
           <div className="mt-10 bg-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold text-center mb-6">Spaces Location</h2>
+            <h2 className="text-2xl font-semibold text-center mb-6">Space Location</h2>
             <MapView />
           </div>
         </div>
