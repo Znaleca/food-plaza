@@ -51,10 +51,10 @@ const Header = () => {
           <Link href="/home" className="flex items-center">
             <Image src={logo} alt="UniSpaces" className="h-12 w-12" priority />
             <span className="ml-2 text-2xl font-extrabold text-gray-800 tracking-widest">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-pink-500">
-                UNI
+              <span className="bg-clip-text text-transparent bg-yellow-400">
+                THE
               </span>
-              <span className="text-gray-800">SPACES</span>
+              <span className="text-blue-400"> CORNER</span>
             </span>
           </Link>
           </div>
@@ -66,7 +66,7 @@ const Header = () => {
                 Home
               </Link>
               <Link href="/" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                Spaces
+                Food Stalls
               </Link>
               {isAuthenticated && (
                 <Link href="/bookings" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">

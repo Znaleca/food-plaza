@@ -1,94 +1,94 @@
-import Heading from 'components/Heading';
-import BookingForm from 'components/BookingForm';
-import ReservationsCalendarPage from 'components/CalendarView';
+import Heading from '@/components/Heading';
 import Link from 'next/link';
-import { FaChevron极Left } from 'react-icons/fa';
-import getSingleSpace from 'app/actions/getSingleSpace';
-import SpacesImage from 'components/SpacesImage';
-import MapView from 'components/MapView';
+import { FaChevronLeft } from 'react-icons/fa';
+import getSingleSpace from '@/app/actions/getSingleSpace';
+import SpacesImage from '@/components/SpacesImage';
 
 const RoomSpace = async ({ params }) => {
   const { id } = params;
   const room = await getSingleSpace(id);
 
   if (!room) {
-    return <Heading title="Space Not Found" />;
+    return <Heading title="Food Stall Not Found" />;
   }
 
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
   // Construct image URLs
-  const imageUrls = room.images?.map((imageId) => 
-    `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${imageId}/view?project=${projectId}`
-  ) || [];
+  const imageUrls =
+    room.images?.map(
+      (imageId) =>
+        `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${imageId}/view?project=${projectId}`
+    ) || [];
 
   return (
-    <>
-      <Heading title={room.name} />
-      <div className="bg-white shadow-xl rounded-lg p-10 max-w-6xl mx-auto mt-8">
-        <Link
-          href="/"
-          className="flex items-center text-gray-600 hover:text-gray-800 mb-8 transition duration-300"
-        >
-          <FaChevronLeft className="inline mr-2" />
-          <span className="font-medium">Back to Spaces</span>
-        </Link>
+    <div className="max-w-4xl mx-auto px-6 py-12">
+      {/* Back Button */}
+      <Link
+        href="/"
+        className="flex items-center text-blue-500 hover:text-blue-700 transition-transform duration-300 transform hover:scale-105 mb-8"
+      >
+        <FaChevronLeft className="mr-2" />
+        <span className="font-medium text-lg">Back to Food Stalls</span>
+      </Link>
 
-        <div className="flex flex-col space-y-10">
-          {/* Image and Description Section */}
-          <div>
-            <SpacesImage imageUrls={imageUrls} />
-            <div className="mt-8 bg-white p-8 rounded-lg shadow-lg">
-              <p className="text-gray-800 text-xl font-semibold mb-6">{room.description || 'No description available'}</p>
+      {/* Stall Name */}
+      <Heading 
+        title={room.name} 
+        className="text-center text-4xl font-extrabold text-gray-900 
+          bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 
+          bg-clip-text text-transparent"
+      />
 
-              <ul className="space-y-6">
-                <li className="flex justify-between items-center py-3 border-b border-gray-200">
-                  <span className="text-gray-700 font-semibold text-lg">Type:</span>
-                  <span className="text-gray-600 text-lg">{room.type || 'N/A'}</span>
-                </li>
-                <li className="flex justify-between items-center py-3 border-b border-gray-200">
-                  <span className="text-gray-极font-semibold text-lg">Capacity:</span>
-                  <span className="text-gray-600 text-lg">{room.capacity || 'N/A'}</span>
-                </li>
-                <li className="flex justify-between items-center py-3 border-b border-gray-200">
-                  <span className="text-gray-700 font-semibold text-lg">Location:</span>
-                  <span className="text-gray-600 text-lg">{room.location || 'N/A'}</span>
-                </li>
-                <li className="flex justify-between items-center py-3 border-b border-gray-200">
-                  <span className="text-gray-700 font-semibold text-lg">Floor:</span>
-                  <span className="text-gray-600 text-lg">{room.floor || 'N/A'}</span>
-                </li>
-                <li className="flex justify-between items-center py-3 border-b border-gray-200">
-                  <span className="text-gray-700 font-semibold text-lg">Room #:</span>
-                  <span className="text-gray-600 text-lg">{room.room || 'N/A'}</span>
-                </li>
-                <li className="flex justify-between items-center py-3">
-                  <span className="text-gray-700 font-semibold text-lg">Amenities:</span>
-                  <span className="text-gray-600 text-lg">{room.amenities || 'N/A'}</span>
-                </li>
-              </ul>
-            </div>
+      {/* Food Stall Details */}
+      <div className="bg-white shadow-2xl rounded-2xl p-8 mt-8 border border-gray-200">
+        {/* Images */}
+        <div className="mb-8">
+          <SpacesImage imageUrls={imageUrls} />
+        </div>
+
+        {/* Food Stall Info */}
+        <div className="bg-green-950 text-white p-6 rounded-2xl shadow-lg text-center mb-8">
+          <h2 className="text-3xl font-bold">{room.name}</h2>
+          <p className="text-lg mt-2 italic">{room.description || 'Delicious food available here!'}</p>
+        </div>
+
+        {/* Grid for Stall Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-800">
+          {/* Stall Number */}
+          <div className="p-6 border border-gray-300 rounded-2xl shadow-md bg-gray-100 text-center">
+            <span className="text-gray-700 font-semibold text-lg">Stall Number:</span>
+            <p className="text-2xl font-bold mt-1">{room.stallNumber || 'N/A'}</p>
           </div>
 
-          {/* MapView Section */}
-          <div className="mt-10 bg-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold text-center mb-6">Space Location</h2>
-            <MapView />
+          {/* Food Type */}
+          <div className="p-6 border border-gray-300 rounded-2xl shadow-md bg-gray-100 text-center">
+            <span className="text-gray-700 font-semibold text-lg">Type</span>
+            <p className="text-clip font-normal mt-1">{room.type?.join(' • ') || 'N/A'}</p>
           </div>
         </div>
 
-        {/* Booking Form */}
-        <div className="mt-10">
-          <BookingForm room={room} />
-        </div>
-
-        {/* Calendar for the room */}
-        <div className="mt-10">
-          <ReservationsCalendarPage />
+        {/* Menu Section */}
+        <div className="mt-10 p-8 border border-gray-300 rounded-2xl shadow-lg bg-gray-100">
+          <h3 className="text-3xl font-semibold text-yellow-500 mb-6 text-center">Menu</h3>
+          {Array.isArray(room.menu) && Array.isArray(room.price) && room.menu.length > 0 ? (
+            <ul className="divide-y divide-gray-300">
+              {room.menu.map((item, index) => (
+                <li key={index} className="flex justify-between items-center py-4 text-gray-700 text-lg font-medium">
+                  <span>{item}</span>
+                  <span className="font-bold text-green-900 text-xl">
+                    ₱{room.price[index] !== undefined ? room.price[index].toFixed(2) : 'N/A'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-600 text-lg text-center">Menu not available</p>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

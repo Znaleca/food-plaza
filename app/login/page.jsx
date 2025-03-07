@@ -30,7 +30,7 @@ const LoginPage = () => {
             <div className="relative z-10 bg-white bg-opacity-90 shadow-xl rounded-lg p-8 w-full max-w-sm">
                 <form action={formAction}>
                     <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-                        Welcome to UniSpaces!
+                        Welcome to The Corner!
                     </h2>
 
                     {/* Email Input */}
