@@ -17,8 +17,8 @@ async function checkAuth() {
 
     const teamsList = await teams.list();
     const isAdmin = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_ADMIN);
-    const isOffice = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_OFFICE);
-    const isAffiliate = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_AFFILIATE);
+    const isFoodstall = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_FOODSTALL);
+    const isCustomer = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_CUSTOMER);
     const isSuperAdmin = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_SUPERADMIN);
 
     return {
@@ -30,9 +30,9 @@ async function checkAuth() {
       },
       roles: {
         isAdmin,
-        isOffice,
-        isAffiliate,
-        isSuperAdmin, // Add super admin role
+        isFoodstall,
+        isCustomer,
+        isSuperAdmin, 
       },
     };
   } catch (error) {

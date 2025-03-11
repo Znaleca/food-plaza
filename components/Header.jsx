@@ -4,13 +4,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import logo from '@/assets/images/logo.svg';
-import { FaUser, FaSignInAlt, FaSignOutAlt, FaBuilding, FaBars, FaTimes, FaUserPlus } from 'react-icons/fa';
-import { FaGear, FaSquarePlus, FaUserGear, FaCircleUser, FaNewspaper } from "react-icons/fa6";
+import { FaUser, FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus } from 'react-icons/fa';
+import { FaGear, FaSquarePlus, FaUserGear, FaCircleUser, FaNewspaper, FaBox, FaStore, FaCartShopping } from "react-icons/fa6";
 import { useState } from "react";
 import destroySession from "@/app/actions/destroySession";
 import { toast } from "react-toastify";
 import { useAuth } from '@/context/authContext';
-
 
 const Header = () => {
   const router = useRouter();
@@ -18,7 +17,7 @@ const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isOfficeDropdownOpen, setOfficeDropdownOpen] = useState(false);
+  const [isFoodstallDropdownOpen, setFoodstallDropdownOpen] = useState(false);
   const [isSuperAdminDropdownOpen, setSuperAdminDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -34,11 +33,11 @@ const Header = () => {
   const toggleDropdown = () => setIsDropdownOpen((prev) => !prev);
   const toggleAdminDropdown = () => {
     setIsAdminDropdownOpen((prev) => !prev);
-    setOfficeDropdownOpen(false); // Close the office dropdown when admin dropdown opens
+    setFoodstallDropdownOpen(false); 
   };
-  const toggleOfficeDropdown = () => {
-    setOfficeDropdownOpen((prev) => !prev);
-    setIsAdminDropdownOpen(false); // Close the admin dropdown when office dropdown opens
+  const toggleFoodstallDropdown = () => {
+    setFoodstallDropdownOpen((prev) => !prev);
+    setIsAdminDropdownOpen(false); // Close admin dropdown when opening foodstall dropdown
   };
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
 
@@ -48,15 +47,15 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Title */}
           <div className="flex items-center">
-          <Link href="/home" className="flex items-center">
-            <Image src={logo} alt="UniSpaces" className="h-12 w-12" priority />
-            <span className="ml-2 text-2xl font-extrabold text-gray-800 tracking-widest">
-              <span className="bg-clip-text text-transparent bg-yellow-400">
-                THE
+            <Link href="/home" className="flex items-center">
+              <Image src={logo} alt="UniSpaces" className="h-12 w-12" priority />
+              <span className="ml-2 text-2xl font-extrabold text-gray-800 tracking-widest">
+                <span className="bg-clip-text text-transparent bg-yellow-400">
+                  THE
+                </span>
+                <span className="text-blue-400"> CORNER</span>
               </span>
-              <span className="text-blue-400"> CORNER</span>
-            </span>
-          </Link>
+            </Link>
           </div>
 
           {/* Desktop Menu */}
@@ -68,20 +67,37 @@ const Header = () => {
               <Link href="/" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
                 Food Stalls
               </Link>
-              {isAuthenticated && (
-                <Link href="/bookings" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                  My Reservations
-                </Link>
+
+              {roles.isCustomer && (
+                <>
+                  <Link href="/customer/promos" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+                    Promotions
+                  </Link>
+                  
+                </>
               )}
-              {roles.isOffice && (
-                <Link href="/reservations" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                  All Reservations
-                </Link>
+              {roles.isAdmin && (
+                <>
+                  <Link href="/calendarView" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+                    Calendar
+                  </Link>
+                  <Link href="/admin/sales" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+                    Sales
+                  </Link>
+                </>
               )}
-              {roles.isOffice && (
-                <Link href="/calendarView" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                  Calendar View
-                </Link>
+              {roles.isFoodstall && (
+                <>
+                  <Link href="/calendarView" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+                    Calendar
+                  </Link>
+                  <Link href="/foodstall/sales" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+                    Sales
+                  </Link>
+                  <Link href="/foodstall/order-status" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+                    Order Status
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -110,6 +126,12 @@ const Header = () => {
                 </>
               ) : (
                 <>
+
+{roles.isCustomer && (
+          <Link href="/order/cart" className="mr-3 text-gray-800 hover:text-gray-500">
+            <FaCartShopping className="inline mr-1" />
+          </Link>
+        )}
                   {roles.isAdmin && (
                     <div className="relative">
                       <button
@@ -120,74 +142,75 @@ const Header = () => {
                       </button>
                       {isAdminDropdownOpen && (
                         <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          <Link
-                            href="/rooms/my"
-                            className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                          >
-                            <FaBuilding className="inline mr-1" /> My Spaces
+                          <Link href="/rooms/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaStore className="inline mr-1" /> All Food Stall
                           </Link>
-                          <Link
-                            href="/rooms/add"
-                            className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                          >
-                            <FaSquarePlus className="inline mr-1" /> Add Spaces
+                          <Link href="/rooms/add" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaSquarePlus className="inline mr-1" /> Add Food Stall
+                          </Link>
+                          <Link href="/office/approval" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaNewspaper className="inline mr-1" /> Lease Status
                           </Link>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {roles.isOffice && (
+                  {roles.isFoodstall && (
                     <div className="relative">
                       <button
-                        onClick={toggleOfficeDropdown}
+                        onClick={toggleFoodstallDropdown}
                         className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
                       >
-                        <FaUserGear className="inline mr-1" /> Office Panel
+                        <FaUserGear className="inline mr-1" /> Food Stall Panel
                       </button>
-                      {isOfficeDropdownOpen && (
+                      {isFoodstallDropdownOpen && (
                         <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          <Link
-                            href="/office/approval"
-                            className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                          >
-                            <FaNewspaper className="inline mr-1" /> Approvals
+                          <Link href="/foodstall/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaStore className="inline mr-1" /> My Food Stall
+                          </Link>
+                          <Link href="/foodstall/inventory" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaBox className="inline mr-1" /> Inventory
+                          </Link>
+                          <Link href="/foodstall/lease" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaNewspaper className="inline mr-1" /> Lease Status
                           </Link>
                         </div>
                       )}
                     </div>
                   )}
 
-                  {roles.isSuperAdmin && (
-                    <div className="relative">
-                      <button
-                        onClick={() => {
-                          setSuperAdminDropdownOpen((prev) => !prev);
-                          setIsAdminDropdownOpen(false); // Ensure other dropdowns are closed
-                          setOfficeDropdownOpen(false);
-                        }}
-                        className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
-                      >
-                        <FaUserGear className="inline mr-1" /> SuperAdmin Panel
-                      </button>
-                      {isSuperAdminDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          <Link
-                            href="/create-account"
-                            className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                          >
-                            <FaUserPlus className="inline mr-1" /> Create Account
-                          </Link>
-                          <Link
-                            href="/all-accounts"
-                            className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                          >
-                            <FaUserPlus className="inline mr-1" /> All Accounts
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  )}
+{roles.isSuperAdmin && (
+  <div className="relative">
+    <button
+      onClick={() => {
+        setSuperAdminDropdownOpen((prev) => !prev);
+        setIsAdminDropdownOpen(false); // Close other dropdowns
+        setFoodstallDropdownOpen(false);
+      }}
+      className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
+    >
+      <FaUserGear className="inline mr-1" /> SuperAdmin Panel
+    </button>
+    {isSuperAdminDropdownOpen && (
+      <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+        <Link
+          href="/create-account"
+          className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+        >
+          <FaUserPlus className="inline mr-1" /> Create Account
+        </Link>
+        <Link
+          href="/all-accounts"
+          className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+        >
+          <FaUserPlus className="inline mr-1" /> All Accounts
+        </Link>
+      </div>
+    )}
+  </div>
+)}
+
 
                   <div className="relative">
                     <button
@@ -202,22 +225,10 @@ const Header = () => {
                         <div className="block px-4 py-2 text-sm text-gray-800 font-semibold border-b border-gray-200">
                           Welcome! {currentUser?.name || "User"}
                         </div>
-                        <Link
-                          href="/account"
-                          className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                        >
+                        <Link href="/account" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
                           <FaGear className="inline mr-1 text-xl" /> Account Settings
                         </Link>
-                        <Link
-                          href="/about"
-                          className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                        >
-                          <FaNewspaper className="inline mr-1 text-xl" /> About
-                        </Link>
-                        <button
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                        >
+                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
                           <FaSignOutAlt className="inline mr-1 text-xl" /> Sign Out
                         </button>
                       </div>
@@ -228,47 +239,6 @@ const Header = () => {
             </div>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
-              <Link href="/home" className="block rounded-md px-3 py-2 text-base font-medium text-gray-800 hover:bg-gray-700 hover:text-white">
-                Home
-              </Link>
-              <Link href="/" className="block rounded-md px-3 py-2 text-base font-medium text-gray-800 hover:bg-gray-700 hover:text-white">
-                Spaces
-              </Link>
-              {isAuthenticated && (
-                <>
-                  <Link href="/bookings" className="block rounded-md px-3 py-2 text-base font-medium text-gray-800 hover:bg-gray-700 hover:text-white">
-                    My Reservations
-                  </Link>
-                  {roles.isAdmin && (
-                    <>
-                      <Link href="/rooms/my" className="block rounded-md px-3 py-2 text-base font-medium text-gray-800 hover:bg-gray-700 hover:text-white">
-                        My Spaces
-                      </Link>
-                      <Link href="/rooms/add" className="block rounded-md px-3 py-2 text-base font-medium text-gray-800 hover:bg-gray-700 hover:text-white">
-                        Add Spaces
-                      </Link>
-                    </>
-                  )}
-                  {roles.isOffice && (
-                    <>
-                      <Link href="/office/dashboard" className="block rounded-md px-3 py-2 text-base font-medium text-gray-800 hover:bg-gray-700 hover:text-white">
-                        Dashboard
-                      </Link>
-                      <Link href="/office/reports" className="block rounded-md px-3 py-2 text-base font-medium text-gray-800 hover:bg-gray-700 hover:text-white">
-                        Reports
-                      </Link>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </nav>
     </header>
   );

@@ -8,9 +8,9 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [roles, setRoles] = useState({
     isAdmin: false,
-    isAffiliate: false,
-    isOffice: false,
-    isSuperAdmin: false, // Add super admin role
+    isFoodstall: false,
+    isCustomer: false,
+    isSuperAdmin: false,
   });
 
   useEffect(() => {
@@ -21,9 +21,9 @@ export const AuthProvider = ({ children }) => {
       setRoles(
         roles || {
           isAdmin: false,
-          isAffiliate: false,
-          isOffice: false,
-          isSuperAdmin: false, // Default to false
+          isCustomer: false,
+          isFoodstall: false,
+          isSuperAdmin: false, 
         }
       );
     };

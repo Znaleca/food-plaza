@@ -1,6 +1,5 @@
 import { Client, Databases, Account, Storage, Teams } from 'node-appwrite';
 
-// Admin Client
 const createAdminClient = async () => {
   if (!process.env.NEXT_APPWRITE_KEY || !process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || !process.env.NEXT_PUBLIC_APPWRITE_PROJECT) {
     throw new Error('Missing required environment variables for creating Admin Client.');
