@@ -45,9 +45,9 @@ const NewsNotifPage = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 w-96 p-4 bg-gradient-to-white shadow-lg rounded-lg border z-50">
+    <div className="fixed bottom-4 right-4 w-96 p-4 bg-gradient-to-r from-yellow-400 to-blue-400 shadow-lg rounded-lg border z-50">
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold text-black">New Deals!</h1>
+        <h1 className="text-xl font-bold text-white">New Deals!</h1>
         <button
           className="text-white hover:text-gray-200"
           onClick={() => setVisible(false)}
@@ -64,7 +64,7 @@ const NewsNotifPage = () => {
           disabled={loading}
         />
       ) : (
-        <p className="mt-2 text-black">{news}</p>
+        <p className="mt-2 text-white">{news}</p>
       )}
 
       {roles.isAdmin || roles.isSuperAdmin ? (
