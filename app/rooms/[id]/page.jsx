@@ -72,13 +72,13 @@ const RoomSpace = async ({ params }) => {
         {/* Menu Section */}
         <div className="mt-10 p-8 border border-gray-300 rounded-2xl shadow-lg bg-gray-100">
           <h3 className="text-3xl font-semibold text-yellow-500 mb-6 text-center">Menu</h3>
-          {Array.isArray(room.menu) && Array.isArray(room.price) && room.menu.length > 0 ? (
+          {Array.isArray(room.menuName) && Array.isArray(room.menuPrice) && room.menuName.length > 0 ? (
             <ul className="divide-y divide-gray-300">
-              {room.menu.map((item, index) => (
+              {room.menuName.map((item, index) => (
                 <li key={index} className="flex justify-between items-center py-4 text-gray-700 text-lg font-medium">
                   <span>{item}</span>
                   <span className="font-bold text-green-900 text-xl">
-                    ₱{room.price[index] !== undefined ? room.price[index].toFixed(2) : 'N/A'}
+                    ₱{room.menuPrice[index] !== undefined ? room.menuPrice[index].toFixed(2) : 'N/A'}
                   </span>
                 </li>
               ))}
