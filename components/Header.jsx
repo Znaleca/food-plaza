@@ -37,7 +37,7 @@ const Header = () => {
   };
   const toggleFoodstallDropdown = () => {
     setFoodstallDropdownOpen((prev) => !prev);
-    setIsAdminDropdownOpen(false); // Close admin dropdown when opening foodstall dropdown
+    setIsAdminDropdownOpen(false);
   };
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
 
@@ -69,12 +69,9 @@ const Header = () => {
               </Link>
 
               {roles.isCustomer && (
-                <>
-                  <Link href="/customer/promos" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                    Promotions
-                  </Link>
-                  
-                </>
+                <Link href="/customer/promos" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+                  Promotions
+                </Link>
               )}
               {roles.isAdmin && (
                 <>
@@ -115,6 +112,9 @@ const Header = () => {
           {/* Account Controls */}
           <div className="hidden md:block ml-auto">
             <div className="flex items-center">
+              <Link href="/order/cart" className="mr-3 text-gray-800 hover:text-gray-500">
+                <FaCartShopping className="inline mr-1" />
+              </Link>
               {!isAuthenticated ? (
                 <>
                   <Link href="/login" className="mr-3 text-gray-800 hover:text-gray-500">
@@ -126,92 +126,7 @@ const Header = () => {
                 </>
               ) : (
                 <>
-
-{roles.isCustomer && (
-          <Link href="/order/cart" className="mr-3 text-gray-800 hover:text-gray-500">
-            <FaCartShopping className="inline mr-1" />
-          </Link>
-        )}
-                  {roles.isAdmin && (
-                    <div className="relative">
-                      <button
-                        onClick={toggleAdminDropdown}
-                        className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
-                      >
-                        <FaUserGear className="inline mr-1" /> Admin Panel
-                      </button>
-                      {isAdminDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          <Link href="/rooms/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaStore className="inline mr-1" /> All Food Stall
-                          </Link>
-                          <Link href="/rooms/add" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaSquarePlus className="inline mr-1" /> Add Food Stall
-                          </Link>
-                          <Link href="/office/approval" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaNewspaper className="inline mr-1" /> Lease Status
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {roles.isFoodstall && (
-                    <div className="relative">
-                      <button
-                        onClick={toggleFoodstallDropdown}
-                        className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
-                      >
-                        <FaUserGear className="inline mr-1" /> Food Stall Panel
-                      </button>
-                      {isFoodstallDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          <Link href="/foodstall/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaStore className="inline mr-1" /> My Food Stall
-                          </Link>
-                          <Link href="/foodstall/inventory" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaBox className="inline mr-1" /> Inventory
-                          </Link>
-                          <Link href="/foodstall/lease" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaNewspaper className="inline mr-1" /> Lease Status
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-{roles.isSuperAdmin && (
-  <div className="relative">
-    <button
-      onClick={() => {
-        setSuperAdminDropdownOpen((prev) => !prev);
-        setIsAdminDropdownOpen(false); // Close other dropdowns
-        setFoodstallDropdownOpen(false);
-      }}
-      className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
-    >
-      <FaUserGear className="inline mr-1" /> SuperAdmin Panel
-    </button>
-    {isSuperAdminDropdownOpen && (
-      <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-        <Link
-          href="/create-account"
-          className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-        >
-          <FaUserPlus className="inline mr-1" /> Create Account
-        </Link>
-        <Link
-          href="/all-accounts"
-          className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-        >
-          <FaUserPlus className="inline mr-1" /> All Accounts
-        </Link>
-      </div>
-    )}
-  </div>
-)}
-
-
+                  {/* User Dropdown */}
                   <div className="relative">
                     <button
                       onClick={toggleDropdown}
