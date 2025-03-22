@@ -13,7 +13,7 @@ async function createSpaces(previousState, formData) {
       return { error: 'You must be logged in to create a room' };
     }
 
-    // Upload multiple images
+    // Upload multiple images for the food stall
     const images = formData.getAll('images');
     const imageIDs = [];
 
@@ -38,12 +38,35 @@ async function createSpaces(previousState, formData) {
     // Convert type from JSON string
     const type = JSON.parse(formData.get('selectedTypes')) || [];
 
-    // Convert menuNames and menuPrices to arrays
-    const menuName = formData.getAll('menuNames').filter((item) => item.trim() !== '');
-    const menuPrice = formData.getAll('menuPrices')
+    // Get menu names and prices
+    const menuNames = formData.getAll('menuNames').filter((item) => item.trim() !== '');
+    const menuPrices = formData.getAll('menuPrices')
       .map((value) => parseFloat(value))
       .filter((value) => !isNaN(value));
 
+    // Handle menu images
+    const menuImageFiles = formData.getAll('menuImages[]'); // Retrieve all menu images
+const menuImages = [];
+
+for (const menuImageFile of menuImageFiles) {
+  if (menuImageFile instanceof File && menuImageFile.size > 0) {
+    try {
+      const response = await storage.createFile(
+        process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS,
+        ID.unique(),
+        menuImageFile
+      );
+      menuImages.push(response.$id);
+    } catch (error) {
+      console.log('Error uploading menu image:', error);
+      return { error: 'Error uploading one or more menu images' };
+    }
+  } else {
+    menuImages.push(null); // Ensure all menu items have a corresponding image or null
+  }
+}
+
+    
     // Create food stall document
     const newStall = await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
@@ -54,10 +77,11 @@ async function createSpaces(previousState, formData) {
         name: formData.get('name'),
         description: formData.get('description'),
         type: type, // Now an array
-        menuName: menuName, // Now an array
-        menuPrice: menuPrice, // Now an array of doubles
+        menuName: menuNames, // Now an array
+        menuPrice: menuPrices, // Now an array of doubles
         stallNumber: parseInt(formData.get('stallNumber'), 10) || null,
         images: imageIDs,
+        menuImages: menuImages, // Add menu images to the document
       }
     );
     
