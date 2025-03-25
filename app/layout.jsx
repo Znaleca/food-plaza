@@ -24,23 +24,27 @@ export default function RootLayout({ children }) {
           <div
             className="min-h-screen bg-cover bg-center"
             style={{
-              backgroundImage: "url(/images/backdrop.jpg)", 
+              backgroundImage: "url(/images/menu.jpg)", 
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
           >
-            <Header />
-            
-            {/* News Notification Section */}
-            <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-              <NewsNotifPage />
-            </section>
-            
-            <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-              {children}
-            </main>
-            <Footer />
-            <ToastContainer />
+            {/* Fixed Header */}
+            <Header className="fixed top-0 left-0 w-full z-50 bg-white shadow-md" />
+
+            {/* Spacing to prevent content from being hidden behind the fixed header */}
+            <div className="pt-16">
+              {/* News Notification Section */}
+              <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <NewsNotifPage />
+              </section>
+
+              <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                {children}
+              </main>
+              <Footer />
+              <ToastContainer />
+            </div>
           </div>
         </body>
       </html>

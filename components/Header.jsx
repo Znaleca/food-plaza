@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import logo from '@/assets/images/logo.svg';
-import { FaUser, FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus, FaUserCircle } from 'react-icons/fa';
+import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus} from 'react-icons/fa';
 import { FaGear, FaSquarePlus, FaUserGear, FaCircleUser, FaNewspaper, FaBox, FaStore, FaCartShopping } from "react-icons/fa6";
 import { useState } from "react";
 import destroySession from "@/app/actions/destroySession";
@@ -96,6 +96,9 @@ const Header = () => {
                   </Link>
                   <Link href="/foodstall/order-status" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
                     Order Status
+                  </Link>
+                  <Link href="/lease/card" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+                    Stall Lease
                   </Link>
                 </>
               )}
@@ -189,10 +192,16 @@ const Header = () => {
                           <Link href="/foodstall/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
                             <FaStore className="inline mr-1" /> My Food Stall
                           </Link>
+                          <Link href="/rooms/add" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaSquarePlus className="inline mr-1" /> Add Food Stall
+                          </Link>
+                          <Link href="/rooms/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaStore className="inline mr-1" /> All Food Stall
+                          </Link>
                           <Link href="/foodstall/inventory" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
                             <FaBox className="inline mr-1" /> Inventory
                           </Link>
-                          <Link href="/foodstall/lease" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                          <Link href="/bookings" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
                             <FaNewspaper className="inline mr-1" /> Lease Status
                           </Link>
                         </div>

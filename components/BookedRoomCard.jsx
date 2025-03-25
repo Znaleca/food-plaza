@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaTrashAlt } from 'react-icons/fa'; // Import Trash Can Icon
+import { FaTrashAlt } from 'react-icons/fa'; 
 import CancelBookingButton from './CancelBookingButton';
 import deleteBooking from '@/app/actions/deleteBooking';
 

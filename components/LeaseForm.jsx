@@ -66,7 +66,7 @@ const BookingForm = ({ room }) => {
 
           <div>
             <label htmlFor="check_out_time" className="block text-sm font-medium text-gray-700">
-              Check-Out Time
+              Che Time
             </label>
             <input
               type="time"

@@ -116,8 +116,8 @@ const ReservationsCalendarPage = () => {
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-center text-white bg-gradient-to-r from-red-600 to-blue-950 p-4 rounded-lg shadow-lg">
-        Reservations Calendar
+      <h1 className="text-3xl font-bold mb-6 text-center text-white bg-yellow-400 p-4 rounded-lg shadow-lg">
+        Lease Calendar
       </h1>
 
       {/* Navigation and Search Date */}
@@ -207,10 +207,10 @@ const ReservationsCalendarPage = () => {
                 <strong>End:</strong> {selectedEvent.end.toLocaleString()}
               </p>
               <p>
-                <strong>Status:</strong> {selectedEvent.resource?.status || 'Unknown'}
+                <strong>Payment Status:</strong> {selectedEvent.resource?.status || 'Unknown'}
               </p>
               <p>
-                <strong>Room:</strong> {selectedEvent.resource?.room_id?.name || 'N/A'}
+                <strong>Food Stall:</strong> {selectedEvent.resource?.room_id?.name || 'N/A'}
               </p>
             </>
           )}
