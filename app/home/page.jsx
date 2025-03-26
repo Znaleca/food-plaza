@@ -22,7 +22,7 @@ const HomePage = () => {
       {/* Overlay for better text contrast */}
       <div className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6">
         <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-tight text-white">
-          <span className="relative inline-block px-6 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl shadow-lg">
+          <span className="relative inline-block px-6 py-2 bg-gradient-to-r from-blue-400 to-yellow-400 rounded-xl shadow-lg">
             THE CORNER
           </span>
           <br />

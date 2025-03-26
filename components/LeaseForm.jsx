@@ -19,7 +19,7 @@ const BookingForm = ({ room }) => {
 
   return (
     <div className="mt-8 bg-white p-8 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Reserve this Space</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Approve Lease</h2>
       <form action={formAction} className="space-y-6">
         <input type="hidden" name="room_id" value={room.$id} />
         <input type="hidden" name="status" value="pending" />
@@ -27,7 +27,7 @@ const BookingForm = ({ room }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label htmlFor="check_in_date" className="block text-sm font-medium text-gray-700">
-              Check-In Date
+              Start Date
             </label>
             <input
               type="date"
@@ -40,7 +40,7 @@ const BookingForm = ({ room }) => {
 
           <div>
             <label htmlFor="check_in_time" className="block text-sm font-medium text-gray-700">
-              Check-In Time
+              Time In
             </label>
             <input
               type="time"
@@ -53,7 +53,7 @@ const BookingForm = ({ room }) => {
 
           <div>
             <label htmlFor="check_out_date" className="block text-sm font-medium text-gray-700">
-              Check-Out Date
+              End Date
             </label>
             <input
               type="date"
@@ -66,7 +66,7 @@ const BookingForm = ({ room }) => {
 
           <div>
             <label htmlFor="check_out_time" className="block text-sm font-medium text-gray-700">
-              Che Time
+              Time Out
             </label>
             <input
               type="time"
@@ -81,7 +81,7 @@ const BookingForm = ({ room }) => {
         {/* Agenda Field */}
         <div>
           <label htmlFor="agenda" className="block text-sm font-medium text-gray-700">
-            Agenda (Purpose of Reservation)
+           Other Request (Optional)
           </label>
           <textarea
             id="agenda"
@@ -98,7 +98,7 @@ const BookingForm = ({ room }) => {
             type="submit"
             className="w-full py-3 px-4 bg-black text-white font-medium text-sm rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 transition duration-300"
           >
-            Reserve Space
+            Send Approval
           </button>
         </div>
       </form>

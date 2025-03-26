@@ -5,7 +5,7 @@ import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import getAllReservations from '@/app/actions/getAllReservations';
-import { Spinner, Modal, Button } from 'react-bootstrap';
+import { Spinner,Button } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -53,33 +53,30 @@ const ReservationsCalendarPage = () => {
       </div>
     );
 
-  // Transform reservations into events for the calendar
-  const events = reservations.map((booking) => ({
-    id: booking.$id,
-    title: booking?.room_id?.name || 'Room Booking',
-    start: new Date(booking.check_in),
-    end: new Date(booking.check_out),
-    resource: booking,
-  }));
+    const events = reservations.map((booking) => ({
+      id: booking.$id, // Unique ID per booking
+      title: booking.room_id?.name || 'Unknown Room',
+      start: new Date(booking.check_in),
+      end: new Date(booking.check_out),
+      resource: booking, // Store the full booking details
+    }));
+    
 
-  const eventStyleGetter = (event) => {
-    const statusColors = {
-      pending: '#f59e0b', // Yellow
-      approved: '#10b981', // Green
-      declined: '#ef4444', // Red
-      unknown: '#9ca3af', // Gray
+    const eventStyleGetter = (event) => {
+      const colors = ['#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#a855f7'];
+      const roomIndex = event.resource?.room_id?.$id.charCodeAt(0) % colors.length;
+      const backgroundColor = colors[roomIndex];
+    
+      return {
+        style: {
+          backgroundColor,
+          color: 'white',
+          borderRadius: '4px',
+          padding: '4px',
+          border: 'none',
+        },
+      };
     };
-    const backgroundColor = statusColors[event.resource?.status || 'unknown'];
-    return {
-      style: {
-        backgroundColor,
-        color: 'white',
-        borderRadius: '4px',
-        padding: '2px 4px',
-        border: 'none',
-      },
-    };
-  };
 
   const handleEventClick = (event) => {
     setSelectedEvent(event);
@@ -116,7 +113,7 @@ const ReservationsCalendarPage = () => {
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-center text-white bg-yellow-400 p-4 rounded-lg shadow-lg">
+      <h1 className="text-3xl font-bold mb-6 text-center text-white bg-blue-400 p-4 rounded-lg shadow-lg">
         Lease Calendar
       </h1>
 
@@ -174,53 +171,70 @@ const ReservationsCalendarPage = () => {
       </div>
 
       <div className="rounded-lg shadow-lg overflow-hidden bg-white" style={{ height: '400px' }}>
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: '100%', background: '#f9fafb' }}
-          date={currentDate}
-          onNavigate={setCurrentDate}
-          view={view}
-          onView={setView}
-          eventPropGetter={eventStyleGetter}
-          onSelectEvent={handleEventClick}
-        />
+      <Calendar
+  localizer={localizer}
+  events={events}
+  startAccessor="start"
+  endAccessor="end"
+  style={{ height: '100%', background: '#f9fafb' }}
+  date={currentDate}
+  onNavigate={setCurrentDate}
+  view={view}
+  onView={setView}
+  eventPropGetter={eventStyleGetter}
+  onSelectEvent={handleEventClick}
+  popup // Ensures clicking on an event shows details even when stacked
+/>
+
       </div>
 
-      {/* Modal for displaying booking details */}
-      <Modal show={showModal} onHide={handleCloseModal} className="modal-custom">
-        <Modal.Header closeButton>
-          <Modal.Title className="text-lg font-semibold">Booking Details</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedEvent && (
-            <>
-              <p>
-                <strong>Title:</strong> {selectedEvent.title}
-              </p>
-              <p>
-                <strong>Start:</strong> {selectedEvent.start.toLocaleString()}
-              </p>
-              <p>
-                <strong>End:</strong> {selectedEvent.end.toLocaleString()}
-              </p>
-              <p>
-                <strong>Payment Status:</strong> {selectedEvent.resource?.status || 'Unknown'}
-              </p>
-              <p>
-                <strong>Food Stall:</strong> {selectedEvent.resource?.room_id?.name || 'N/A'}
-              </p>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {showModal && selectedEvent && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="bg-white p-6 rounded-2xl shadow-lg max-w-md w-full border-4 border-yellow-400 relative ticket-style">
+      {/* Close Button */}
+      <button 
+        onClick={handleCloseModal} 
+        className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl"
+      >
+        &times;
+      </button>
+
+      {/* Ticket Header */}
+      <h2 className="text-2xl font-bold text-center text-gray-800 border-b-2 border-dashed border-gray-300 pb-3 mb-4">
+        Lease Ticket
+      </h2>
+
+      {/* Ticket Content */}
+      <div className="space-y-3 text-gray-700">
+        <p className="flex justify-between border-b border-dashed pb-2">
+          <span className="font-semibold">Title:</span> <span>{selectedEvent.title}</span>
+        </p>
+        <p className="flex justify-between border-b border-dashed pb-2">
+          <span className="font-semibold">Stall #:</span> <span>{selectedEvent.resource?.room_id?.stallNumber || 'N/A'}</span>
+        </p>
+        <p className="flex justify-between border-b border-dashed pb-2">
+          <span className="font-semibold">Start:</span> <span>{selectedEvent.start.toLocaleString()}</span>
+        </p>
+        <p className="flex justify-between border-b border-dashed pb-2">
+          <span className="font-semibold">End:</span> <span>{selectedEvent.end.toLocaleString()}</span>
+        </p>
+        <p className="flex justify-between">
+          <span className="font-semibold">Payment Status:</span> <span>{selectedEvent.resource?.status || 'Unknown'}</span>
+        </p>
+      </div>
+
+      {/* Ticket Footer (Close Button) */}
+      <button 
+        onClick={handleCloseModal} 
+        className="w-full mt-5 bg-blue-400 hover:bg-yellow-400 text-white font-medium py-2 rounded-lg transition duration-200"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 };

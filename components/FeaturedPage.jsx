@@ -40,14 +40,12 @@ const FeaturedPage = () => {
       className="max-w-6xl mx-auto p-6 bg-cover bg-center bg-no-repeat rounded-lg shadow-lg"
       style={{ backgroundImage: "url('/images/card.jpg')" }}
     >
-      {/* Featured Menu Title with Blue Outline */}
-      <h1 
-  className="text-4xl font-bold text-center text-yellow-400 mb-6"
-  
->
-  Featured Menu
-</h1>
-
+      {/* Featured Menu Title with Solid Box */}
+      <div className="text-center mb-6">
+        <h1 className="text-4xl font-bold text-yellow-400 bg-black border-4 border-yellow-400 px-6 py-2 inline-block rounded-lg">
+          Featured Menu
+        </h1>
+      </div>
 
       {featuredMenus.length > 0 ? (
         <div className="relative">
