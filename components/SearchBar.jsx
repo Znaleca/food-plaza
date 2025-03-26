@@ -9,7 +9,7 @@ const SearchBar = () => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const [activeIndex, setActiveIndex] = useState(-1); // For keyboard navigation
   const router = useRouter();
 
   useEffect(() => {
@@ -31,20 +31,9 @@ const SearchBar = () => {
       return;
     }
 
-    const filtered = rooms.reduce((acc, room) => {
-      if (room.name.toLowerCase().includes(query.toLowerCase())) {
-        acc.push({ type: 'room', ...room });
-      }
-
-      room.menuName?.forEach((menu) => {
-        if (menu.toLowerCase().includes(query.toLowerCase())) {
-          acc.push({ type: 'menu', roomId: room.$id, roomName: room.name, menu });
-        }
-      });
-
-      return acc;
-    }, []);
-    
+    const filtered = rooms.filter((room) =>
+      room.name.toLowerCase().includes(query.toLowerCase())
+    );
     setSuggestions(filtered);
   }, [query, rooms]);
 
@@ -66,8 +55,7 @@ const SearchBar = () => {
     } else if (e.key === 'ArrowUp') {
       setActiveIndex((prev) => (prev > 0 ? prev - 1 : prev));
     } else if (e.key === 'Enter' && activeIndex >= 0) {
-      const selected = suggestions[activeIndex];
-      router.push(selected.type === 'room' ? `/rooms/${selected.$id}` : `/rooms/${selected.roomId}`);
+      router.push(`/rooms/${suggestions[activeIndex].$id}`);
       setQuery('');
       setSuggestions([]);
     }
@@ -78,33 +66,25 @@ const SearchBar = () => {
       <form onSubmit={handleSearch}>
         <input
           type="text"
-          placeholder="Search for a food stall or menu..."
+          placeholder="Search for a food stall..."
           value={query}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           className="w-full px-6 py-3 text-lg border border-gray-300 rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
         />
       </form>
+
+      {/* Search Suggestions Popup */}
       {suggestions.length > 0 && (
         <div className="absolute left-0 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto z-50">
-          {suggestions.map((suggestion, index) => (
-            <Link
-              key={suggestion.type === 'menu' ? suggestion.menu : suggestion.$id}
-              href={suggestion.type === 'room' ? `/rooms/${suggestion.$id}` : `/rooms/${suggestion.roomId}`}
-              passHref
-            >
+          {suggestions.map((room, index) => (
+            <Link key={room.$id} href={`/rooms/${room.$id}`} passHref>
               <div
                 className={`p-3 flex items-center cursor-pointer hover:bg-gray-200 ${
                   index === activeIndex ? 'bg-yellow-200' : ''
                 }`}
               >
-                <p className="text-lg">
-                  {suggestion.type === 'room' ? suggestion.name : (
-                    <span>
-                      <strong>{suggestion.menu}</strong> - {suggestion.roomName}
-                    </span>
-                  )}
-                </p>
+                <p className="text-lg">{room.name}</p>
               </div>
             </Link>
           ))}
