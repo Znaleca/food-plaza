@@ -1,19 +1,17 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import getAllSpaces from "../actions/getAllSpaces";
 import Image from "next/image";
 import Link from "next/link";
 
 const SearchResultPage = () => {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const searchQuery = searchParams.get("query") || "";
   const [rooms, setRooms] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchInput, setSearchInput] = useState(searchQuery); // Controlled input
+  const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -44,21 +42,25 @@ const SearchResultPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!searchQuery) {
+    if (!searchInput) {
       setFilteredRooms(rooms.sort(() => 0.5 - Math.random()).slice(0, 6));
     } else {
       const filteredRoomsByQuery = rooms.filter((room) =>
-        room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        room.menuName.some(menuItem => menuItem.toLowerCase().includes(searchQuery.toLowerCase())) // Filter by menu name
+        room.name.toLowerCase().includes(searchInput.toLowerCase()) ||
+        room.menuName.some(menuItem => menuItem.toLowerCase().includes(searchInput.toLowerCase()))
       );
       setFilteredRooms(filteredRoomsByQuery);
     }
-  }, [searchQuery, rooms]);
+  }, [searchInput, rooms]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchInput(value);
-    router.push(value ? `/search?query=${value}` : "/search");
+    if (value) {
+      router.push(`/search?query=${encodeURIComponent(value)}`, { scroll: false });
+    } else {
+      router.push("/search", { scroll: false });
+    }
   };
 
   if (loading) {
@@ -67,9 +69,7 @@ const SearchResultPage = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto mt-10 px-4">
-      {/* White background container */}
       <div className="bg-white p-6 rounded-lg shadow-lg">
-        {/* Search Bar */}
         <div className="mb-6 flex justify-center">
           <input
             type="text"
@@ -81,14 +81,13 @@ const SearchResultPage = () => {
         </div>
 
         <h2 className="text-3xl font-bold text-center mb-6">
-          {searchQuery ? `Search Results for "${searchQuery}"` : "Explore Food Stalls"}
+          {searchInput ? `Search Results for "${searchInput}"` : "Explore Food Stalls"}
         </h2>
 
         {filteredRooms.length === 0 ? (
           <p className="text-center text-lg font-semibold">No food stalls or menus found.</p>
         ) : (
           <>
-            {/* Food Stalls Section */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-6">
               {filteredRooms.map((room) => (
                 <div key={room.id} className="p-4 border rounded-lg shadow-lg bg-white">
@@ -110,7 +109,6 @@ const SearchResultPage = () => {
               ))}
             </div>
 
-            {/* Menu Items Section */}
             {filteredRooms.some((room) => room.menuName.length > 0) && (
               <div className="mb-6">
                 <h3 className="text-2xl font-semibold mb-4">Menu Items</h3>
@@ -118,7 +116,7 @@ const SearchResultPage = () => {
                   {filteredRooms.map((room) =>
                     room.menuName.map(
                       (menuItem, index) =>
-                        menuItem.toLowerCase().includes(searchQuery.toLowerCase()) && (
+                        menuItem.toLowerCase().includes(searchInput.toLowerCase()) && (
                           <Link key={`${room.id}-${index}`} href={`/rooms/${room.id}`} passHref>
                             <div className="border p-4 rounded-lg shadow-md bg-gray-100 cursor-pointer hover:bg-gray-200">
                               <p className="italic text-sm">{menuItem}</p>
