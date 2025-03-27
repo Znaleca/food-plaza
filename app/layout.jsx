@@ -7,8 +7,6 @@ import "react-toastify/dist/ReactToastify.css";
 import AuthWrapper from "@/components/AuthWrapper";
 import NewsNotifPage from "@/components/NewsNotif";
 
-
-
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
@@ -20,31 +18,36 @@ export default function RootLayout({ children }) {
   return (
     <AuthWrapper>
       <html lang="en">
-        <body className={inter.className}>
+        <body className={`${inter.className} min-h-screen`}>
           <div
             className="min-h-screen bg-cover bg-center"
             style={{
               backgroundImage: "url(/images/menu.jpg)", 
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              backgroundSize: "cover",
+              backgroundPosition: "center",
             }}
           >
             {/* Fixed Header */}
             <Header className="fixed top-0 left-0 w-full z-50 bg-white shadow-md" />
 
-            {/* Spacing to prevent content from being hidden behind the fixed header */}
-            <div className="pt-16">
+            {/* Removed Extra Space Above */}
+            <div className="w-full max-w-screen-2xl mx-auto px-8">
               {/* News Notification Section */}
-              <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+              <section className="w-full py-8">
                 <NewsNotifPage />
               </section>
 
-              <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+              {/* Main Content - Made Wider */}
+              <main className="w-full py-10">
                 {children}
               </main>
-              <Footer />
-              <ToastContainer />
             </div>
+
+            {/* Footer (Unchanged) */}
+            <Footer />
+
+            {/* Toast Notifications */}
+            <ToastContainer />
           </div>
         </body>
       </html>

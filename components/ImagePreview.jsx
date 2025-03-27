@@ -21,10 +21,9 @@ const ImagePreview = () => {
         const formattedRooms = fetchedRooms.map((room) => ({
           id: room.$id,
           name: room.name,
-          imageUrl:
-            room.images?.length > 0
-              ? `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${room.images[0]}/view?project=${projectId}`
-              : "/placeholder.jpg",
+          imageUrl: room.images?.length > 0
+            ? `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${room.images[0]}/view?project=${projectId}`
+            : "/placeholder.jpg",
         }));
 
         setRooms(formattedRooms);
@@ -43,7 +42,7 @@ const ImagePreview = () => {
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % rooms.length);
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [rooms, isManual]);
@@ -53,17 +52,17 @@ const ImagePreview = () => {
 
     const resetTimer = setTimeout(() => {
       setIsManual(false);
-    }, 10000); 
+    }, 10000);
 
     return () => clearTimeout(resetTimer);
   }, [isManual]);
 
   if (loading) {
-    return <p className="text-center text-lg font-semibold text-gray-700">Loading food stalls...</p>;
+    return <p className="text-center text-lg font-semibold text-gray-400">Loading food stalls...</p>;
   }
 
   if (rooms.length === 0) {
-    return <p className="text-center text-lg font-semibold text-gray-700">No food stalls available.</p>;
+    return <p className="text-center text-lg font-semibold text-gray-400">No food stalls available.</p>;
   }
 
   const handleNext = () => {
@@ -81,18 +80,25 @@ const ImagePreview = () => {
   return (
     <div className="relative w-full max-w-5xl mx-auto mt-12 px-6">
       <Link href={`/rooms/${currentRoom.id}`} passHref>
-        <div className="relative group cursor-pointer rounded-xl overflow-hidden shadow-2xl border border-gray-200">
-          {/* Large Image */}
-          <Image
-            src={currentRoom.imageUrl}
-            alt={currentRoom.name}
-            width={1600}
-            height={800}
-            className="w-full h-[500px] object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+        <div className="relative group cursor-pointer rounded-xl overflow-hidden shadow-2xl border border-gray-700">
+          {/* Image with Fade Effect */}
+          <div className="relative w-full h-[500px] overflow-hidden">
+            {rooms.map((room, index) => (
+              <Image
+                key={room.id}
+                src={room.imageUrl}
+                alt={room.name}
+                width={1600}
+                height={800}
+                className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                  index === currentIndex ? "opacity-100" : "opacity-0"
+                }`}
+              />
+            ))}
+          </div>
 
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50 opacity-80"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60"></div>
 
           {/* Text & Button */}
           <div className="absolute bottom-10 left-10 text-white">
@@ -124,7 +130,7 @@ const ImagePreview = () => {
           <div
             key={index}
             className={`w-4 h-4 mx-1 rounded-full transition-all duration-300 ${
-              index === currentIndex ? "bg-yellow-500 scale-125 shadow-lg" : "bg-gray-400 opacity-70"
+              index === currentIndex ? "bg-yellow-500 scale-125 shadow-lg" : "bg-gray-500 opacity-70"
             }`}
           />
         ))}

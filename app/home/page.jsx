@@ -41,7 +41,7 @@ const HomePage = () => {
           bg-black hover:bg-gray-900 transition-transform transform hover:scale-105"
           onClick={handleReserveClick}
         >
-          View Stalls
+          Order Now!
         </button>
       </div>
 

@@ -1,9 +1,11 @@
-const Heading = ({title}) => {
-    return ( <section className="bg-white mb-5 shadow px-4 py-4">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-         {title}
-        </h1>
-      </section> );
-}
- 
+const Heading = ({ title }) => {
+  return (
+    <section className="relative bg-gradient-to-r from-blue-500 to-blue-400 shadow-lg rounded-xl px-6 py-5 mb-6 animate-fadeIn">
+      <h1 className="text-3xl font-extrabold text-white tracking-wide drop-shadow-md">
+        {title}
+      </h1>
+    </section>
+  );
+};
+
 export default Heading;
