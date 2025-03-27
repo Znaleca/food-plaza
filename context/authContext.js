@@ -5,7 +5,7 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser , setCurrentUser ] = useState(null);
   const [roles, setRoles] = useState({
     isAdmin: false,
     isFoodstall: false,
@@ -13,23 +13,34 @@ export const AuthProvider = ({ children }) => {
     isSuperAdmin: false,
   });
 
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      const { isAuthenticated, user, roles } = await checkAuth();
-      setIsAuthenticated(isAuthenticated);
-      setCurrentUser(user);
-      setRoles(
-        roles || {
-          isAdmin: false,
-          isCustomer: false,
-          isFoodstall: false,
-          isSuperAdmin: false, 
-        }
-      );
-    };
+  const checkAuthentication = async () => {
+    const { isAuthenticated, user, roles } = await checkAuth();
+    setIsAuthenticated(isAuthenticated);
+    setCurrentUser (user);
+    setRoles(
+      roles || {
+        isAdmin: false,
+        isCustomer: false,
+        isFoodstall: false,
+        isSuperAdmin: false, 
+      }
+    );
+  };
 
+  useEffect(() => {
     checkAuthentication();
   }, []);
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setRoles({
+      isAdmin: false,
+      isCustomer: false,
+      isFoodstall: false,
+      isSuperAdmin: false,
+    });
+  };
 
   return (
     <AuthContext.Provider
@@ -40,6 +51,8 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated,
         setCurrentUser,
         setRoles,
+        checkAuthentication, // Expose the checkAuthentication function
+        handleLogout, // Expose the logout function
       }}
     >
       {children}

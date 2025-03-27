@@ -8,6 +8,13 @@ async function checkAuth() {
   if (!sessionCookie) {
     return {
       isAuthenticated: false,
+      user: null,
+      roles: {
+        isAdmin: false,
+        isFoodstall: false,
+        isCustomer: false,
+        isSuperAdmin: false,
+      },
     };
   }
 
@@ -32,13 +39,20 @@ async function checkAuth() {
         isAdmin,
         isFoodstall,
         isCustomer,
-        isSuperAdmin, 
+        isSuperAdmin,
       },
     };
   } catch (error) {
-    console.error("Authentication error:", error); 
+    console.error("Authentication error:", error);
     return {
       isAuthenticated: false,
+      user: null,
+      roles: {
+        isAdmin: false,
+        isFoodstall: false,
+        isCustomer: false,
+        isSuperAdmin: false,
+      },
     };
   }
 }

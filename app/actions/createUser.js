@@ -6,9 +6,9 @@ async function createUser(previousState, formData) {
   const name = formData.get('name');
   const email = formData.get('email');
   const password = formData.get('password');
-  const confirmPassword = formData.get('confirmPassword'); // Fixed field name
+  const confirmPassword = formData.get('confirmPassword'); // Fixed mismatch
 
-  if (!email || !name || !password) {
+  if (!email || !name || !password || !confirmPassword) {
     return { error: 'Please fill in all fields' };
   }
 
@@ -26,7 +26,7 @@ async function createUser(previousState, formData) {
     await account.create(ID.unique(), email, password, name);
     return { success: true };
   } catch (error) {
-    console.log('Registration Error: ', error);
+    console.error('Registration Error:', error);
     return { error: 'Could not register user' };
   }
 }

@@ -13,7 +13,7 @@ import { useAuth } from '@/context/authContext';
 
 const Header = () => {
   const router = useRouter();
-  const { isAuthenticated, setIsAuthenticated, currentUser, roles } = useAuth();
+  const { isAuthenticated, setIsAuthenticated, currentUser, setCurrentUser, roles, setRoles } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -24,11 +24,19 @@ const Header = () => {
     const { success, error } = await destroySession();
     if (success) {
       setIsAuthenticated(false);
+      setCurrentUser(null); // Reset user state
+      setRoles({
+        isAdmin: false,
+        isCustomer: false,
+        isFoodstall: false,
+        isSuperAdmin: false,
+      });
       router.push('/login');
     } else {
       toast.error(error || "Logout failed.");
     }
   };
+  
 
   const toggleDropdown = () => setIsDropdownOpen((prev) => !prev);
   const toggleAdminDropdown = () => {

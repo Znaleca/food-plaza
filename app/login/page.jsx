@@ -7,26 +7,26 @@ import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/authContext";
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from "react-icons/fa"; // Importing icons
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from "react-icons/fa";
 
 const LoginPage = () => {
     const [state, formAction] = useFormState(createSession, {});
-    const { setIsAuthenticated } = useAuth();
+    const { setIsAuthenticated, checkAuthentication } = useAuth();
     const router = useRouter();
-    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (state.error) toast.error(state.error);
         if (state.success) {
             toast.success("Logged in successfully!");
             setIsAuthenticated(true);
+            checkAuthentication(); // Refresh authentication state
             router.push("/home");
         }
     }, [state]);
 
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-blue-200/50 via-blue-300/50 to-indigo-200/50 flex items-center justify-center">
-            {/* Login Form Container */}
             <div className="relative z-10 bg-white bg-opacity-90 shadow-xl rounded-lg p-8 w-full max-w-sm">
                 <form action={formAction}>
                     <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
@@ -47,7 +47,6 @@ const LoginPage = () => {
                                 placeholder="Enter your email"
                                 required
                             />
-                            {/* Email Icon */}
                             <div className="absolute inset-y-0 left-3 flex items-center">
                                 <FaEnvelope className="text-gray-500" />
                             </div>
@@ -68,11 +67,9 @@ const LoginPage = () => {
                                 placeholder="Enter your password"
                                 required
                             />
-                            {/* Password Icon */}
                             <div className="absolute inset-y-0 left-3 flex items-center">
                                 <FaLock className="text-gray-500" />
                             </div>
-                            {/* Toggle Password Visibility */}
                             <button
                                 type="button"
                                 className="absolute inset-y-0 right-3 flex items-center"
@@ -87,7 +84,6 @@ const LoginPage = () => {
                         </div>
                     </div>
 
-                    {/* Login Button */}
                     <button
                         type="submit"
                         className="w-full py-3 bg-blue-600 text-white rounded-lg text-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
@@ -95,7 +91,6 @@ const LoginPage = () => {
                         Login
                     </button>
 
-                    {/* Footer Links */}
                     <div className="flex justify-between items-center mt-4">
                         <p className="text-sm text-gray-600">
                             Don't have an account?{" "}
