@@ -7,7 +7,7 @@ const MySpacePage = async () => {
 
   return (
     <>
-      <Heading title='My Spaces' />
+      <Heading title='My Food Stall' />
       {rooms.length > 0 ? (
         rooms.map((room) => <MySpaceCard key={room.$id} room={room} />)
       ) : (

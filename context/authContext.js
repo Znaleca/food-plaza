@@ -51,8 +51,8 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated,
         setCurrentUser,
         setRoles,
-        checkAuthentication, // Expose the checkAuthentication function
-        handleLogout, // Expose the logout function
+        checkAuthentication, 
+        handleLogout,
       }}
     >
       {children}

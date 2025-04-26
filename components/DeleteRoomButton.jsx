@@ -11,10 +11,10 @@ const DeleteRoomButton = ({ roomId }) => {
 
     if (confirmed) {
       try {
-        const response = await deleteSpace(roomId);
+        await deleteSpace(roomId);
         toast.success('Room deleted successfully!');
       } catch (error) {
-        console.log('Failed to delete room', error);
+        console.error('Failed to delete room', error);
         toast.error('Failed to delete room');
       }
     }
@@ -23,9 +23,9 @@ const DeleteRoomButton = ({ roomId }) => {
   return (
     <button
       onClick={handleDelete}
-      className='bg-red-500 text-white px-4 py-2 rounded mb-2 sm:mb-0 w-full sm:w-auto text-center hover:bg-red-700'
+      className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-full shadow-md text-sm font-semibold flex items-center justify-center gap-2 transform hover:scale-105 transition-all"
     >
-      <FaTrash className='inline mr-1' /> Delete
+      <FaTrash /> Delete
     </button>
   );
 };

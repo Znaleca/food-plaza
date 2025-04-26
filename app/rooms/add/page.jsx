@@ -9,10 +9,10 @@ import createSpaces from '@/app/actions/createSpaces';
 
 const foodTypes = [
   'Fries', 'Burger', 'Chicken', 'BBQ', 'Rice Bowls', 'Ice Cream',
-  'Isaw', 'Egg Waffles', 'Calamares', 'Turo-Turo', 'Fish',  
-  'Betamax', 'Taho', 'Banana Cue', 'Kamote Cue', 'Mango',  
-  'Smoke', 'Egg', 'Cheese', 'Turon', 'Korean', 'Shakes', 'Hotdogs', 'Corn', 'Fruits',  
-  'Halo-Halo', 'Sorbetes', 'Goto', 'Lugaw', 'Bibingka',  
+  'Isaw', 'Egg Waffles', 'Calamares', 'Turo-Turo', 'Fish',
+  'Betamax', 'Taho', 'Banana Cue', 'Kamote Cue', 'Mango',
+  'Smoke', 'Egg', 'Cheese', 'Turon', 'Korean', 'Shakes', 'Hotdogs', 'Corn', 'Fruits',
+  'Halo-Halo', 'Sorbetes', 'Goto', 'Lugaw', 'Bibingka',
   'Puto Bumbong', 'Fried', 'Puto', 'Kakanin', 'Coffee'
 ];
 
@@ -26,12 +26,12 @@ const AddSpacePage = () => {
     if (state.error) toast.error(state.error);
     if (state.success) {
       toast.success('Food Stall added successfully!');
-      router.push('/');
+      router.push('/rooms/my');
     }
   }, [state, router]);
 
-  const handleTypeChange = (event) => {
-    const { value, checked } = event.target;
+  const handleTypeChange = (e) => {
+    const { value, checked } = e.target;
     setSelectedTypes((prev) =>
       checked ? [...prev, value] : prev.filter((type) => type !== value)
     );
@@ -54,17 +54,18 @@ const AddSpacePage = () => {
   };
 
   const removeMenuItem = (index) => {
-    const updatedMenu = menuItems.filter((_, i) => i !== index);
-    setMenuItems(updatedMenu);
+    setMenuItems(menuItems.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
 
     menuItems.forEach((item) => {
       if (item.menuImage) {
         formData.append('menuImages[]', item.menuImage);
+      } else {
+        formData.append('menuImages[]', new Blob([])); // keep alignment
       }
     });
 
@@ -74,7 +75,6 @@ const AddSpacePage = () => {
   return (
     <>
       <Heading title="Add a Food Stall" className="text-center mb-8 text-3xl font-extrabold text-gray-900" />
-      
       <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -87,7 +87,7 @@ const AddSpacePage = () => {
             <div className="grid grid-cols-5 gap-3">
               {foodTypes.map((type) => (
                 <label key={type} className="flex items-center space-x-2 text-sm">
-                  <input type="checkbox" name="type" value={type} onChange={handleTypeChange} className="accent-blue-500" />
+                  <input type="checkbox" value={type} onChange={handleTypeChange} className="accent-blue-500" />
                   <span>{type}</span>
                 </label>
               ))}
@@ -104,7 +104,7 @@ const AddSpacePage = () => {
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Menu</label>
             {menuItems.map((item, index) => (
-              <div key={index} className="flex space-x-2 mb-2">
+              <div key={index} className="flex space-x-2 mb-2 items-center">
                 <input type="text" name="menuNames" placeholder="Item Name" required value={item.name} onChange={(e) => handleMenuChange(index, 'name', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-full" />
                 <input type="number" name="menuPrices" placeholder="₱ Price" required value={item.price} onChange={(e) => handleMenuChange(index, 'price', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-24" />
                 <input type="file" accept="image/*" onChange={(e) => handleMenuImageChange(index, e.target.files[0])} className="border border-gray-300 rounded-lg py-2 px-3" />

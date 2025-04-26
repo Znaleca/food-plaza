@@ -19,36 +19,38 @@ export default function RootLayout({ children }) {
     <AuthWrapper>
       <html lang="en">
         <body className={`${inter.className} min-h-screen`}>
+          {/* Fixed Header */}
+          <div className="fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+            <Header />
+          </div>
+
+          {/* Main container with padding to prevent overlap */}
           <div
-            className="min-h-screen bg-cover bg-center"
+            className="min-h-screen bg-cover bg-center pt-16" // pt-16 prevents overlap with the fixed header
             style={{
-              backgroundImage: "url(/images/menu.jpg)", 
+              backgroundImage: "url(/images/menu.jpg)",
               backgroundSize: "cover",
               backgroundPosition: "center",
             }}
           >
-            {/* Fixed Header */}
-            <Header className="fixed top-0 left-0 w-full z-50 bg-white shadow-md" />
-
-            {/* Removed Extra Space Above */}
             <div className="w-full max-w-screen-2xl mx-auto px-8">
               {/* News Notification Section */}
               <section className="w-full py-8">
                 <NewsNotifPage />
               </section>
 
-              {/* Main Content - Made Wider */}
+              {/* Main Content */}
               <main className="w-full py-10">
                 {children}
               </main>
             </div>
-
-            {/* Footer (Unchanged) */}
-            <Footer />
-
-            {/* Toast Notifications */}
-            <ToastContainer />
           </div>
+
+          {/* Footer */}
+          <Footer />
+
+          {/* Toast Notifications */}
+          <ToastContainer />
         </body>
       </html>
     </AuthWrapper>

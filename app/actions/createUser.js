@@ -6,7 +6,7 @@ async function createUser(previousState, formData) {
   const name = formData.get('name');
   const email = formData.get('email');
   const password = formData.get('password');
-  const confirmPassword = formData.get('confirmPassword'); // Fixed mismatch
+  const confirmPassword = formData.get('confirmPassword'); 
 
   if (!email || !name || !password || !confirmPassword) {
     return { error: 'Please fill in all fields' };

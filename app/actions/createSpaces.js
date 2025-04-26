@@ -1,7 +1,7 @@
 'use server';
 import { createAdminClient } from '@/config/appwrite';
 import checkAuth from './checkAuth';
-import { ID } from 'node-appwrite';
+import { ID, Query } from 'node-appwrite';
 import { revalidatePath } from 'next/cache';
 
 async function createSpaces(previousState, formData) {
@@ -10,10 +10,21 @@ async function createSpaces(previousState, formData) {
   try {
     const { user } = await checkAuth();
     if (!user) {
-      return { error: 'You must be logged in to create a room' };
+      return { error: 'You must be logged in to create a food stall.' };
     }
 
-    // Upload multiple images for the food stall
+    // ✅ Check if the user already has a food stall
+    const existingStalls = await databases.listDocuments(
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS,
+      [Query.equal('user_id', user.id)]
+    );
+
+    if (existingStalls.total > 0) {
+      return { error: 'You already have a food stall listed.' };
+    }
+
+    // Upload stall images
     const images = formData.getAll('images');
     const imageIDs = [];
 
@@ -35,7 +46,7 @@ async function createSpaces(previousState, formData) {
       }
     }
 
-    // Convert type from JSON string
+    // Convert types from JSON string
     const type = JSON.parse(formData.get('selectedTypes')) || [];
 
     // Get menu names and prices
@@ -44,31 +55,30 @@ async function createSpaces(previousState, formData) {
       .map((value) => parseFloat(value))
       .filter((value) => !isNaN(value));
 
-    // Handle menu images
-    const menuImageFiles = formData.getAll('menuImages[]'); // Retrieve all menu images
-const menuImages = [];
+    // Upload menu images
+    const menuImageFiles = formData.getAll('menuImages[]');
+    const menuImages = [];
 
-for (const menuImageFile of menuImageFiles) {
-  if (menuImageFile instanceof File && menuImageFile.size > 0) {
-    try {
-      const response = await storage.createFile(
-        process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS,
-        ID.unique(),
-        menuImageFile
-      );
-      menuImages.push(response.$id);
-    } catch (error) {
-      console.log('Error uploading menu image:', error);
-      return { error: 'Error uploading one or more menu images' };
+    for (const menuImageFile of menuImageFiles) {
+      if (menuImageFile instanceof File && menuImageFile.size > 0) {
+        try {
+          const response = await storage.createFile(
+            process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS,
+            ID.unique(),
+            menuImageFile
+          );
+          menuImages.push(response.$id);
+        } catch (error) {
+          console.log('Error uploading menu image:', error);
+          return { error: 'Error uploading one or more menu images' };
+        }
+      } else {
+        menuImages.push(null);
+      }
     }
-  } else {
-    menuImages.push(null); // Ensure all menu items have a corresponding image or null
-  }
-}
 
-    
-    // Create food stall document
-    const newStall = await databases.createDocument(
+    // Create document
+    await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS,
       ID.unique(),
@@ -76,15 +86,15 @@ for (const menuImageFile of menuImageFiles) {
         user_id: user.id,
         name: formData.get('name'),
         description: formData.get('description'),
-        type: type, // Now an array
-        menuName: menuNames, // Now an array
-        menuPrice: menuPrices, // Now an array of doubles
+        type: type,
+        menuName: menuNames,
+        menuPrice: menuPrices,
         stallNumber: parseInt(formData.get('stallNumber'), 10) || null,
         images: imageIDs,
-        menuImages: menuImages, // Add menu images to the document
+        menuImages: menuImages,
       }
     );
-    
+
     revalidatePath('/', 'layout');
 
     return { success: true };

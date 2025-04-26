@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import logo from '@/assets/images/logo.svg';
 import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus} from 'react-icons/fa';
-import { FaGear, FaSquarePlus, FaUserGear, FaCircleUser, FaNewspaper, FaBox, FaStore, FaCartShopping } from "react-icons/fa6";
+import { FaGear, FaSquarePlus, FaUserGear, FaCircleUser, FaNewspaper, FaBox, FaStore, FaCartShopping, FaChartLine, FaBagShopping, FaTags, FaBullhorn, FaClipboardList } from "react-icons/fa6";
 import { useState } from "react";
 import destroySession from "@/app/actions/destroySession";
 import { toast } from "react-toastify";
@@ -67,51 +67,58 @@ const Header = () => {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              <Link href="/home" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                Home
-              </Link>
-              <Link href="/" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                Food Stalls
-              </Link>
+<div className="hidden md:block">
+  <div className="ml-10 flex items-baseline space-x-4">
+  {!roles.isFoodstall && (
+  <>
+    <Link href="/home" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+      Home
+    </Link>
 
-              {roles.isCustomer && (
-                <>
-                  <Link href="/customer/promos" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                    Promotions
-                  </Link>
-                  
-                </>
-              )}
-              {roles.isAdmin && (
-                <>
-                  <Link href="/calendarView" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                    Calendar
-                  </Link>
-                  <Link href="/admin/sales" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                    Sales
-                  </Link>
-                </>
-              )}
-              {roles.isFoodstall && (
-                <>
-                  <Link href="/calendarView" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                    Calendar
-                  </Link>
-                  <Link href="/foodstall/sales" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                    Sales
-                  </Link>
-                  <Link href="/foodstall/order-status" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                    Order Status
-                  </Link>
-                  <Link href="/lease/card" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-                    Stall Lease
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
+    <Link href="/" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+      Food Stalls
+    </Link>
+
+    <Link href="/customer/order-status" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+      Order Status
+    </Link>
+  </>
+)}
+
+
+    {roles.isCustomer && (
+      <Link href="/customer/promos" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+        Promotions
+      </Link>
+    )}
+
+    {roles.isAdmin && (
+      <>
+        <Link href="/calendarView" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+          Calendar
+        </Link>
+        <Link href="/foodstall/sales" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+          Sales
+        </Link>
+      </>
+    )}
+
+    {roles.isFoodstall && (
+      <>
+      <Link href="/rooms/my" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+        My Food Stall
+      </Link>
+      <Link href="/foodstall/tables" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+        Tables
+      </Link>
+      <Link href="/foodstall" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
+        FoodStall
+      </Link>
+    </>
+    )}
+  </div>
+</div>
+
 
           {/* Mobile Menu Toggle */}
           <div className="md:hidden">
@@ -159,9 +166,12 @@ const Header = () => {
 
              
 
-                  <Link href="/order/cart" className="mr-3 text-gray-800 hover:text-gray-500">
-                    <FaCartShopping className="inline mr-1" />
-                  </Link>
+       {!roles.isFoodstall && (
+  <Link href="/order/cart" className="mr-3 text-gray-800 hover:text-gray-500">
+  <FaCartShopping className="inline mr-1" />
+</Link>
+)}
+                  
                   
                   {roles.isAdmin && (
                     <div className="relative">
@@ -173,14 +183,11 @@ const Header = () => {
                       </button>
                       {isAdminDropdownOpen && (
                         <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          <Link href="/rooms/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaStore className="inline mr-1" /> All Food Stall
+                          <Link href="/lease/card" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaNewspaper className="inline mr-1" /> Lease Food Stall
                           </Link>
-                          <Link href="/rooms/add" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaSquarePlus className="inline mr-1" /> Add Food Stall
-                          </Link>
-                          <Link href="/office/approval" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaNewspaper className="inline mr-1" /> Lease Status
+                          <Link href="/bookings" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaClipboardList className="inline mr-1" /> Lease Status
                           </Link>
                         </div>
                       )}
@@ -197,21 +204,28 @@ const Header = () => {
                       </button>
                       {isFoodstallDropdownOpen && (
                         <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          <Link href="/foodstall/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaStore className="inline mr-1" /> My Food Stall
-                          </Link>
+                          
                           <Link href="/rooms/add" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
                             <FaSquarePlus className="inline mr-1" /> Add Food Stall
                           </Link>
-                          <Link href="/rooms/my" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaStore className="inline mr-1" /> All Food Stall
+                          <Link href="/foodstall/add-promos" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaBullhorn className="inline mr-1" /> Create Promos
                           </Link>
-                          <Link href="/foodstall/inventory" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaBox className="inline mr-1" /> Inventory
+                          <Link href="/foodstall/promos" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaTags className="inline mr-1" /> Promotions
                           </Link>
-                          <Link href="/bookings" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaNewspaper className="inline mr-1" /> Lease Status
+                          <Link href="/foodstall/order-status" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaBagShopping className="inline mr-1" /> Orders
                           </Link>
+                          <Link href="/foodstall/sales" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaChartLine className="inline mr-1" /> Sales
+                          </Link>
+                          <Link href="/foodstall/approval" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                            <FaStore className="inline mr-1" /> Stall Lease
+                          </Link>
+                          
+                          
+
                         </div>
                       )}
                     </div>
@@ -232,10 +246,10 @@ const Header = () => {
     {isSuperAdminDropdownOpen && (
       <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
         <Link
-          href="/create-account"
+          href="/accept-team"
           className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
         >
-          <FaUserPlus className="inline mr-1" /> Create Account
+          <FaUserPlus className="inline mr-1" /> Accept Teams
         </Link>
         <Link
           href="/all-accounts"

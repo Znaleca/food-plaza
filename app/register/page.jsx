@@ -21,10 +21,10 @@ const RegisterPage = () => {
   useEffect(() => {
     if (state.error) toast.error(state.error);
     if (state.success) {
-      toast.success("You can now log in!");
+      toast.success("Account created! Check your email.");
       router.push("/login");
     }
-  }, [state, router]); // Added missing dependency
+  }, [state, router]);
 
   const handlePasswordChange = (e) => {
     const value = e.target.value;
@@ -45,12 +45,12 @@ const RegisterPage = () => {
         <form action={formAction}>
           <div className="mb-4">
             <label htmlFor="name" className="block text-gray-700 font-medium mb-2">Nickname</label>
-            <input type="text" id="name" name="name" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="John" autoComplete="name" required />
+            <input type="text" id="name" name="name" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="John" required />
           </div>
 
           <div className="mb-4">
             <label htmlFor="email" className="block text-gray-700 font-medium mb-2">Email</label>
-            <input type="email" id="email" name="email" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="johndoe@example.com" autoComplete="email" required />
+            <input type="email" id="email" name="email" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="johndoe@example.com" required />
           </div>
 
           <div className="mb-4 relative">

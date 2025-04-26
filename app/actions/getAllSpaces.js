@@ -1,27 +1,29 @@
-//Spaces
-
 'use server';
 
-import { createAdminClient } from '@/config/appwrite';
-import { revalidatePath } from 'next/cache';
+import { createSessionClient } from '@/config/appwrite';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 async function getAllSpaces() {
-  try {
-    const { databases } = await createAdminClient();
+  const sessionCookie = cookies().get('appwrite-session');
+  if (!sessionCookie) {
+    redirect('/login');
+  }
 
-    // Fetch rooms
-    const { documents: rooms } = await databases.listDocuments(
-      process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
-      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS
+  try {
+    const { databases } = await createSessionClient(
+      sessionCookie.value
     );
 
-    // Revalidate the cache for this path
-    revalidatePath('/', 'layout');
+    const { documents: rooms } = await databases.listDocuments(
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS,
+      
+    );
 
     return rooms;
   } catch (error) {
-    console.log('Failed to get rooms', error);
+    console.log('Failed to get user rooms', error);
     redirect('/error');
   }
 }
