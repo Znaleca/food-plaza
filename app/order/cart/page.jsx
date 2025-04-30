@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FaTrash } from "react-icons/fa6";
 import VoucherWallet from "@/components/VoucherWallet";
 import CheckoutButton from "@/components/CheckoutButton";
+import Heading from "@/components/Heading";
 
 const OrderCartPage = () => {
   const [cart, setCart] = useState([]);
@@ -153,7 +154,7 @@ const OrderCartPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-8 bg-gray-100 min-h-screen flex flex-col items-center">
-      <h1 className="text-3xl font-bold text-center text-gray-900 mb-6">Order Cart</h1>
+        <Heading title="Your Cart" />
 
       {/* Global Select All Checkbox */}
       <div className="flex items-center mb-6">

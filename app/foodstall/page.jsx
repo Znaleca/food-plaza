@@ -5,34 +5,39 @@ import {
   FaTags,
   FaBagShopping,
   FaChartLine,
-  FaStore
+  FaStore,
+  FaTableColumns,
+  FaHandHoldingDollar,
+  FaStar
 } from "react-icons/fa6";
 import Heading from "@/components/Heading";
 
 const links = [
-  { href: "/rooms/add", icon: <FaSquarePlus className="text-xl" />, label: "Add Food Stall" },
-  { href: "/foodstall/add-promos", icon: <FaBullhorn className="text-xl" />, label: "Create Promos" },
-  { href: "/foodstall/promos", icon: <FaTags className="text-xl" />, label: "Promotions" },
-  { href: "/foodstall/order-status", icon: <FaBagShopping className="text-xl" />, label: "Orders" },
-  { href: "/foodstall/sales", icon: <FaChartLine className="text-xl" />, label: "Sales" },
-  { href: "/foodstall/approval", icon: <FaStore className="text-xl" />, label: "Stall Lease" },
-  { href: "/rooms/my", icon: <FaStore className="text-xl" />, label: "My Food Stall" },
-  { href: "/foodstall/tables", icon: <FaStore className="text-xl" />, label: "Tables" },
+  { href: "/rooms/add", icon: <FaSquarePlus className="text-3xl" />, label: "Add Food Stall" },
+  { href: "/foodstall/add-promos", icon: <FaBullhorn className="text-3xl" />, label: "Create Promos" },
+  { href: "/foodstall/promos", icon: <FaTags className="text-3xl" />, label: "Promotions" },
+  { href: "/foodstall/order-status", icon: <FaBagShopping className="text-3xl" />, label: "Orders" },
+  { href: "/foodstall/sales", icon: <FaChartLine className="text-3xl" />, label: "Sales" },
+  { href: "/foodstall/approval", icon: <FaHandHoldingDollar className="text-3xl" />, label: "Stall Lease" },
+  { href: "/rooms/my", icon: <FaStore className="text-3xl" />, label: "My Food Stall" },
+  { href: "/foodstall/tables", icon: <FaTableColumns className="text-3xl" />, label: "Tables" },
+  { href: "/reviews", icon: <FaStar className="text-3xl" />, label: "Reviews" }, // <-- Unique icon
 ];
+
 
 const FoodStallPage = () => {
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100 p-6" style={{ backgroundImage: 'url(images/backdrop.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <Heading title="Food Stall Dashboard" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-8">
         {links.map(({ href, icon, label }, idx) => (
           <Link
             key={idx}
             href={href}
-            className="flex items-center gap-3 p-4 rounded-xl shadow-md bg-white hover:bg-gray-50 transition duration-200"
+            className="flex flex-col items-center justify-center gap-4 p-6 rounded-xl shadow-lg bg-white text-gray-800 hover:bg-yellow-400 hover:text-white transition duration-300 ease-in-out transform hover:scale-105"
           >
-            <div className="text-blue-600">{icon}</div>
-            <span className="text-gray-800 font-medium">{label}</span>
+            <div className="text-blue-400">{icon}</div>
+            <span className="text-lg font-medium">{label}</span>
           </Link>
         ))}
       </div>

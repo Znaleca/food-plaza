@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import logo from '@/assets/images/logo.svg';
-import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus} from 'react-icons/fa';
-import { FaGear, FaSquarePlus, FaUserGear, FaCircleUser, FaNewspaper, FaBox, FaStore, FaCartShopping, FaChartLine, FaBagShopping, FaTags, FaBullhorn, FaClipboardList } from "react-icons/fa6";
+import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus, FaHome, FaUtensils, FaBoxOpen, FaTools, FaStore} from 'react-icons/fa';
+import { FaGear, FaCircleUser, FaCartShopping, FaGift, FaStar } from "react-icons/fa6";
 import { useState } from "react";
 import destroySession from "@/app/actions/destroySession";
 import { toast } from "react-toastify";
@@ -15,16 +15,13 @@ const Header = () => {
   const router = useRouter();
   const { isAuthenticated, setIsAuthenticated, currentUser, setCurrentUser, roles, setRoles } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isFoodstallDropdownOpen, setFoodstallDropdownOpen] = useState(false);
-  const [isSuperAdminDropdownOpen, setSuperAdminDropdownOpen] = useState(false);
 
   const handleLogout = async () => {
     const { success, error } = await destroySession();
     if (success) {
       setIsAuthenticated(false);
-      setCurrentUser(null); // Reset user state
+      setCurrentUser(null);
       setRoles({
         isAdmin: false,
         isCustomer: false,
@@ -39,14 +36,6 @@ const Header = () => {
   
 
   const toggleDropdown = () => setIsDropdownOpen((prev) => !prev);
-  const toggleAdminDropdown = () => {
-    setIsAdminDropdownOpen((prev) => !prev);
-    setFoodstallDropdownOpen(false); 
-  };
-  const toggleFoodstallDropdown = () => {
-    setFoodstallDropdownOpen((prev) => !prev);
-    setIsAdminDropdownOpen(false); // Close admin dropdown when opening foodstall dropdown
-  };
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
 
   return (
@@ -56,7 +45,7 @@ const Header = () => {
           {/* Logo and Title */}
           <div className="flex items-center">
             <Link href="/home" className="flex items-center">
-              <Image src={logo} alt="UniSpaces" className="h-12 w-12" priority />
+              <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
               <span className="ml-2 text-2xl font-extrabold text-gray-800 tracking-widest">
                 <span className="bg-clip-text text-transparent bg-yellow-400">
                   THE
@@ -68,55 +57,49 @@ const Header = () => {
 
           {/* Desktop Menu */}
 <div className="hidden md:block">
-  <div className="ml-10 flex items-baseline space-x-4">
+<div className="ml-10 flex items-center gap-6 text-sm font-medium text-gray-800">
   {!roles.isFoodstall && (
-  <>
-    <Link href="/home" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-      Home
-    </Link>
-
-    <Link href="/" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-      Food Stalls
-    </Link>
-
-    <Link href="/customer/order-status" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-      Order Status
-    </Link>
-  </>
-)}
-
-
-    {roles.isCustomer && (
-      <Link href="/customer/promos" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-        Promotions
+    <>
+      <Link href="/home" className="flex items-center gap-2 hover:text-blue-600 transition">
+        <FaHome className="text-lg" /> Home
       </Link>
-    )}
-
-    {roles.isAdmin && (
-      <>
-        <Link href="/calendarView" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-          Calendar
-        </Link>
-        <Link href="/foodstall/sales" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-          Sales
-        </Link>
-      </>
-    )}
-
-    {roles.isFoodstall && (
-      <>
-      <Link href="/rooms/my" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-        My Food Stall
+      <Link href="/" className="flex items-center gap-2 hover:text-blue-600 transition">
+        <FaUtensils className="text-lg" /> Food Stalls
       </Link>
-      <Link href="/foodstall/tables" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-        Tables
+      <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-blue-600 transition">
+        <FaBoxOpen className="text-lg" /> Order Status
       </Link>
-      <Link href="/foodstall" className="rounded-md px-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500">
-        FoodStall
+      <Link href="/reviews" className="flex items-center gap-2 hover:text-blue-600 transition">
+      <FaStar className="text-lg" /> Reviews
+    </Link>
+    </>
+  )}
+
+  {roles.isCustomer && (
+    <Link href="/customer/promos" className="flex items-center gap-2 hover:text-blue-600 transition">
+      <FaGift className="text-lg" /> Promotions
+    </Link>
+  )}
+
+  {roles.isAdmin && (
+    <>
+      <span className="text-gray-400">|</span>
+      <Link href="/admin" className="flex items-center gap-2 hover:text-blue-600 transition">
+        <FaTools className="text-lg" /> Admin Panel
       </Link>
     </>
-    )}
-  </div>
+  )}
+
+  {roles.isFoodstall && (
+    <>
+      <span className="text-gray-400">|</span>
+      <Link href="/foodstall" className="flex items-center gap-2 hover:text-blue-600 transition">
+        <FaStore className="text-lg" /> Food Stall Panel
+      </Link>
+    </>
+  )}
+</div>
+
 </div>
 
 
@@ -171,97 +154,6 @@ const Header = () => {
   <FaCartShopping className="inline mr-1" />
 </Link>
 )}
-                  
-                  
-                  {roles.isAdmin && (
-                    <div className="relative">
-                      <button
-                        onClick={toggleAdminDropdown}
-                        className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
-                      >
-                        <FaUserGear className="inline mr-1" /> Admin Panel
-                      </button>
-                      {isAdminDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          <Link href="/lease/card" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaNewspaper className="inline mr-1" /> Lease Food Stall
-                          </Link>
-                          <Link href="/bookings" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaClipboardList className="inline mr-1" /> Lease Status
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {roles.isFoodstall && (
-                    <div className="relative">
-                      <button
-                        onClick={toggleFoodstallDropdown}
-                        className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
-                      >
-                        <FaUserGear className="inline mr-1" /> Food Stall Panel
-                      </button>
-                      {isFoodstallDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                          
-                          <Link href="/rooms/add" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaSquarePlus className="inline mr-1" /> Add Food Stall
-                          </Link>
-                          <Link href="/foodstall/add-promos" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaBullhorn className="inline mr-1" /> Create Promos
-                          </Link>
-                          <Link href="/foodstall/promos" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaTags className="inline mr-1" /> Promotions
-                          </Link>
-                          <Link href="/foodstall/order-status" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaBagShopping className="inline mr-1" /> Orders
-                          </Link>
-                          <Link href="/foodstall/sales" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaChartLine className="inline mr-1" /> Sales
-                          </Link>
-                          <Link href="/foodstall/approval" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-                            <FaStore className="inline mr-1" /> Stall Lease
-                          </Link>
-                          
-                          
-
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-{roles.isSuperAdmin && (
-  <div className="relative">
-    <button
-      onClick={() => {
-        setSuperAdminDropdownOpen((prev) => !prev);
-        setIsAdminDropdownOpen(false); // Close other dropdowns
-        setFoodstallDropdownOpen(false);
-      }}
-      className="mx-3 py-2 text-sm font-medium text-gray-800 hover:text-gray-500"
-    >
-      <FaUserGear className="inline mr-1" /> SuperAdmin Panel
-    </button>
-    {isSuperAdminDropdownOpen && (
-      <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-        <Link
-          href="/accept-team"
-          className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-        >
-          <FaUserPlus className="inline mr-1" /> Accept Teams
-        </Link>
-        <Link
-          href="/all-accounts"
-          className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-        >
-          <FaUserPlus className="inline mr-1" /> All Accounts
-        </Link>
-      </div>
-    )}
-  </div>
-)}
-
 
                   <div className="relative">
                     <button

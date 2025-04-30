@@ -7,6 +7,8 @@ import { FaChevronLeft } from "react-icons/fa";
 import getSingleSpace from "@/app/actions/getSingleSpace";
 import SpacesImage from "@/components/SpacesImage";
 import MenuPopUp from "@/components/MenuPopUp";
+import CustomerRatingCard from "@/components/CustomerRatingCard";
+
 
 const RoomSpace = ({ params }) => {
   const { id } = params;
@@ -115,36 +117,39 @@ const RoomSpace = ({ params }) => {
       </div>
 
       {/* Menu Section */}
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {Array.isArray(room.menuName) && room.menuName.length > 0 ? (
-          room.menuName.map((item, index) => (
-            <div
-              key={index}
-              className="border border-gray-300 rounded-lg shadow-lg bg-white p-4 flex flex-col items-center cursor-pointer hover:shadow-2xl transform hover:scale-105 transition duration-300"
-              onClick={() =>
-                setSelectedMenu({
-                  name: item,
-                  price: room.menuPrice[index]?.toFixed(2),
-                  image: menuImageUrls[index] || null,
-                  roomName: room.name, // Pass room name
-                })
-              }
-              
-            >
-              {menuImageUrls[index] && (
-                <img
-                  src={menuImageUrls[index]}
-                  alt={item}
-                  className="w-32 h-32 object-cover rounded-full mb-3 shadow-md"
-                />
-              )}
-              <h4 className="text-lg font-normal text-gray-700">{item}</h4>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-600 text-lg text-center col-span-2">Menu not available</p>
+<div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  {Array.isArray(room.menuName) && room.menuName.length > 0 ? (
+    room.menuName.map((item, index) => (
+      <div
+        key={index}
+        className="border border-gray-300 rounded-lg shadow-lg bg-white p-4 flex flex-col items-center cursor-pointer hover:shadow-2xl transform hover:scale-105 transition duration-300"
+        onClick={() =>
+          setSelectedMenu({
+            name: item,
+            price: room.menuPrice[index]?.toFixed(2),
+            image: menuImageUrls[index] || null,
+            roomName: room.name,
+          })
+        }
+      >
+        {menuImageUrls[index] && (
+          <img
+            src={menuImageUrls[index]}
+            alt={item}
+            className="w-32 h-32 object-cover rounded-full mb-3 shadow-md"
+          />
         )}
+        <h4 className="text-lg font-normal text-gray-700">{item}</h4>
       </div>
+    ))
+  ) : (
+    <p className="text-gray-600 text-lg text-center col-span-2">Menu not available</p>
+  )}
+</div>
+
+{/* ➕ Insert CustomerRatingCard here */}
+<CustomerRatingCard roomName={room.name} />
+
 
       {/* Menu Pop-Up */}
       {selectedMenu && (
