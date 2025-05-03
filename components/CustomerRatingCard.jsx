@@ -73,7 +73,7 @@ const CustomerRatingCard = ({ roomName }) => {
         <FontAwesomeIcon
           key={star}
           icon={solidStar}
-          className={value >= star ? 'text-yellow-400' : 'text-gray-300'}
+          className={value >= star ? 'text-yellow-500' : 'text-gray-300'}
         />
       ))}
     </div>
@@ -83,52 +83,51 @@ const CustomerRatingCard = ({ roomName }) => {
   if (reviews.length === 0) return <p className="text-sm text-gray-400">No reviews yet.</p>;
 
   return (
-    <div className="mt-10 bg-white p-6 rounded-xl border shadow-md">
-      <h3 className="text-xl font-semibold mb-4 text-gray-800">Customer Ratings</h3>
-      <div className="flex justify-between items-center mb-2">
+    <div className="mt-10 bg-white p-8 rounded-xl border shadow-lg hover:shadow-2xl transition-all duration-300">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           {renderStarRating(averageRating)}
-          <span className="text-gray-500 text-sm">({percentage}%)</span>
+          <span className="text-gray-600 text-sm">({percentage}%)</span>
         </div>
         <button
           onClick={() => setExpanded((prev) => !prev)}
-          className="text-sm text-blue-500 hover:underline"
+          className="text-sm text-teal-500 hover:underline"
         >
           {expanded ? 'Hide Reviews' : 'View More'}
         </button>
       </div>
 
       {/* Mini Chart */}
-      <div className="h-32 mb-4">
+      <div className="h-36 mb-6">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="miniChart" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="index" hide />
-            <YAxis domain={[0, 5]} hide />
-            <Tooltip />
-            <Area
-              type="monotone"
-              dataKey="rating"
-              stroke="#3b82f6"
-              fill="url(#miniChart)"
-            />
+          <defs>
+  <linearGradient id="miniChart" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="5%" stopColor="#db2777" stopOpacity={0.8} />
+    <stop offset="95%" stopColor="#db2777" stopOpacity={0} />
+  </linearGradient>
+</defs>
+<XAxis dataKey="index" hide />
+<YAxis domain={[0, 5]} hide />
+<Tooltip />
+<Area
+  type="monotone"
+  dataKey="rating"
+  stroke="#db2777"
+  fill="url(#miniChart)"
+/>
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       {expanded && (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-6">
           {reviews.map((review, idx) => (
             <div
               key={idx}
-              className="bg-gray-50 border rounded-lg p-4 shadow-sm"
+              className="bg-gray-50 border rounded-lg p-6 shadow-sm hover:shadow-lg transition-all duration-300"
             >
-              <h4 className="font-semibold text-gray-700">{review.item.menuName}</h4>
+              <h4 className="font-semibold text-gray-800">{review.item.menuName}</h4>
               <p className="text-xs text-gray-500">Order ID: {review.orderId}</p>
               <p className="text-xs text-gray-500">
                 Reviewed by: {review.user} ({review.email})
@@ -137,15 +136,15 @@ const CustomerRatingCard = ({ roomName }) => {
                 <img
                   src={review.item.menuImage}
                   alt={review.item.menuName}
-                  className="w-24 h-24 object-cover rounded-md my-2"
+                  className="w-24 h-24 object-cover rounded-md my-2 shadow-md"
                 />
               )}
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-700">
                 ₱{(Number(review.item.menuPrice) * Number(review.item.quantity || 1)).toFixed(2)}
               </p>
-              <p className="text-sm text-gray-600">Quantity: {review.item.quantity || 1}</p>
+              <p className="text-sm text-gray-700">Quantity: {review.item.quantity || 1}</p>
               <div className="mt-2">{renderStarRating(review.rating)}</div>
-              <p className="italic text-gray-700 mt-1">"{review.comment}"</p>
+              <p className="italic text-gray-700 mt-2">"{review.comment}"</p>
             </div>
           ))}
         </div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaNewspaper, FaClipboardList, FaCalendarAlt, FaChartBar } from "react-icons/fa";
+import { FaNewspaper, FaClipboardList, FaCalendarAlt, FaChartBar, FaStar } from "react-icons/fa";
 import Heading from "@/components/Heading";
 
 const links = [
@@ -7,6 +7,8 @@ const links = [
   { href: "/bookings", icon: <FaClipboardList className="text-3xl" />, label: "Lease Status" },
   { href: "/calendarView", icon: <FaCalendarAlt className="text-3xl" />, label: "Calendar" },
   { href: "/foodstall/sales", icon: <FaChartBar className="text-3xl" />, label: "Sales" },
+  { href: "/reviews", icon: <FaStar className="text-3xl" />, label: "Reviews" }, 
+  
 ];
 
 const AdminPage = () => {
@@ -20,7 +22,7 @@ const AdminPage = () => {
             href={href}
             className="flex flex-col items-center justify-center gap-4 p-6 rounded-xl shadow-lg bg-white text-gray-800 hover:bg-yellow-400 hover:text-white transition duration-300 ease-in-out transform hover:scale-105"
           >
-            <div className="text-blue-400">{icon}</div>
+            <div className="text-pink-600">{icon}</div>
             <span className="text-lg font-medium">{label}</span>
           </Link>
         ))}

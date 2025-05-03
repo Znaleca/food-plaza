@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { useFormState } from "react-dom";
-import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
-import createUser from "@/app/actions/createUser";
 import Link from "next/link";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useRouter } from "next/navigation";
+import { useFormState } from "react-dom";
+import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
+import createUser from "@/app/actions/createUser";
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from "react-icons/fa";
 
 const RegisterPage = () => {
   const [state, formAction] = useFormState(createUser, {});
@@ -39,47 +39,134 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-blue-200/50 via-green-200/50 to-teal-200/50">
-      <div className="relative z-10 bg-white bg-opacity-90 rounded-lg shadow-lg p-10 max-w-md w-full">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Create Your Account</h2>
-        <form action={formAction}>
-          <div className="mb-4">
-            <label htmlFor="name" className="block text-gray-700 font-medium mb-2">Nickname</label>
-            <input type="text" id="name" name="name" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="John" required />
-          </div>
+    <div className="min-h-screen w-full bg-gradient-to-br from-yellow-400/50 to-pink-600/50 flex items-center justify-center p-6">
+      <div
+  className="relative z-10 bg-cover bg-center bg-no-repeat rounded-3xl shadow-lg w-full max-w-2xl"
+  style={{ backgroundImage: "url('/images/card.jpg')" }}
+>
 
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-gray-700 font-medium mb-2">Email</label>
-            <input type="email" id="email" name="email" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="johndoe@example.com" required />
-          </div>
+        <div className="bg-white bg-opacity-80 rounded-3xl p-12">
+          <form action={formAction} className="space-y-8">
+            <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-6">
+              Join <span className="text-pink-600">THE CORNER</span>!
+            </h2>
 
-          <div className="mb-4 relative">
-            <label htmlFor="password" className="block text-gray-700 font-medium mb-2">Password</label>
+            {/* Name Input */}
             <div className="relative">
-              <input type={showPassword ? "text" : "password"} id="password" name="password" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Enter your password" required value={password} onChange={handlePasswordChange} />
-              <button type="button" className="absolute inset-y-0 right-3 flex items-center" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <FaEyeSlash className="text-gray-500" /> : <FaEye className="text-gray-500" />}
-              </button>
+              <label htmlFor="name" className="block text-gray-700 font-semibold mb-3 text-lg">
+                Nickname
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  className="border rounded-lg w-full py-4 px-12 text-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                  placeholder="Your nickname"
+                  required
+                />
+                <div className="absolute inset-y-0 left-4 flex items-center">
+                  <FaUser className="text-gray-500" />
+                </div>
+              </div>
             </div>
-            {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
-          </div>
 
-          <div className="mb-6 relative">
-            <label htmlFor="confirmPassword" className="block text-gray-700 font-medium mb-2">Confirm Password</label>
+            {/* Email Input */}
             <div className="relative">
-              <input type={showConfirmPassword ? "text" : "password"} id="confirmPassword" name="confirmPassword" className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none" placeholder="Confirm your password" required value={confirmPassword} onChange={handleConfirmPasswordChange} />
-              <button type="button" className="absolute inset-y-0 right-3 flex items-center" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                {showConfirmPassword ? <FaEyeSlash className="text-gray-500" /> : <FaEye className="text-gray-500" />}
-              </button>
+              <label htmlFor="email" className="block text-gray-700 font-semibold mb-3 text-lg">
+                Email
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  className="border rounded-lg w-full py-4 px-12 text-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                  placeholder="Enter your email"
+                  required
+                />
+                <div className="absolute inset-y-0 left-4 flex items-center">
+                  <FaEnvelope className="text-gray-500" />
+                </div>
+              </div>
             </div>
-            {matchError && <p className="text-red-500 text-sm mt-1">{matchError}</p>}
-          </div>
 
-          <button type="submit" className="w-full py-3 text-lg font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-400" disabled={!!passwordError || !!matchError}>
-            Register
-          </button>
-          <p className="text-center mt-4 text-sm text-gray-700">Already have an account? <Link href="/login" className="text-green-500 hover:underline">Log in</Link></p>
-        </form>
+            {/* Password Input */}
+            <div className="relative">
+              <label htmlFor="password" className="block text-gray-700 font-semibold mb-3 text-lg">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={password}
+                  onChange={handlePasswordChange}
+                  className="border rounded-lg w-full py-4 px-12 text-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                  placeholder="Enter your password"
+                  required
+                />
+                <div className="absolute inset-y-0 left-4 flex items-center">
+                  <FaLock className="text-gray-500" />
+                </div>
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-4 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEyeSlash className="text-gray-600" /> : <FaEye className="text-gray-600" />}
+                </button>
+              </div>
+              {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
+            </div>
+
+            {/* Confirm Password Input */}
+            <div className="relative">
+              <label htmlFor="confirmPassword" className="block text-gray-700 font-semibold mb-3 text-lg">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={confirmPassword}
+                  onChange={handleConfirmPasswordChange}
+                  className="border rounded-lg w-full py-4 px-12 text-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+                  placeholder="Re-enter your password"
+                  required
+                />
+                <div className="absolute inset-y-0 left-4 flex items-center">
+                  <FaLock className="text-gray-500" />
+                </div>
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-4 flex items-center"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <FaEyeSlash className="text-gray-600" /> : <FaEye className="text-gray-600" />}
+                </button>
+              </div>
+              {matchError && <p className="text-red-500 text-sm mt-1">{matchError}</p>}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-4 bg-pink-600 text-white rounded-lg text-xl font-medium hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition duration-300"
+              disabled={!!passwordError || !!matchError}
+            >
+              Register
+            </button>
+
+            <p className="text-center mt-4 text-sm text-gray-700">
+              Already have an account?{" "}
+              <Link href="/login" className="text-pink-600 hover:underline">
+                Log in
+              </Link>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );

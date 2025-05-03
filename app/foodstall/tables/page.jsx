@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { FaUserCheck } from 'react-icons/fa';
-import { GiTable } from 'react-icons/gi';
 import getAllOrders from '@/app/actions/getAllOrders';
 import updateTableNumber from '@/app/actions/updateTableNumber'; // Make sure the path is correct
+import Heading from '@/components/Heading';
+import { FaUser } from 'react-icons/fa6';
 
 const TableViewPage = () => {
   const [orders, setOrders] = useState([]);
@@ -77,10 +78,9 @@ const TableViewPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4">
+    <div className="min-h-screen bg-white py-12 px-4">
       <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-3xl p-8">
-        <h1 className="text-4xl font-bold text-center text-yellow-500 mb-10">Table View</h1>
-
+        <Heading title="Table View" />
         {loading ? (
           <p className="text-gray-500 text-center">Loading...</p>
         ) : error ? (
@@ -96,16 +96,16 @@ const TableViewPage = () => {
                   onClick={() => handleClick(tableNumber)}
                   className={`cursor-pointer flex flex-col items-center justify-center rounded-xl shadow-md p-3 aspect-square transition-transform duration-200 border-2 ${
                     isOccupied(tableNumber)
-                      ? 'bg-yellow-100 border-yellow-400 hover:bg-yellow-200'
-                      : 'bg-blue-100 border-blue-400 hover:bg-blue-200'
+                      ? 'bg-pink-100 border-pink-600 hover:bg-pink-200'
+                      : 'bg-white border-gray-300 hover:bg-gray-100'
                   } hover:scale-105`}
                 >
                   <div className="text-lg font-bold text-gray-800">T{tableNumber}</div>
                   <div className="mt-2 text-2xl">
                     {isOccupied(tableNumber) ? (
-                      <FaUserCheck className="text-yellow-500" />
+                      <FaUserCheck className="text-pink-600" />
                     ) : (
-                      <GiTable className="text-blue-500" />
+                      <FaUser className="text-black" />
                     )}
                   </div>
                 </div>
@@ -132,7 +132,7 @@ const TableViewPage = () => {
               </button>
               <button
                 onClick={handleConfirmRemove}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
               >
                 Yes, Remove
               </button>

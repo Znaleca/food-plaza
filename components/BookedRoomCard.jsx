@@ -105,7 +105,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
               isDeclined ? 'pointer-events-none opacity-50' : ''
             }`}
           >
-            View Room
+            View Stall
           </Link>
         </div>
       )}

@@ -36,16 +36,8 @@ const FeaturedPage = () => {
   };
 
   return (
-    <div 
-      className="max-w-6xl mx-auto p-6 bg-cover bg-center bg-no-repeat rounded-lg shadow-lg"
-      style={{ backgroundImage: "url('/images/card.jpg')" }}
-    >
-      {/* Featured Menu Title with Solid Box */}
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold text-yellow-400 bg-black border-4 border-yellow-400 px-6 py-2 inline-block rounded-lg">
-          Featured Menu
-        </h1>
-      </div>
+    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      
 
       {featuredMenus.length > 0 ? (
         <div className="relative">
@@ -53,6 +45,7 @@ const FeaturedPage = () => {
           <button 
             onClick={scrollLeft} 
             className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black p-3 rounded-full text-white hover:bg-gray-950 transition shadow-lg z-10"
+            aria-label="Scroll left"
           >
             <FaChevronLeft size={20} />
           </button>
@@ -65,7 +58,7 @@ const FeaturedPage = () => {
             {featuredMenus.map((menu) => (
               <div 
                 key={menu.id} 
-                className="min-w-[250px] border-2 border-yellow-400 p-4 shadow-lg rounded-lg bg-white flex flex-col items-center"
+                className="min-w-[250px] border-2 border-pink-600 p-4 shadow-lg rounded-lg bg-white flex flex-col items-center"
               >
                 {/* Circular Menu Image */}
                 {menu.menuImage ? (
@@ -97,12 +90,13 @@ const FeaturedPage = () => {
           <button 
             onClick={scrollRight} 
             className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black p-3 rounded-full text-white hover:bg-gray-950 transition shadow-lg z-10"
+            aria-label="Scroll right"
           >
             <FaChevronRight size={20} />
           </button>
         </div>
       ) : (
-        <p className="text-center text-white">No featured menus available.</p>
+        <p className="text-center text-gray-500">No featured menus available.</p>
       )}
     </div>
   );

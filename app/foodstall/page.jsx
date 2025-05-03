@@ -17,7 +17,7 @@ const links = [
   { href: "/foodstall/add-promos", icon: <FaBullhorn className="text-3xl" />, label: "Create Promos" },
   { href: "/foodstall/promos", icon: <FaTags className="text-3xl" />, label: "Promotions" },
   { href: "/foodstall/order-status", icon: <FaBagShopping className="text-3xl" />, label: "Orders" },
-  { href: "/foodstall/sales", icon: <FaChartLine className="text-3xl" />, label: "Sales" },
+  { href: "/sales", icon: <FaChartLine className="text-3xl" />, label: "Sales" },
   { href: "/foodstall/approval", icon: <FaHandHoldingDollar className="text-3xl" />, label: "Stall Lease" },
   { href: "/rooms/my", icon: <FaStore className="text-3xl" />, label: "My Food Stall" },
   { href: "/foodstall/tables", icon: <FaTableColumns className="text-3xl" />, label: "Tables" },
@@ -36,7 +36,7 @@ const FoodStallPage = () => {
             href={href}
             className="flex flex-col items-center justify-center gap-4 p-6 rounded-xl shadow-lg bg-white text-gray-800 hover:bg-yellow-400 hover:text-white transition duration-300 ease-in-out transform hover:scale-105"
           >
-            <div className="text-blue-400">{icon}</div>
+            <div className="text-pink-600">{icon}</div>
             <span className="text-lg font-medium">{label}</span>
           </Link>
         ))}

@@ -1,47 +1,48 @@
 const AboutPage = () => {
     return (
-        <div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
-            <header className="text-3xl font-bold text-gray-800 mb-4">About UniSpaces</header>
-            <section className="w-full max-w-3xl bg-white rounded-lg shadow-md p-6 space-y-6">
+        <div className="min-h-screen bg-black text-white p-6 flex flex-col items-center">
+            {/* Welcome Section */}
+            <section className="w-full max-w-3xl bg-black rounded-lg shadow-xl p-8 space-y-8">
                 {/* Introduction */}
                 <div>
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-2">Our Mission</h2>
-                    <p className="text-gray-600">
-                        UniSpaces is designed to make booking and managing spaces simple and efficient. Our mission is to help organizations and individuals find, reserve, and manage their ideal spaces with ease.
+                    <h1 className="text-4xl font-extrabold text-pink-600">Welcome to The Corner Food Plaza</h1>
+                    <p className="text-lg text-gray-400 mt-4">
+                        The Corner Food Plaza is your go-to spot for the best merienda and dinner experience in town! Whether you're craving classic Filipino snacks or a hearty dinner, we've got you covered. From your favorite <strong className="text-yellow-400">lumpia</strong>, <strong className="text-yellow-400">kwek-kwek</strong>, and <strong className="text-yellow-400">halo-halo</strong>, to savory dishes like <strong className="text-yellow-400">sinigang</strong> and <strong className="text-yellow-400">lechon kawali</strong>, we’ve got something for everyone. 
+                        Grab your friends and family and enjoy a fun-filled, casual dining experience perfect for merienda or dinner time.
                     </p>
                 </div>
 
                 {/* Features */}
                 <div>
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-2">Key Features</h2>
-                    <ul className="list-disc list-inside text-gray-600 space-y-2">
-                        <li>Easy space booking and management</li>
-                        <li>User-friendly interface</li>
-                        <li>Customizable notifications and reminders</li>
-                        <li>Support for both individual and organizational accounts</li>
-                        <li>Robust security for account protection</li>
+                    <h2 className="text-3xl font-semibold text-pink-600">Why Visit Us?</h2>
+                    <ul className="list-disc list-inside text-gray-400 space-y-2 mt-4">
+                        <li>Variety of food stalls offering Filipino favorites for merienda and dinner</li>
+                        <li>Perfect spot to hang out with friends and family in a cozy, relaxed ambiance</li>
+                        <li>Live band performances every weekend to set the mood for a fun-filled night</li>
+                        <li>Plenty of tables for dine-in, whether you’re with a group or just enjoying a quiet snack</li>
+                        <li>Affordable meals, so you can enjoy more without breaking the bank!</li>
                     </ul>
                 </div>
 
-                {/* Team */}
+                {/* Passion */}
                 <div>
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-2">Meet the Team</h2>
-                    <p className="text-gray-600">
-                        Our team consists of passionate developers, designers, and project managers who believe in simplifying space management. With a focus on user experience and security, we are dedicated to providing a reliable platform that meets your needs.
+                    <h2 className="text-3xl font-semibold text-pink-600">Our Passion</h2>
+                    <p className="text-lg text-gray-400 mt-4">
+                        Our team is dedicated to bringing you the best Filipino comfort food, with a focus on quality and flavor. Every dish is prepared with love, and we strive to create a warm and inviting atmosphere where everyone can enjoy good food, good company, and good vibes. Whether it's a light snack or a hearty dinner, we make sure every bite feels like home.
                     </p>
                 </div>
 
-                {/* Version or Contact Info */}
-                <div>
-                    <h2 className="text-2xl font-semibold text-gray-700 mb-2">Contact Us</h2>
-                    <p className="text-gray-600">
-                        Have questions or feedback? Reach out to us at <a href="mailto:support@unispaces.com" className="text-blue-500 hover:underline">support@unispaces.com</a>.
+                {/* Contact / Version Info */}
+                <div className="mt-8">
+                    <h2 className="text-3xl font-semibold text-pink-600">Visit Us</h2>
+                    <p className="text-lg text-gray-400 mt-4">
+                        Hungry yet? We’re open every day to satisfy your merienda cravings and dinner hunger. Bring your loved ones, take a seat, and let’s enjoy a great meal together! For questions or inquiries, don’t hesitate to contact us at <a href="mailto:support@thecornerfoodplaza.com" className="text-yellow-400 hover:underline">support@thecornerfoodplaza.com</a>.
                     </p>
-                    <p className="text-gray-600 mt-2">Version 1.0.0</p>
+                    <p className="text-sm text-gray-500 mt-2">Version 1.0.0</p>
                 </div>
             </section>
         </div>
     );
 }
- 
+
 export default AboutPage;

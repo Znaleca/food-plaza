@@ -48,12 +48,12 @@ const RoomSpace = ({ params }) => {
 
   const imageUrls = room.images?.map(
     (imageId) =>
-      `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${imageId}/view?project=${projectId}`
+      `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${imageId}/view?project=${projectId}` 
   ) || [];
 
   const menuImageUrls = room.menuImages?.map(
     (imageId) =>
-      `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${imageId}/view?project=${projectId}`
+      `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${imageId}/view?project=${projectId}` 
   ) || [];
 
   const addToCart = (menuName, menuPrice, quantity, menuImage) => {
@@ -68,15 +68,13 @@ const RoomSpace = ({ params }) => {
     localStorage.setItem("cart", JSON.stringify(cart));
     alert("Item added to cart!");
   };
-  
-  
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12 bg-gray-50">
+    <div className="max-w-7xl mx-auto px-8 py-16 bg-gray-50"> {/* Increased max width and padding */}
       {/* Back Button */}
       <Link
         href="/"
-        className="flex items-center text-blue-500 hover:text-blue-700 transition duration-300 mb-6"
+        className="flex items-center text-black hover:text-gray-800 transition duration-300 mb-6"
       >
         <FaChevronLeft className="mr-2" />
         <span className="font-medium text-lg">Back to Food Stalls</span>
@@ -86,7 +84,7 @@ const RoomSpace = ({ params }) => {
       <Heading title={room.name} className="text-center text-4xl font-extrabold text-blue-600 mb-8" />
 
       {/* Content Card */}
-      <div className="bg-white shadow-xl rounded-xl p-8 border border-gray-300">
+      <div className="bg-white shadow-xl rounded-xl p-8 border border-gray-300 mb-8">
         {/* Images */}
         <div className="mb-6">
           <SpacesImage imageUrls={imageUrls} />
@@ -111,57 +109,67 @@ const RoomSpace = ({ params }) => {
       </div>
 
       {/* Room Details */}
-      <div className="bg-green-950 text-white p-6 rounded-lg text-center shadow-lg mb-6">
+      <div className="bg-pink-600 text-white p-6 rounded-lg text-center shadow-lg mb-6">
         <h2 className="text-3xl font-bold">{room.name}</h2>
         <p className="text-lg mt-2 italic">{room.description || "Delicious food available here!"}</p>
       </div>
 
       {/* Menu Section */}
-<div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-  {Array.isArray(room.menuName) && room.menuName.length > 0 ? (
-    room.menuName.map((item, index) => (
-      <div
-        key={index}
-        className="border border-gray-300 rounded-lg shadow-lg bg-white p-4 flex flex-col items-center cursor-pointer hover:shadow-2xl transform hover:scale-105 transition duration-300"
-        onClick={() =>
-          setSelectedMenu({
-            name: item,
-            price: room.menuPrice[index]?.toFixed(2),
-            image: menuImageUrls[index] || null,
-            roomName: room.name,
-          })
-        }
-      >
-        {menuImageUrls[index] && (
-          <img
-            src={menuImageUrls[index]}
-            alt={item}
-            className="w-32 h-32 object-cover rounded-full mb-3 shadow-md"
-          />
-        )}
-        <h4 className="text-lg font-normal text-gray-700">{item}</h4>
+      <div className="mt-10 bg-white shadow-xl rounded-xl p-8 mb-6">
+        {/* Menu Heading */}
+        <Heading title="Menu" className="text-2xl font-semibold mb-6 text-center text-gray-900" />
+
+        {/* Menu Items Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {Array.isArray(room.menuName) && room.menuName.length > 0 ? (
+            room.menuName.map((item, index) => (
+              <div
+                key={index}
+                className="border border-pink-600 rounded-lg shadow-lg bg-white p-4 flex flex-col items-center cursor-pointer hover:shadow-2xl transform hover:scale-105 transition duration-300"
+                onClick={() =>
+                  setSelectedMenu({
+                    name: item,
+                    price: room.menuPrice[index]?.toFixed(2),
+                    image: menuImageUrls[index] || null,
+                    roomName: room.name,
+                  })
+                }
+              >
+                {menuImageUrls[index] && (
+                  <img
+                    src={menuImageUrls[index]}
+                    alt={item}
+                    className="w-32 h-32 object-cover rounded-full mb-3 shadow-md"
+                  />
+                )}
+                <h4 className="text-lg font-normal text-gray-700">{item}</h4>
+                <p className="text-sm text-gray-500">{`₱${room.menuPrice[index]?.toFixed(2)}`}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-600 text-lg text-center col-span-2">Menu not available</p>
+          )}
+        </div>
       </div>
-    ))
-  ) : (
-    <p className="text-gray-600 text-lg text-center col-span-2">Menu not available</p>
-  )}
-</div>
 
-{/* ➕ Insert CustomerRatingCard here */}
-<CustomerRatingCard roomName={room.name} />
+      {/* Ratings Section */}
+      <div className="mt-10 bg-white shadow-xl rounded-xl p-8 mb-6">
+        <Heading title="Ratings" className="text-2xl font-semibold mb-6 text-center text-gray-900" />
 
+        {/* Customer Rating Card */}
+        <CustomerRatingCard roomName={room.name} />
+      </div>
 
       {/* Menu Pop-Up */}
       {selectedMenu && (
         <MenuPopUp
-        item={selectedMenu.name}
-        price={selectedMenu.price}
-        menuImage={selectedMenu.image}
-        roomName={selectedMenu.roomName} // Pass roomName
-        onClose={() => setSelectedMenu(null)}
-        onAddToCart={addToCart}
-      />
-      
+          item={selectedMenu.name}
+          price={selectedMenu.price}
+          menuImage={selectedMenu.image}
+          roomName={selectedMenu.roomName} // Pass roomName
+          onClose={() => setSelectedMenu(null)}
+          onAddToCart={addToCart}
+        />
       )}
     </div>
   );

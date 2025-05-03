@@ -58,7 +58,7 @@ const ImagePreview = () => {
   }, [isManual]);
 
   if (loading) {
-    return <p className="text-center text-lg font-semibold text-gray-400">Loading food stalls...</p>;
+    return <p className="text-center text-lg font-semibold text-gray-400">Loading...</p>;
   }
 
   if (rooms.length === 0) {
@@ -78,19 +78,19 @@ const ImagePreview = () => {
   const currentRoom = rooms[currentIndex];
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto mt-12 px-6">
+    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg border-2 border-pink-600">
       <Link href={`/rooms/${currentRoom.id}`} passHref>
-        <div className="relative group cursor-pointer rounded-xl overflow-hidden shadow-2xl border border-gray-700">
+        <div className="relative group cursor-pointer rounded-xl overflow-hidden shadow-xl transition-transform duration-500">
           {/* Image with Fade Effect */}
-          <div className="relative w-full h-[500px] overflow-hidden">
+          <div className="relative w-full h-[500px] overflow-hidden rounded-xl p-4">
             {rooms.map((room, index) => (
               <Image
                 key={room.id}
                 src={room.imageUrl}
                 alt={room.name}
-                width={1600}
-                height={800}
-                className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                width={1400}  // Reduced the width of the image
+                height={750}  // Reduced the height of the image
+                className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
                   index === currentIndex ? "opacity-100" : "opacity-0"
                 }`}
               />
@@ -98,39 +98,28 @@ const ImagePreview = () => {
           </div>
 
           {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40 rounded-xl"></div>
 
           {/* Text & Button */}
-          <div className="absolute bottom-10 left-10 text-white">
-            <h2 className="text-3xl font-extrabold">{currentRoom.name}</h2>
-            <button className="mt-4 px-6 py-3 bg-yellow-500 text-black font-semibold rounded-full shadow-lg hover:bg-yellow-400 transition-transform transform hover:scale-105">
-              View Food Stall
-            </button>
+          <div className="absolute bottom-8 left-8 text-white z-10">
+            <h2 className="text-3xl md:text-4xl font-bold">{currentRoom.name}</h2>
+            <button className="mt-4 px-8 py-4 bg-black text-white font-semibold text-xl rounded-full shadow-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105">
+  Explore
+</button>
+
           </div>
         </div>
       </Link>
 
-      {/* Navigation Buttons */}
-      <button
-        onClick={handleBack}
-        className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black/70 text-white p-4 rounded-full shadow-lg hover:bg-black/90 transition-all duration-300 hover:scale-110"
-      >
-        ◀
-      </button>
-      <button
-        onClick={handleNext}
-        className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black/70 text-white p-4 rounded-full shadow-lg hover:bg-black/90 transition-all duration-300 hover:scale-110"
-      >
-        ▶
-      </button>
+     
 
       {/* Pagination Dots */}
       <div className="flex justify-center mt-6">
         {rooms.map((_, index) => (
           <div
             key={index}
-            className={`w-4 h-4 mx-1 rounded-full transition-all duration-300 ${
-              index === currentIndex ? "bg-yellow-500 scale-125 shadow-lg" : "bg-gray-500 opacity-70"
+            className={`w-4 h-4 mx-2 rounded-full transition-all duration-300 ${
+              index === currentIndex ? "bg-yellow-500 opacity-100" : "bg-gray-400 opacity-80"
             }`}
           />
         ))}

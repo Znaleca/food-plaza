@@ -24,10 +24,7 @@ const COLORS = [
 const StocksChart = ({ data }) => {
   return (
     <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-      <h2 className="text-2xl font-bold text-center text-green-800 mb-6">
-        Food Inventory
-      </h2>
-
+      
       <ResponsiveContainer width="100%" height={70 * data.length}>
         <BarChart
           layout="vertical"

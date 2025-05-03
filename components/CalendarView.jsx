@@ -8,6 +8,7 @@ import getAllReservations from '@/app/actions/getAllReservations';
 import { Spinner,Button } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import Heading from './Heading';
 
 const localizer = momentLocalizer(moment);
 
@@ -113,9 +114,7 @@ const ReservationsCalendarPage = () => {
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-center text-white bg-blue-400 p-4 rounded-lg shadow-lg">
-        Lease Calendar
-      </h1>
+      <Heading title = "Lease Calendar"/>
 
       {/* Navigation and Search Date */}
       <div className="flex justify-between mb-4">
