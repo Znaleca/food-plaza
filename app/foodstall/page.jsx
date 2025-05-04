@@ -27,8 +27,8 @@ const links = [
 
 const FoodStallPage = () => {
   return (
-    <div className="min-h-screen bg-gray-100 p-6" style={{ backgroundImage: 'url(images/backdrop.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-      <Heading title="Food Stall Dashboard" />
+<div className="min-h-screen bg-gray-100 p-6">
+<Heading title="Food Stall Dashboard" />
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-8">
         {links.map(({ href, icon, label }, idx) => (
           <Link
