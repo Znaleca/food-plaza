@@ -60,7 +60,7 @@ const VoucherClaimingButton = ({ voucherId }) => {
   return (
     <button
       onClick={handleClaimClick}
-      className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+      className="bg-pink-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-700 disabled:opacity-50"
       disabled={isClaiming || isClaimed} // Disable if already claimed
     >
       {isClaiming ? 'Claiming...' : isClaimed ? 'Already Claimed' : 'Claim Voucher'}

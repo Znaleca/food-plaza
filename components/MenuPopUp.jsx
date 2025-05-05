@@ -21,7 +21,7 @@ const MenuPopUp = ({ item, price, menuImage, roomName, onClose, onAddToCart }) =
           />
         )}
         <h2 className="text-2xl font-semibold text-gray-800 mb-2">{item}</h2>
-        <p className="text-2xl font-bold text-green-900 mb-4">₱{price}</p>
+        <p className="text-2xl font-bold text-pink-600 mb-4">₱{price}</p>
 
         <div className="flex items-center justify-center space-x-4 mb-4">
           <label className="text-gray-700 font-medium">Quantity:</label>

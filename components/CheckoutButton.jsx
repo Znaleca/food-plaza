@@ -1,34 +1,62 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 
 const CheckoutButton = ({ cart, total, onCheckoutSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [phone, setPhone] = useState("");
+
+  const isValidPhone = phone => /^09\d{9}$/.test(phone);
 
   const handleCheckout = async () => {
+    if (!isValidPhone(phone)) {
+      setMessage("Invalid phone number format. Use 09XXXXXXXXX.");
+      return;
+    }
+
     setLoading(true);
     setMessage("");
 
     try {
-      const user = JSON.parse(localStorage.getItem("user")) || {}; // Fetch user info from localStorage
+      const user = JSON.parse(localStorage.getItem("user")) || {};
 
+      // 1. Checkout with Xendit
       const response = await fetch("/api/xendit/checkout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ items: cart, user, totalAmount: total }), // Send final total to backend
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: cart, user, totalAmount: total }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        localStorage.removeItem("cart"); // Clear cart on success
+        // Format phone before sending to Twilio
+        const formattedPhone = phone.replace(/^0/, "+63");
 
-        onCheckoutSuccess?.(); // Notify parent component
+        // 2. Send SMS with Twilio
+        const smsRes = await fetch("/api/twilio", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: formattedPhone,
+            name: user.name || "Customer",
+          }),
+        });
 
-        window.location.href = result.redirect_url; // Redirect to payment
+        const smsResult = await smsRes.json();
+
+        if (!smsResult.success) {
+          setMessage(`Order placed, but SMS failed: ${smsResult.message}`);
+        } else {
+          setMessage("Order placed! SMS sent successfully.");
+        }
+
+        localStorage.removeItem("cart");
+        onCheckoutSuccess?.();
+        setTimeout(() => {
+          window.location.href = result.redirect_url;
+        }, 1000);
       } else {
         setMessage(result.message || "Checkout failed.");
       }
@@ -37,23 +65,36 @@ const CheckoutButton = ({ cart, total, onCheckoutSuccess }) => {
       setMessage("An error occurred. Please try again.");
     } finally {
       setLoading(false);
-      setTimeout(() => setMessage(""), 3000); // Reset message after 3 seconds
+      setTimeout(() => setMessage(""), 5000);
     }
   };
 
   return (
-    <div className="w-full flex flex-col items-center mt-8">
+    <div className="w-full flex flex-col items-center mt-6 space-y-4">
+      <input
+        type="tel"
+        placeholder="(09XXXXXXXXX)"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        className="w-full max-w-xs px-4 py-2 border rounded-md"
+      />
+
       <button
         onClick={handleCheckout}
-        disabled={loading}
+        disabled={loading || !isValidPhone(phone)}
         aria-busy={loading}
-        className={`px-6 py-3 rounded-lg text-white font-semibold transition ${
-          loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+        className={`w-full max-w-xs px-4 py-2 rounded-md text-white font-medium transition ${
+          loading || !isValidPhone(phone)
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-pink-600 hover:bg-pink-700"
         }`}
       >
-        {loading ? "Redirecting for Payment..." : "Checkout Order"}
+        {loading ? "Processing..." : "Checkout Order"}
       </button>
-      {message && <p className="mt-2 text-sm text-center text-red-600">{message}</p>}
+
+      {message && (
+        <p className="mt-2 text-sm text-center text-red-500">{message}</p>
+      )}
     </div>
   );
 };

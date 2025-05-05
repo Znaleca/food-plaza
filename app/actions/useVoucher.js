@@ -15,19 +15,26 @@ const useVoucher = async (voucherId, markAsUsed = true) => {
     const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
     const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS;
 
-    // Fetch voucher first
     const voucher = await databases.getDocument(databaseId, collectionId, voucherId);
 
-    if (voucher.user_id !== user.id) {
+    const claimedUsers = voucher.claimed_users || [];
+    const usedVoucherArray = voucher.used_voucher || [];
+
+    const userIndex = claimedUsers.indexOf(user.id);
+    if (userIndex === -1) {
       throw new Error('You do not own this voucher.');
     }
+
+    // Clone the array and update the specific index
+    const updatedUsedVoucherArray = [...usedVoucherArray];
+    updatedUsedVoucherArray[userIndex] = markAsUsed;
 
     const updatedVoucher = await databases.updateDocument(
       databaseId,
       collectionId,
       voucherId,
       {
-        used_voucher: markAsUsed
+        used_voucher: updatedUsedVoucherArray
       }
     );
 

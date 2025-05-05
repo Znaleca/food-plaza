@@ -4,11 +4,9 @@ import {
   FaBullhorn,
   FaTags,
   FaBagShopping,
-  FaChartLine,
   FaStore,
   FaTableColumns,
   FaHandHoldingDollar,
-  FaStar
 } from "react-icons/fa6";
 import Heading from "@/components/Heading";
 
@@ -17,11 +15,9 @@ const links = [
   { href: "/foodstall/add-promos", icon: <FaBullhorn className="text-3xl" />, label: "Create Promos" },
   { href: "/foodstall/promos", icon: <FaTags className="text-3xl" />, label: "Promotions" },
   { href: "/foodstall/order-status", icon: <FaBagShopping className="text-3xl" />, label: "Orders" },
-  { href: "/sales", icon: <FaChartLine className="text-3xl" />, label: "Sales" },
   { href: "/foodstall/approval", icon: <FaHandHoldingDollar className="text-3xl" />, label: "Stall Lease" },
   { href: "/rooms/my", icon: <FaStore className="text-3xl" />, label: "My Food Stall" },
   { href: "/foodstall/tables", icon: <FaTableColumns className="text-3xl" />, label: "Tables" },
-  { href: "/reviews", icon: <FaStar className="text-3xl" />, label: "Reviews" }, // <-- Unique icon
 ];
 
 

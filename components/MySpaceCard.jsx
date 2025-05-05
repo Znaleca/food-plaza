@@ -15,7 +15,7 @@ const MySpaceCard = ({ room }) => {
   const imageSrc = imageUrls.length > 0 ? imageUrls[0] : '/images/no-image.jpg';
 
   return (
-    <div className="relative z-0 bg-white shadow-lg rounded-2xl overflow-hidden flex flex-col transition-all transform hover:scale-105 hover:shadow-2xl border border-yellow-400 w-full sm:w-[400px] md:w-[450px] lg:w-[500px] mx-auto mb-6">
+    <div className="relative z-0 bg-white shadow-lg rounded-2xl overflow-hidden flex flex-col transition-all transform hover:scale-105 hover:shadow-2xl border border-pink-600 w-full sm:w-[400px] md:w-[450px] lg:w-[500px] mx-auto mb-6">
       {/* Image */}
       <div className="relative w-full h-64 bg-gray-200 overflow-hidden">
         <Image
@@ -29,7 +29,7 @@ const MySpaceCard = ({ room }) => {
 
       {/* Details Section */}
       <div className="p-6 flex flex-col flex-grow">
-        <h3 className="text-2xl font-extrabold text-blue-400 tracking-wide text-center uppercase">
+        <h3 className="text-2xl font-extrabold text-pink-600 tracking-wide text-center uppercase">
           {room.name}
         </h3>
 
@@ -48,14 +48,14 @@ const MySpaceCard = ({ room }) => {
         <div className="mt-6 pt-4 border-t border-gray-300 flex flex-col sm:flex-row justify-center gap-3">
           <Link
             href={`/rooms/${room.$id}/preview`}
-            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full shadow-md text-sm font-semibold flex items-center justify-center gap-2 transform hover:scale-105"
+            className="bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-full shadow-md text-sm font-semibold flex items-center justify-center gap-2 transform hover:scale-105"
           >
             <FaEye /> View
           </Link>
 
           <Link
             href={`/rooms/${room.$id}/edit`}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-full shadow-md text-sm font-semibold flex items-center justify-center gap-2 transform hover:scale-105"
+            className="bg-yellow-400 hover:bg-yellow-500 text-white py-2 px-4 rounded-full shadow-md text-sm font-semibold flex items-center justify-center gap-2 transform hover:scale-105"
           >
             <FaEdit /> Edit
           </Link>

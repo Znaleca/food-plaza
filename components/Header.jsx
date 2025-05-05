@@ -43,7 +43,7 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Title */}
           <div className="flex items-center">
-  {(roles.isAdmin || roles.isFoodstall) ? (
+  {(roles.isAdmin || roles.isFoodstall || !isAuthenticated) ? (
     // Admin and Foodstall: no link
     <div className="flex items-center cursor-default">
       <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
@@ -69,19 +69,20 @@ const Header = () => {
           {/* Desktop Menu */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center gap-6 text-sm font-medium text-white">
-              {!roles.isAdmin && !roles.isFoodstall && (
-                <>
-                  <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaHome className="text-lg" /> Home
-                  </Link>
-                  <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaUtensils className="text-lg" /> Browse
-                  </Link>
-                  <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaBoxOpen className="text-lg" /> Order Status
-                  </Link>
-                </>
-              )}
+            {isAuthenticated && !roles.isAdmin && !roles.isFoodstall && (
+  <>
+    <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
+      <FaHome className="text-lg" /> Home
+    </Link>
+    <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
+      <FaUtensils className="text-lg" /> Browse
+    </Link>
+    <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
+      <FaBoxOpen className="text-lg" /> Order Status
+    </Link>
+  </>
+)}
+
 
               {roles.isCustomer && (
                 <Link href="/customer/promos" className="flex items-center gap-2 hover:text-yellow-400 transition">
@@ -148,7 +149,7 @@ const Header = () => {
                 </div>
               ) : (
                 <>
-                  {!roles.isFoodstall && (
+{!roles.isAdmin && !roles.isFoodstall && (
                     <Link href="/order/cart" className="mr-3 text-white hover:text-yellow-400">
                       <FaCartShopping className="inline mr-1" />
                     </Link>
@@ -186,19 +187,20 @@ const Header = () => {
         {/* Mobile Menu Content */}
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 space-y-2 text-white bg-zinc-900 rounded-md p-4 z-50">
-            {!roles.isAdmin && !roles.isFoodstall && (
-              <>
-                <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                  <FaHome className="text-lg" /> Home
-                </Link>
-                <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                  <FaUtensils className="text-lg" /> Browse
-                </Link>
-                <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                  <FaBoxOpen className="text-lg" /> Order Status
-                </Link>
-              </>
-            )}
+            {isAuthenticated && !roles.isAdmin && !roles.isFoodstall && (
+  <>
+    <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
+      <FaHome className="text-lg" /> Home
+    </Link>
+    <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
+      <FaUtensils className="text-lg" /> Browse
+    </Link>
+    <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
+      <FaBoxOpen className="text-lg" /> Order Status
+    </Link>
+  </>
+)}
+
 
             {roles.isCustomer && (
               <Link href="/customer/promos" className="flex items-center gap-2 hover:text-yellow-400 transition">
@@ -234,7 +236,7 @@ const Header = () => {
               </>
             ) : (
               <>
-                {!roles.isFoodstall && (
+{!roles.isAdmin && !roles.isFoodstall && (
                   <Link href="/order/cart" className="flex items-center gap-2 hover:text-yellow-400 transition">
                     <FaCartShopping className="text-lg" /> Cart
                   </Link>

@@ -21,7 +21,6 @@ const VouchersCard = ({ voucher, onClaim }) => {
     claimedVouchers[voucher.$id] = true;
     localStorage.setItem('claimedVouchers', JSON.stringify(claimedVouchers));
 
-    // Notify parent to remove the card
     if (onClaim) onClaim(voucher.$id);
   };
 
@@ -33,8 +32,8 @@ const VouchersCard = ({ voucher, onClaim }) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
+      month: 'short',
+      day: 'numeric',
       year: 'numeric',
     });
   };
@@ -43,51 +42,58 @@ const VouchersCard = ({ voucher, onClaim }) => {
 
   return (
     <div
-      className={`relative w-full max-w-md p-3 bg-white text-gray-900 border-2 border-yellow-400 rounded-lg shadow-lg flex items-center justify-between transform hover:scale-105 transition-all duration-300 
+      className={`relative w-full max-w-sm p-4 bg-white text-gray-800 border-2 border-pink-600 rounded-lg shadow-lg flex items-center justify-between transition-all duration-300 
         ${!isActive ? 'opacity-50' : ''}`}
     >
-      {!isActive && (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-5xl font-bold opacity-20 pointer-events-none">
-          EXPIRED
+      {/* Ticket "perforated" effect */}
+      <div className="absolute top-1/2 left-0 right-0 -z-10">
+        <div className="w-full h-1 bg-gradient-to-r from-transparent to-gray-400 opacity-50">
+          <div className="w-full h-1 bg-gray-400 dotted-border"></div>
         </div>
-      )}
+      </div>
 
-      {!isActive && (
-        <div className="absolute inset-0 w-full h-full border-t-4 border-b-4 border-gray-500 rotate-[-5deg] opacity-50 pointer-events-none"></div>
-      )}
+      {/* Ticket-like Design: Image Section */}
+      <div
+        className="w-28 h-28 bg-cover bg-center rounded-md flex-shrink-0"
+        style={{ backgroundImage: `url(${imageSrc})` }}
+      ></div>
 
-      <div className="w-24 h-24 bg-cover bg-center mr-4" style={{ backgroundImage: `url(${imageSrc})` }}></div>
-
-      <div className="flex flex-col flex-grow border-l-4 border-blue-400 pl-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-md font-bold text-gray-800">{voucher.title || 'Voucher Title'}</h3>
-          <span className="px-2 py-1 text-xs font-semibold bg-gray-200 text-gray-800 rounded-full">
+      {/* Voucher Details */}
+      <div className="flex flex-col flex-grow pl-4">
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-xl font-semibold">{voucher.title || 'Voucher Title'}</h3>
+          <span className="px-3 py-1 text-xs font-semibold bg-pink-100 text-pink-600 rounded-full">
             {voucher.discount || 'N/A'}% OFF
           </span>
         </div>
 
-        <div className="text-xs text-gray-700">
-          <p><span className="font-semibold">Valid From:</span> {formatDate(voucher.valid_from)}</p>
-          <p><span className="font-semibold">Valid To:</span> {formatDate(voucher.valid_to)}</p>
+        <div className="text-sm text-gray-600 space-y-1">
+          <p><span className="font-medium">From:</span> {formatDate(voucher.valid_from)}</p>
+          <p><span className="font-medium">To:</span> {formatDate(voucher.valid_to)}</p>
         </div>
 
         {voucher.description && (
-          <p className="mt-2 text-gray-600 text-xs italic">{voucher.description}</p>
+          <p className="mt-2 text-xs text-gray-600 italic">{voucher.description}</p>
         )}
 
-        <div className="mt-2 flex items-center space-x-2 text-xs font-bold">
+        <div className="mt-3 flex items-center space-x-2 text-sm">
           {isActive ? (
-            <FaCheckCircle className="text-green-400" />
+            <>
+              <FaCheckCircle className="text-green-500" />
+              <span className="text-green-600 font-medium">Active</span>
+            </>
           ) : (
-            <FaTimesCircle className="text-red-400" />
+            <>
+              <FaTimesCircle className="text-red-400" />
+              <span className="text-red-500 font-medium">Expired</span>
+            </>
           )}
-          <span className={isActive ? 'text-green-600' : 'text-red-600'}>
-            {isActive ? 'Active' : 'Expired'}
-          </span>
         </div>
 
         {isActive && (
-          <VoucherClaimingButton voucherId={voucher.$id} onClaim={handleClaim} />
+          <div className="mt-4">
+            <VoucherClaimingButton voucherId={voucher.$id} onClaim={handleClaim} />
+          </div>
         )}
       </div>
     </div>
