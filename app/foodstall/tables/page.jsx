@@ -13,6 +13,7 @@ const TableViewPage = () => {
   const [error, setError] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [usersInfo, setUsersInfo] = useState([]); // Holds all users occupying the selected table
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -36,7 +37,10 @@ const TableViewPage = () => {
   orders.forEach((order) => {
     if (Array.isArray(order.tableNumber)) {
       order.tableNumber.forEach((number) => {
-        occupiedMap.set(number, {
+        if (!occupiedMap.has(number)) {
+          occupiedMap.set(number, []);
+        }
+        occupiedMap.get(number).push({
           user: order.name || 'Unknown',
           email: order.email || 'N/A',
           orderId: order.$id,
@@ -50,16 +54,15 @@ const TableViewPage = () => {
   const handleClick = (tableNumber) => {
     if (isOccupied(tableNumber)) {
       setSelectedTable(tableNumber);
+      setUsersInfo(occupiedMap.get(tableNumber)); // Get all user info for the modal
       setShowModal(true);
     }
   };
 
   const handleConfirmRemove = async () => {
-    const info = occupiedMap.get(selectedTable);
-    const orderId = info.orderId;
-
+    const selectedUsers = usersInfo.map(user => user.orderId);
     const updatedOrders = orders.map((order) => {
-      if (order.$id === orderId) {
+      if (selectedUsers.includes(order.$id)) {
         const updatedTableNumbers = order.tableNumber.filter((num) => num !== selectedTable);
         return { ...order, tableNumber: updatedTableNumbers };
       }
@@ -71,7 +74,7 @@ const TableViewPage = () => {
     setSelectedTable(null);
 
     try {
-      await updateTableNumber(orderId, updatedOrders.find(o => o.$id === orderId).tableNumber || null);
+      await updateTableNumber(selectedUsers[0], updatedOrders.find(o => o.$id === selectedUsers[0]).tableNumber || null);
     } catch (err) {
       console.error("Failed to update table:", err);
     }
@@ -123,6 +126,20 @@ const TableViewPage = () => {
             <p className="text-sm text-gray-600">
               Are you sure you want to remove table T{selectedTable} from the order?
             </p>
+            <div className="mt-2 text-gray-600">
+              {usersInfo.length > 1 ? (
+                <p className="font-semibold">Multiple users assigned to this table:</p>
+              ) : (
+                <p className="font-semibold">{usersInfo[0]?.user}</p>
+              )}
+              <ul className="text-sm text-gray-400 space-y-1">
+                {usersInfo.map((user, index) => (
+                  <li key={index}>
+                    {user.user} - {user.email}
+                  </li>
+                ))}
+              </ul>
+            </div>
             <div className="flex justify-center gap-4 mt-4">
               <button
                 onClick={() => setShowModal(false)}

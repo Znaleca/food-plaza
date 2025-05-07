@@ -8,6 +8,8 @@ const links = [
   { href: "/calendarView", icon: <FaCalendarAlt className="text-3xl" />, label: "Calendar" },
   { href: "/foodstall/sales", icon: <FaChartBar className="text-3xl" />, label: "Sales" },
   { href: "/reviews", icon: <FaStar className="text-3xl" />, label: "Reviews" }, 
+  { href: "/admin/create-account", icon: <FaUser className="text-3xl" />, label: "Reviews" }, 
+
   
 ];
 

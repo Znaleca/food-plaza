@@ -32,7 +32,7 @@ const processCheckout = async (cart, spaceId = null, voucherId = null) => {
       user_id: user.id,
       name: user.name || 'Unknown User', 
       email: user.email || 'Unknown Email', 
-      status: "pending",
+      status: ["pending"], // This is an array
       items: stringifiedItems,
       total: [baseTotal, serviceCharge, -discountAmount, finalTotal],
       spaces: spaceId || null,
