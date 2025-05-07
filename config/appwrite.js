@@ -1,4 +1,4 @@
-import { Client, Databases, Account, Storage, Teams } from 'node-appwrite';
+import { Client, Databases, Account, Storage, Teams, Users } from 'node-appwrite';
 
 const createAdminClient = async () => {
   if (!process.env.NEXT_APPWRITE_KEY || !process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || !process.env.NEXT_PUBLIC_APPWRITE_PROJECT) {
@@ -22,6 +22,9 @@ const createAdminClient = async () => {
     },
     get teams() {
       return new Teams(client);
+    },
+    get users() {
+      return new Users(client); // Add this line to provide access to the Users service
     },
   };
 };

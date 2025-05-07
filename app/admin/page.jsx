@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FaNewspaper, FaClipboardList, FaCalendarAlt, FaChartBar, FaStar } from "react-icons/fa";
+import { FaNewspaper, FaClipboardList, FaCalendarAlt, FaChartBar, FaStar, FaUser, FaUsers } from "react-icons/fa";
 import Heading from "@/components/Heading";
 
 const links = [
@@ -8,7 +8,9 @@ const links = [
   { href: "/calendarView", icon: <FaCalendarAlt className="text-3xl" />, label: "Calendar" },
   { href: "/foodstall/sales", icon: <FaChartBar className="text-3xl" />, label: "Sales" },
   { href: "/reviews", icon: <FaStar className="text-3xl" />, label: "Reviews" }, 
-  { href: "/admin/create-account", icon: <FaUser className="text-3xl" />, label: "Reviews" }, 
+  { href: "/admin/create-account", icon: <FaUser className="text-3xl" />, label: "Create Account" }, 
+  { href: "/admin/accounts", icon: <FaUsers className="text-3xl" />, label: "All Accounts" }, 
+
 
   
 ];
