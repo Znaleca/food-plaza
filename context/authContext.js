@@ -5,26 +5,14 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser , setCurrentUser ] = useState(null);
-  const [roles, setRoles] = useState({
-    isAdmin: false,
-    isFoodstall: false,
-    isCustomer: false,
-    isSuperAdmin: false,
-  });
+  const [currentUser, setCurrentUser] = useState(null);
+  const [labels, setLabels] = useState([]);
 
   const checkAuthentication = async () => {
-    const { isAuthenticated, user, roles } = await checkAuth();
+    const { isAuthenticated, user, labels } = await checkAuth();
     setIsAuthenticated(isAuthenticated);
-    setCurrentUser (user);
-    setRoles(
-      roles || {
-        isAdmin: false,
-        isCustomer: false,
-        isFoodstall: false,
-        isSuperAdmin: false, 
-      }
-    );
+    setCurrentUser(user);
+    setLabels(labels || []);
   };
 
   useEffect(() => {
@@ -34,12 +22,14 @@ export const AuthProvider = ({ children }) => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
-    setRoles({
-      isAdmin: false,
-      isCustomer: false,
-      isFoodstall: false,
-      isSuperAdmin: false,
-    });
+    setLabels([]);
+  };
+
+  const roles = {
+    isAdmin: labels.includes('admin'),
+    isCustomer: labels.includes('customer'),
+    isFoodstall: labels.includes('foodstall'),
+    isSuperAdmin: labels.includes('superAdmin'),
   };
 
   return (
@@ -47,11 +37,12 @@ export const AuthProvider = ({ children }) => {
       value={{
         isAuthenticated,
         currentUser,
+        labels,
         roles,
         setIsAuthenticated,
         setCurrentUser,
-        setRoles,
-        checkAuthentication, 
+        setLabels,
+        checkAuthentication,
         handleLogout,
       }}
     >

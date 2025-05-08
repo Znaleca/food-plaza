@@ -13,21 +13,28 @@ import { useAuth } from '@/context/authContext';
 
 const Header = () => {
   const router = useRouter();
-  const { isAuthenticated, setIsAuthenticated, currentUser, setCurrentUser, roles, setRoles } = useAuth();
+  const {
+    isAuthenticated,
+    setIsAuthenticated,
+    currentUser,
+    setCurrentUser,
+    labels,
+    setLabels
+  } = useAuth();
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const isAdmin = labels.includes("admin");
+  const isCustomer = labels.includes("customer");
+  const isFoodstall = labels.includes("foodstall");
 
   const handleLogout = async () => {
     const { success, error } = await destroySession();
     if (success) {
       setIsAuthenticated(false);
       setCurrentUser(null);
-      setRoles({
-        isAdmin: false,
-        isCustomer: false,
-        isFoodstall: false,
-        isSuperAdmin: false,
-      });
+      setLabels([]);
       router.push('/login');
     } else {
       toast.error(error || "Logout failed.");
@@ -43,54 +50,49 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Title */}
           <div className="flex items-center">
-  {(roles.isAdmin || roles.isFoodstall || !isAuthenticated) ? (
-    // Admin and Foodstall: no link
-    <div className="flex items-center cursor-default">
-      <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
-      <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
-        <span className="bg-clip-text text-transparent bg-white">THE</span>
-        <span className="text-white"> CORNER</span>
-      </span>
-    </div>
-  ) : (
-    // Customers: clickable
-    <Link href="/home" className="flex items-center">
-      <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
-      <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
-        <span className="bg-clip-text text-transparent bg-white">THE</span>
-        <span className="text-white"> CORNER</span>
-      </span>
-    </Link>
-  )}
-</div>
-
-
+            {(isAdmin || isFoodstall || !isAuthenticated) ? (
+              <div className="flex items-center cursor-default">
+                <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
+                <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
+                  <span className="bg-clip-text text-transparent bg-white">THE</span>
+                  <span className="text-white"> CORNER</span>
+                </span>
+              </div>
+            ) : (
+              <Link href="/home" className="flex items-center">
+                <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
+                <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
+                  <span className="bg-clip-text text-transparent bg-white">THE</span>
+                  <span className="text-white"> CORNER</span>
+                </span>
+              </Link>
+            )}
+          </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center gap-6 text-sm font-medium text-white">
-            {isAuthenticated && !roles.isAdmin && !roles.isFoodstall && (
-  <>
-    <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
-      <FaHome className="text-lg" /> Home
-    </Link>
-    <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
-      <FaUtensils className="text-lg" /> Browse
-    </Link>
-    <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
-      <FaBoxOpen className="text-lg" /> Order Status
-    </Link>
-  </>
-)}
+              {isAuthenticated && !isAdmin && !isFoodstall && (
+                <>
+                  <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                    <FaHome className="text-lg" /> Home
+                  </Link>
+                  <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                    <FaUtensils className="text-lg" /> Browse
+                  </Link>
+                  <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                    <FaBoxOpen className="text-lg" /> Order Status
+                  </Link>
+                </>
+              )}
 
-
-              {roles.isCustomer && (
+              {isCustomer && (
                 <Link href="/customer/promos" className="flex items-center gap-2 hover:text-yellow-400 transition">
                   <FaGift className="text-lg" /> Promotions
                 </Link>
               )}
 
-              {roles.isAdmin && (
+              {isAdmin && (
                 <>
                   <span className="text-gray-400">|</span>
                   <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition">
@@ -99,7 +101,7 @@ const Header = () => {
                 </>
               )}
 
-              {roles.isFoodstall && (
+              {isFoodstall && (
                 <>
                   <span className="text-gray-400">|</span>
                   <Link href="/foodstall" className="flex items-center gap-2 hover:text-yellow-400 transition">
@@ -149,35 +151,34 @@ const Header = () => {
                 </div>
               ) : (
                 <>
-{!roles.isAdmin && !roles.isFoodstall && (
+                  {!isAdmin && !isFoodstall && (
                     <Link href="/order/cart" className="mr-3 text-white hover:text-yellow-400">
                       <FaCartShopping className="inline mr-1" />
                     </Link>
                   )}
 
-<div className="relative">
-  <button
-    onClick={toggleDropdown}
-    className="relative flex items-center px-4 py-2 space-x-2 text-sm font-medium text-white bg-black border-2 border-gray-300 rounded-full shadow hover:border-yellow-400 focus:outline-none"
-  >
-    <FaBars className="text-lg" />
-    <FaCircleUser className="text-lg" />
-  </button>
-  {isDropdownOpen && (
-    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-      <div className="block px-4 py-2 text-sm text-gray-800 font-semibold border-b border-gray-200">
-        Welcome! {currentUser?.name || "User"}
-      </div>
-      <Link href="/account" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-        <FaGear className="inline mr-1 text-xl" /> Account Settings
-      </Link>
-      <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
-        <FaSignOutAlt className="inline mr-1 text-xl" /> Sign Out
-      </button>
-    </div>
-  )}
-</div>
-
+                  <div className="relative">
+                    <button
+                      onClick={toggleDropdown}
+                      className="relative flex items-center px-4 py-2 space-x-2 text-sm font-medium text-white bg-black border-2 border-gray-300 rounded-full shadow hover:border-yellow-400 focus:outline-none"
+                    >
+                      <FaBars className="text-lg" />
+                      <FaCircleUser className="text-lg" />
+                    </button>
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                        <div className="block px-4 py-2 text-sm text-gray-800 font-semibold border-b border-gray-200">
+                          Welcome! {currentUser?.name || "User"}
+                        </div>
+                        <Link href="/account" className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                          <FaGear className="inline mr-1 text-xl" /> Account Settings
+                        </Link>
+                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                          <FaSignOutAlt className="inline mr-1 text-xl" /> Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -187,34 +188,33 @@ const Header = () => {
         {/* Mobile Menu Content */}
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 space-y-2 text-white bg-zinc-900 rounded-md p-4 z-50">
-            {isAuthenticated && !roles.isAdmin && !roles.isFoodstall && (
-  <>
-    <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
-      <FaHome className="text-lg" /> Home
-    </Link>
-    <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
-      <FaUtensils className="text-lg" /> Browse
-    </Link>
-    <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
-      <FaBoxOpen className="text-lg" /> Order Status
-    </Link>
-  </>
-)}
+            {isAuthenticated && !isAdmin && !isFoodstall && (
+              <>
+                <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                  <FaHome className="text-lg" /> Home
+                </Link>
+                <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                  <FaUtensils className="text-lg" /> Browse
+                </Link>
+                <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                  <FaBoxOpen className="text-lg" /> Order Status
+                </Link>
+              </>
+            )}
 
-
-            {roles.isCustomer && (
+            {isCustomer && (
               <Link href="/customer/promos" className="flex items-center gap-2 hover:text-yellow-400 transition">
                 <FaGift className="text-lg" /> Promotions
               </Link>
             )}
 
-            {roles.isAdmin && (
+            {isAdmin && (
               <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition">
                 <FaTools className="text-lg" /> Admin Panel
               </Link>
             )}
 
-            {roles.isFoodstall && (
+            {isFoodstall && (
               <Link href="/foodstall" className="flex items-center gap-2 hover:text-yellow-400 transition">
                 <FaStore className="text-lg" /> Food Stall Panel
               </Link>
@@ -236,7 +236,7 @@ const Header = () => {
               </>
             ) : (
               <>
-{!roles.isAdmin && !roles.isFoodstall && (
+                {!isAdmin && !isFoodstall && (
                   <Link href="/order/cart" className="flex items-center gap-2 hover:text-yellow-400 transition">
                     <FaCartShopping className="text-lg" /> Cart
                   </Link>

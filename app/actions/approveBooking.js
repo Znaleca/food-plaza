@@ -17,7 +17,7 @@ async function approveBooking(bookingId) {
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS,
       bookingId,
       {
-        status: 'approved',  // Change status to approved
+        status: 'approved',  
       }
     );
 

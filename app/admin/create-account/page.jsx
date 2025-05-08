@@ -22,7 +22,7 @@ const CreateAccountPage = () => {
     if (state.error) toast.error(state.error);
     if (state.success) {
       toast.success("Account created! Check your email.");
-      router.push("/login");
+      router.push("/admin/accounts");
     }
   }, [state, router]);
 
@@ -150,6 +150,24 @@ const CreateAccountPage = () => {
               </div>
               {matchError && <p className="text-red-500 text-sm mt-1">{matchError}</p>}
             </div>
+
+            <div className="relative">
+  <label htmlFor="label" className="block text-gray-700 font-semibold mb-3 text-lg">
+    Select Role
+  </label>
+  <select
+    id="label"
+    name="label"
+    className="border rounded-lg w-full py-4 px-6 text-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
+    required
+  >
+    <option value="">-- Select Role --</option>
+    <option value="admin">Admin</option>
+    <option value="customer">Customer</option>
+    <option value="foodstall">Food Stall</option>
+  </select>
+</div>
+
 
             <button
               type="submit"

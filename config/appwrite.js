@@ -24,7 +24,7 @@ const createAdminClient = async () => {
       return new Teams(client);
     },
     get users() {
-      return new Users(client); // Add this line to provide access to the Users service
+      return new Users(client); 
     },
   };
 };

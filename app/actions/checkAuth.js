@@ -1,4 +1,5 @@
 'use server';
+
 import { createSessionClient } from '@/config/appwrite';
 import { cookies } from 'next/headers';
 
@@ -9,24 +10,15 @@ async function checkAuth() {
     return {
       isAuthenticated: false,
       user: null,
-      roles: {
-        isAdmin: false,
-        isFoodstall: false,
-        isCustomer: false,
-        isSuperAdmin: false,
-      },
+      labels: [],
     };
   }
 
   try {
-    const { account, teams } = await createSessionClient(sessionCookie.value);
+    const { account } = await createSessionClient(sessionCookie.value);
     const user = await account.get();
 
-    const teamsList = await teams.list();
-    const isAdmin = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_ADMIN);
-    const isFoodstall = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_FOODSTALL);
-    const isCustomer = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_CUSTOMER);
-    const isSuperAdmin = teamsList.teams.some(team => team.$id === process.env.NEXT_PUBLIC_APPWRITE_TEAM_SUPERADMIN);
+    const labels = user.labels || [];
 
     return {
       isAuthenticated: true,
@@ -35,24 +27,14 @@ async function checkAuth() {
         name: user.name,
         email: user.email,
       },
-      roles: {
-        isAdmin,
-        isFoodstall,
-        isCustomer,
-        isSuperAdmin,
-      },
+      labels,
     };
   } catch (error) {
     console.error("Authentication error:", error);
     return {
       isAuthenticated: false,
       user: null,
-      roles: {
-        isAdmin: false,
-        isFoodstall: false,
-        isCustomer: false,
-        isSuperAdmin: false,
-      },
+      labels: [],
     };
   }
 }

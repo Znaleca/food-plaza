@@ -6,10 +6,11 @@ async function createAccount(previousState, formData) {
   const name = formData.get('name');
   const email = formData.get('email');
   const password = formData.get('password');
-  const confirmPassword = formData.get('confirmPassword'); 
+  const confirmPassword = formData.get('confirmPassword');
+  const label = formData.get('label');
 
-  if (!email || !name || !password || !confirmPassword) {
-    return { error: 'Please fill in all fields' };
+  if (!email || !name || !password || !confirmPassword || !label) {
+    return { error: 'Please fill in all fields including role' };
   }
 
   if (password.length < 8) {
@@ -20,10 +21,16 @@ async function createAccount(previousState, formData) {
     return { error: 'Passwords do not match' };
   }
 
-  const { account } = await createAdminClient();
+  const allowedLabels = ['admin', 'customer', 'foodstall'];
+  if (!allowedLabels.includes(label)) {
+    return { error: 'Invalid role selected' };
+  }
+
+  const { account, users } = await createAdminClient();
 
   try {
-    await account.create(ID.unique(), email, password, name);
+    const user = await account.create(ID.unique(), email, password, name);
+    await users.updateLabels(user.$id, [label]);
     return { success: true };
   } catch (error) {
     console.error('Registration Error:', error);

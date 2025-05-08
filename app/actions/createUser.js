@@ -6,7 +6,7 @@ async function createUser(previousState, formData) {
   const name = formData.get('name');
   const email = formData.get('email');
   const password = formData.get('password');
-  const confirmPassword = formData.get('confirmPassword'); 
+  const confirmPassword = formData.get('confirmPassword');
 
   if (!email || !name || !password || !confirmPassword) {
     return { error: 'Please fill in all fields' };
@@ -20,10 +20,15 @@ async function createUser(previousState, formData) {
     return { error: 'Passwords do not match' };
   }
 
-  const { account } = await createAdminClient();
+  const { account, users } = await createAdminClient();
 
   try {
-    await account.create(ID.unique(), email, password, name);
+    // Step 1: Create user
+    const newUser = await account.create(ID.unique(), email, password, name);
+
+    // Step 2: Add "customer" label
+    await users.updateLabels(newUser.$id, ['customer']);
+
     return { success: true };
   } catch (error) {
     console.error('Registration Error:', error);

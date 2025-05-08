@@ -25,7 +25,7 @@ const UsersCard = ({ users, loading, error }) => {
                 <th className="px-6 py-4 text-left font-semibold">Name</th>
                 <th className="px-6 py-4 text-left font-semibold">Email</th>
                 <th className="px-6 py-4 text-left font-semibold">Creation Date</th>
-                <th className="px-6 py-4 text-left font-semibold">Teams</th>
+                <th className="px-6 py-4 text-left font-semibold">Labels</th>
               </tr>
             </thead>
             <tbody>
@@ -42,9 +42,9 @@ const UsersCard = ({ users, loading, error }) => {
                       : 'N/A'}
                   </td>
                   <td className="px-6 py-4">
-                    {user.teams.length > 0
-                      ? user.teams.join(', ')
-                      : 'No Team'}
+                    {user.labels && user.labels.length > 0
+                      ? user.labels.join(', ')
+                      : 'No Label'}
                   </td>
                 </tr>
               ))}
