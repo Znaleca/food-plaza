@@ -26,13 +26,13 @@ async function createSession(previousState, formData) {
             path: '/'
         });
 
-        // 🔍 Fetch roles after login
+        // 🔍 Fetch labels (instead of roles) after login
         const auth = await checkAuth();
 
         return {
             success: true,
             user: auth.user,
-            roles: auth.roles, // <- return roles for frontend to use
+            labels: auth.labels, // <- return labels for frontend to use
         };
 
     } catch (error) {

@@ -19,21 +19,26 @@ const LoginPage = () => {
         if (state.error) {
             toast.error(state.error);
         }
-
+    
         if (state.success) {
             toast.success("Logged in successfully!");
             setIsAuthenticated(true);
             checkAuthentication();
-
-            if (state.roles?.isAdmin) {
+    
+            // Assuming 'labels' is returned from the response (you might need to replace it with your actual response structure)
+            const isAdmin = state.labels?.includes("admin");
+            const isFoodstall = state.labels?.includes("foodstall");
+    
+            if (isAdmin) {
                 router.push("/admin");
-            } else if (state.roles?.isFoodstall) {
+            } else if (isFoodstall) {
                 router.push("/foodstall");
             } else {
                 router.push("/home");
             }
         }
     }, [state]);
+    
 
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-yellow-400/50  to-pink-600/50 flex items-center justify-center p-6">
