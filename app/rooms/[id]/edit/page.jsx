@@ -140,10 +140,10 @@ const EditSpacePage = ({ params }) => {
                 <input type="text" placeholder="Item Name" required value={item.name} onChange={(e) => handleMenuChange(index, 'name', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-full" />
                 <input type="number" placeholder="₱ Price" required value={item.price} onChange={(e) => handleMenuChange(index, 'price', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-24" />
                 <input type="file" accept="image/*" onChange={(e) => handleMenuImageChange(index, e.target.files[0])} className="border border-gray-300 rounded-lg py-2 px-3" />
-                <button type="button" onClick={() => removeMenuItem(index)} className="bg-red-500 text-white px-3 py-2 rounded">Remove</button>
+                <button type="button" onClick={() => removeMenuItem(index)} className="bg-black text-white px-3 py-2 rounded">Remove</button>
               </div>
             ))}
-            <button type="button" onClick={addMenuItem} className="bg-green-500 text-white px-4 py-2 rounded mt-2">+ Add Menu Item</button>
+            <button type="button" onClick={addMenuItem} className="bg-yellow-400 text-white px-4 py-2 rounded mt-2">+ Add Menu Item</button>
           </div>
 
           <div>
@@ -157,7 +157,7 @@ const EditSpacePage = ({ params }) => {
           </div>
 
           <div className="flex justify-center">
-            <button type="submit" className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition-all">
+            <button type="submit" className="bg-pink-600 text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-pink-700 transition-all">
               Update Food Stall
             </button>
           </div>

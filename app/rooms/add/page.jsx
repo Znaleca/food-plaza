@@ -8,12 +8,12 @@ import Heading from '@/components/Heading';
 import createSpaces from '@/app/actions/createSpaces';
 
 const foodTypes = [
-  'Fries', 'Burger', 'Chicken', 'BBQ', 'Rice Bowls', 'Ice Cream',
-  'Isaw', 'Egg Waffles', 'Calamares', 'Turo-Turo', 'Fish',
-  'Betamax', 'Taho', 'Banana Cue', 'Kamote Cue', 'Mango',
-  'Smoke', 'Egg', 'Cheese', 'Turon', 'Korean', 'Shakes', 'Hotdogs', 'Corn', 'Fruits',
-  'Halo-Halo', 'Sorbetes', 'Goto', 'Lugaw', 'Bibingka',
-  'Puto Bumbong', 'Fried', 'Puto', 'Kakanin', 'Coffee'
+  'Fried', 'Smoked', 'Sushi', 'BBQ', 'Rice Bowl', 'Dessert',
+  'Drinks', 'Egg', 'Vegan', 'Healthy', 'Coffee',
+  'Samgyupsal', 'Hot Pot', 'Milk Tea', 'Milk Shake', 'Sweets',
+  'Pastry', 'Burger', 'Meat', 'Rice Cake', 'Shake', 'Dish', 'Pasta', 'Fruits',
+  'Steamed', 'Spicy', 'Sour', 'Chocolate', 'Seafood',
+  'Steak', 'Soup', 'Noodles',
 ];
 
 const AddSpacePage = () => {
@@ -108,10 +108,10 @@ const AddSpacePage = () => {
                 <input type="text" name="menuNames" placeholder="Item Name" required value={item.name} onChange={(e) => handleMenuChange(index, 'name', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-full" />
                 <input type="number" name="menuPrices" placeholder="₱ Price" required value={item.price} onChange={(e) => handleMenuChange(index, 'price', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-24" />
                 <input type="file" accept="image/*" onChange={(e) => handleMenuImageChange(index, e.target.files[0])} className="border border-gray-300 rounded-lg py-2 px-3" />
-                <button type="button" onClick={() => removeMenuItem(index)} className="bg-red-500 text-white px-3 py-2 rounded">Remove</button>
+                <button type="button" onClick={() => removeMenuItem(index)} className="bg-black text-white px-3 py-2 rounded">Remove</button>
               </div>
             ))}
-            <button type="button" onClick={addMenuItem} className="bg-green-500 text-white px-4 py-2 rounded mt-2">+ Add Menu Item</button>
+            <button type="button" onClick={addMenuItem} className="bg-yellow-400 text-white px-4 py-2 rounded mt-2">+ Add Menu Item</button>
           </div>
 
           <div>
@@ -125,7 +125,7 @@ const AddSpacePage = () => {
           </div>
 
           <div className="flex justify-center">
-            <button type="submit" className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition-all">
+            <button type="submit" className="bg-pink-600 text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-blue-700 transition-all">
               Save Food Stall
             </button>
           </div>

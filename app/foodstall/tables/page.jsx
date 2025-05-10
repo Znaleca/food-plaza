@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { FaUserCheck } from 'react-icons/fa';
-import getAllOrders from '@/app/actions/getAllOrders';
-import updateTableNumber from '@/app/actions/updateTableNumber'; // Make sure the path is correct
-import Heading from '@/components/Heading';
 import { FaUser } from 'react-icons/fa6';
+import getAllOrders from '@/app/actions/getAllOrders';
+import updateTableNumber from '@/app/actions/updateTableNumber';
+import Heading from '@/components/Heading';
 
 const TableViewPage = () => {
   const [orders, setOrders] = useState([]);
@@ -13,7 +13,7 @@ const TableViewPage = () => {
   const [error, setError] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [usersInfo, setUsersInfo] = useState([]); // Holds all users occupying the selected table
+  const [usersInfo, setUsersInfo] = useState([]);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -54,16 +54,18 @@ const TableViewPage = () => {
   const handleClick = (tableNumber) => {
     if (isOccupied(tableNumber)) {
       setSelectedTable(tableNumber);
-      setUsersInfo(occupiedMap.get(tableNumber)); // Get all user info for the modal
+      setUsersInfo(occupiedMap.get(tableNumber));
       setShowModal(true);
     }
   };
 
   const handleConfirmRemove = async () => {
-    const selectedUsers = usersInfo.map(user => user.orderId);
+    const selectedUsers = usersInfo.map((user) => user.orderId);
     const updatedOrders = orders.map((order) => {
       if (selectedUsers.includes(order.$id)) {
-        const updatedTableNumbers = order.tableNumber.filter((num) => num !== selectedTable);
+        const updatedTableNumbers = order.tableNumber.filter(
+          (num) => num !== selectedTable
+        );
         return { ...order, tableNumber: updatedTableNumbers };
       }
       return order;
@@ -74,16 +76,30 @@ const TableViewPage = () => {
     setSelectedTable(null);
 
     try {
-      await updateTableNumber(selectedUsers[0], updatedOrders.find(o => o.$id === selectedUsers[0]).tableNumber || null);
+      await updateTableNumber(
+        selectedUsers[0],
+        updatedOrders.find((o) => o.$id === selectedUsers[0]).tableNumber || null
+      );
     } catch (err) {
-      console.error("Failed to update table:", err);
+      console.error('Failed to update table:', err);
     }
   };
 
   return (
     <div className="min-h-screen bg-white py-12 px-4">
-      <div className="max-w-4xl mx-auto bg-white shadow-xl rounded-3xl p-8">
-        <Heading title="Table View" />
+      {/* Header Section */}
+      <div className="text-center mb-8">
+        <Heading
+          title="Dining Table Overview"
+          className="text-3xl font-extrabold text-gray-900"
+        />
+        <p className="mt-2 text-gray-500 text-sm">
+          Tap a table to see who’s seated or to clear its assignment.
+        </p>
+      </div>
+
+      {/* Table Grid */}
+      <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-3xl p-8">
         {loading ? (
           <p className="text-gray-500 text-center">Loading...</p>
         ) : error ? (
@@ -122,7 +138,9 @@ const TableViewPage = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center space-y-4">
-            <h2 className="text-lg font-bold text-gray-800">Remove Table Assignment?</h2>
+            <h2 className="text-lg font-bold text-gray-800">
+              Remove Table Assignment?
+            </h2>
             <p className="text-sm text-gray-600">
               Are you sure you want to remove table T{selectedTable} from the order?
             </p>
