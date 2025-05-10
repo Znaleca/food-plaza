@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/authContext';
-import { updateNews } from '@/app/actions/newsUpdate';
+import updateNews from '@/app/actions/newsUpdate';
 import { createSessionClient } from '@/config/appwrite';
-import { FaEdit, FaSave, FaTimes } from 'react-icons/fa'; // Import icons for better UI
+import { FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 
 const NewsNotifPage = () => {
   const [news, setNews] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [visible, setVisible] = useState(true);
   const [loading, setLoading] = useState(false);
-  const { roles } = useAuth();
+  const { labels } = useAuth(); // Uses labels for access control
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -20,13 +20,14 @@ const NewsNotifPage = () => {
         const response = await databases.getDocument(
           process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
           process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_NEWS,
-          'news' // Document ID
+          'news'
         );
-        setNews(response.news || "No news available."); // Access `news` attribute
+        setNews(response.news || 'No news available.');
       } catch (error) {
-        console.error("Failed to fetch news:", error);
+        console.error('Failed to fetch news:', error);
       }
     };
+
     fetchNews();
   }, []);
 
@@ -36,7 +37,8 @@ const NewsNotifPage = () => {
       await updateNews(news);
       setEditMode(false);
     } catch (error) {
-      alert("Failed to update news.");
+      alert('Failed to update news.');
+      console.error('Error updating news:', error);
     } finally {
       setLoading(false);
     }
@@ -44,12 +46,14 @@ const NewsNotifPage = () => {
 
   if (!visible) return null;
 
+  const isAdmin = labels?.includes('admin');
+
   return (
-    <div className="fixed bottom-4 right-4 w-96 p-4 bg-white to-blue-400 shadow-lg rounded-lg border z-50">
+    <div className="fixed bottom-4 right-4 w-96 p-4 bg-white shadow-lg rounded-lg border z-50">
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-bold text-black">New Deals!</h1>
         <button
-          className="text-black hover:text-gray-200"
+          className="text-black hover:text-gray-400"
           onClick={() => setVisible(false)}
         >
           <FaTimes size={20} />
@@ -64,10 +68,10 @@ const NewsNotifPage = () => {
           disabled={loading}
         />
       ) : (
-        <p className="mt-2 text-black">{news}</p>
+        <p className="mt-2 text-black whitespace-pre-line">{news}</p>
       )}
 
-      {roles.isAdmin || roles.isSuperAdmin ? (
+      {isAdmin && (
         <div className="mt-4 flex space-x-2">
           {editMode ? (
             <>
@@ -76,7 +80,13 @@ const NewsNotifPage = () => {
                 onClick={handleSave}
                 disabled={loading}
               >
-                {loading ? <span>Saving...</span> : <><FaSave className="mr-1" /> Save</>}
+                {loading ? (
+                  <span>Saving...</span>
+                ) : (
+                  <>
+                    <FaSave className="mr-1" /> Save
+                  </>
+                )}
               </button>
               <button
                 className="flex items-center px-4 py-2 text-white bg-gray-600 rounded hover:bg-gray-700"
@@ -95,7 +105,7 @@ const NewsNotifPage = () => {
             </button>
           )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

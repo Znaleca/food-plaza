@@ -1,4 +1,3 @@
-// /app/api/getCurrentUser/route.js
 
 import { NextResponse } from 'next/server';
 import { createAdminClient, createSessionClient } from '@/config/appwrite';
