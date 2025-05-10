@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import getAllOrders from '@/app/actions/getAllOrders';
-import OrderReceiveCard from '@/components/OrderReceiveCard';
 import getMySpaces from '@/app/actions/getMySpaces'; 
+import AllOrdersCard from '@/components/AllOrdersCard';
+import Heading from '@/components/Heading';
 
-const MyOrdersPage = () => {
+const AllOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [roomName, setRoomName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -22,7 +23,7 @@ const MyOrdersPage = () => {
 
       const spaces = await getMySpaces();
       if (spaces.length > 0) {
-        setRoomName(spaces[0].name); // Only use the first space name
+        setRoomName(spaces[0].name); // If you only allow one room per user
       }
     } catch (error) {
       console.error('Could not load orders or room:', error);
@@ -36,38 +37,23 @@ const MyOrdersPage = () => {
     loadOrders();
   }, []);
 
-  // Filter orders that contain at least one item for this room
-  const filteredOrders = orders.filter(order =>
-    order.items.some(itemString => {
-      try {
-        const item = JSON.parse(itemString);
-        return item.room_name === roomName;
-      } catch {
-        return false;
-      }
-    })
-  );
-
   return (
     <div className="min-h-screen bg-gray-100 py-10">
       <div className="max-w-6xl mx-auto bg-white shadow-md rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
-          {roomName ? `${roomName} | ORDER(S)` : 'ORDER(S)'}
-        </h1>
+        <Heading title=" All Orders"/>
 
         {loading ? (
           <p className="text-gray-500">Loading...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
-        ) : filteredOrders.length === 0 ? (
-          <p className="text-gray-600">No orders found for this room.</p>
+        ) : orders.length === 0 ? (
+          <p className="text-gray-600">No orders found.</p>
         ) : (
           <div className="space-y-6">
-            {filteredOrders.map((order) => (
-              <OrderReceiveCard
+            {orders.map((order) => (
+              <AllOrdersCard
                 key={order.$id}
                 order={order}
-                roomName={roomName}
                 refreshOrders={loadOrders}
               />
             ))}
@@ -78,4 +64,4 @@ const MyOrdersPage = () => {
   );
 };
 
-export default MyOrdersPage;
+export default AllOrdersPage;

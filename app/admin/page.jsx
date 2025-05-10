@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { FaNewspaper, FaClipboardList, FaCalendarAlt, FaChartBar, FaStar, FaUser, FaUsers } from "react-icons/fa";
+import { FaNewspaper, FaClipboardList, FaCalendarAlt, FaChartBar, FaStar, FaUser, FaUsers} from "react-icons/fa";
 import Heading from "@/components/Heading";
+import { FaBagShopping } from "react-icons/fa6";
 
 const links = [
   { href: "/lease/card", icon: <FaNewspaper className="text-3xl" />, label: "Lease Food Stall" },
   { href: "/bookings", icon: <FaClipboardList className="text-3xl" />, label: "Lease Status" },
   { href: "/calendarView", icon: <FaCalendarAlt className="text-3xl" />, label: "Calendar" },
+  { href: "/admin/all-orders", icon: <FaBagShopping className="text-3xl" />, label: "Orders" },
   { href: "/foodstall/sales", icon: <FaChartBar className="text-3xl" />, label: "Sales" },
   { href: "/reviews", icon: <FaStar className="text-3xl" />, label: "Reviews" }, 
   { href: "/admin/create-account", icon: <FaUser className="text-3xl" />, label: "Create Account" }, 

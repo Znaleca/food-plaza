@@ -12,23 +12,26 @@ const ORDER_STATUS = {
   CANCELLED: 'cancelled',
 };
 
-const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
+const AllOrdersCard = ({ order, refreshOrders }) => {
   const [editingTable, setEditingTable] = useState(order.tableNumber?.[0] || '');
   const [updating, setUpdating] = useState(false);
   const [statusUpdates, setStatusUpdates] = useState({});
   const [saveToast, setSaveToast] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTableNumber, setNewTableNumber] = useState(editingTable);
+  const [isModalOpen, setIsModalOpen] = useState(false); // To control modal visibility
+  const [newTableNumber, setNewTableNumber] = useState(editingTable); // Table number in the modal
 
+  // Function to open modal and set current table number
   const openModal = () => {
     setNewTableNumber(editingTable);
     setIsModalOpen(true);
   };
 
+  // Function to close modal
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
+  // Save table number when updated in the modal
   const handleSaveTable = async () => {
     try {
       setUpdating(true);
@@ -36,8 +39,8 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
       setEditingTable(newTableNumber);
       setSaveToast(true);
       refreshOrders();
-      setTimeout(() => setSaveToast(false), 2000);
-      closeModal();
+      setTimeout(() => setSaveToast(false), 2000); // Hide the toast after 2 seconds
+      closeModal(); // Close modal after saving
     } catch (error) {
       console.error("Failed to update table number", error);
       alert("Failed to update table number");
@@ -74,22 +77,9 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     );
   };
 
-  const parsedItems = order.items
-    .map((itemStr, idx) => {
-      try {
-        const parsed = JSON.parse(itemStr);
-        return { ...parsed, originalIndex: idx };
-      } catch {
-        return null;
-      }
-    })
-    .filter((item) => item && item.room_name === roomName); // 🔥 Filter by room
-
-  if (parsedItems.length === 0) return null; // 👈 Hide the whole card if no matching items
-
-  const totalAmount = parsedItems.reduce((acc, item) => {
-    return acc + (item.menuPrice * (item.quantity || 1));
-  }, 0);
+  const totalAmount = Array.isArray(order.total)
+    ? order.total[3] || order.total.at(-1) || 0
+    : +order.total || 0;
 
   return (
     <div className="border border-gray-200 rounded-xl p-6 bg-white space-y-8">
@@ -101,6 +91,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
           <p className="text-xs text-gray-400">Created: {new Date(order.created_at).toLocaleString()}</p>
         </div>
         <div className="flex items-center gap-2 relative">
+          {/* Button to open modal */}
           <button
             onClick={openModal}
             className="text-xs px-4 py-1.5 rounded border border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white transition"
@@ -117,9 +108,15 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
       {/* Order Items Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {parsedItems.map((item) => {
+        {order.items.map((itemString, idx) => {
+          let item;
+          try {
+            item = JSON.parse(itemString);
+          } catch {
+            item = { menuName: 'Invalid Item' };
+          }
+
           const itemStatus = item.status || 'pending';
-          const idx = item.originalIndex;
 
           return (
             <div
@@ -149,6 +146,10 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
               <p className="text-sm text-gray-600">₱{(item.menuPrice * (item.quantity || 1)).toFixed(2)}</p>
               <p className="text-sm text-gray-500">Qty: {item.quantity || 1}</p>
+
+              {item.room_name && (
+                <p className="text-xs italic text-gray-400">From: {item.room_name}</p>
+              )}
 
               {/* Status Buttons */}
               <div className="flex flex-wrap gap-2 pt-2">
@@ -213,4 +214,4 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   );
 };
 
-export default OrderReceiveCard;
+export default AllOrdersCard;
