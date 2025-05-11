@@ -8,12 +8,12 @@ import { getDocumentById } from '@/app/actions/getSpace';
 import updateSpace from '@/app/actions/updateSpace';
 
 const foodTypes = [
-  'Fries', 'Burger', 'Chicken', 'BBQ', 'Rice Bowls', 'Ice Cream',
-  'Isaw', 'Egg Waffles', 'Calamares', 'Turo-Turo', 'Fish',  
-  'Betamax', 'Taho', 'Banana Cue', 'Kamote Cue', 'Mango',  
-  'Smoke', 'Egg', 'Cheese', 'Turon', 'Korean', 'Shakes', 'Hotdogs', 'Corn', 'Fruits',  
-  'Halo-Halo', 'Sorbetes', 'Goto', 'Lugaw', 'Bibingka',  
-  'Puto Bumbong', 'Fried', 'Puto', 'Kakanin', 'Coffee'
+  'Fried', 'Smoked', 'Sushi', 'BBQ', 'Rice Bowl', 'Dessert',
+  'Drinks', 'Egg', 'Vegan', 'Healthy', 'Coffee',
+  'Samgyupsal', 'Hot Pot', 'Milk Tea', 'Milk Shake', 'Sweets',
+  'Pastry', 'Burger', 'Meat', 'Rice Cake', 'Shake', 'Dish', 'Pasta', 'Fruits',
+  'Steamed', 'Spicy', 'Sour', 'Chocolate', 'Seafood',
+  'Steak', 'Soup', 'Noodles'
 ];
 
 const EditSpacePage = ({ params }) => {
