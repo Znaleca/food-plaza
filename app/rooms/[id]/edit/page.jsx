@@ -13,7 +13,7 @@ const foodTypes = [
   'Samgyupsal', 'Hot Pot', 'Milk Tea', 'Milk Shake', 'Sweets',
   'Pastry', 'Burger', 'Meat', 'Rice Cake', 'Shake', 'Dish', 'Pasta', 'Fruits',
   'Steamed', 'Spicy', 'Sour', 'Chocolate', 'Seafood',
-  'Steak', 'Soup', 'Noodles'
+  'Steak', 'Soup', 'Noodles', 'Sizzling'
 ];
 
 const EditSpacePage = ({ params }) => {
