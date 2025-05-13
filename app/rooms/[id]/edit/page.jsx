@@ -92,7 +92,7 @@ const EditSpacePage = ({ params }) => {
     const result = await updateSpace(null, formData);
     if (result.success) {
       toast.success('Food Stall updated!');
-      router.push('/');
+      router.push('/foodstall');
     } else {
       toast.error(result.error);
     }

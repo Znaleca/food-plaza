@@ -63,10 +63,9 @@ async function updateSpace(_, formData) {
       }
     }
 
-    // Ensure the number of descriptions matches the number of menu items
-    if (menuNames.length !== menuDescriptions.length) {
-      throw new Error('The number of descriptions must match the number of menu items.');
-    }
+    // Now, menuDescriptions is optional, so no validation for the count
+    // If there are fewer descriptions than menu items, the missing ones will default to null.
+    const finalMenuDescriptions = menuDescriptions.length > 0 ? menuDescriptions : new Array(menuNames.length).fill(null);
 
     // Update the document
     const updated = await databases.updateDocument(DB_ID, COLLECTION_ID, id, {
@@ -76,7 +75,7 @@ async function updateSpace(_, formData) {
       stallNumber,  // Ensure it's an integer
       menuName: menuNames, // Array of menu names
       menuPrice: finalMenuPrices,  // Array of prices
-      menuDescription: menuDescriptions, // Array of descriptions
+      menuDescription: finalMenuDescriptions, // Optional array of descriptions (defaults to null if missing)
       menuImages: menuImages, // Array of image IDs
       ...(stallImageIDs.length > 0 && { images: stallImageIDs }), // Optionally include new images
     });

@@ -31,7 +31,7 @@ const LeaseSpace = ({ params }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-500"></div>
       </div>
     );
   }
@@ -41,37 +41,40 @@ const LeaseSpace = ({ params }) => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-12 bg-white">
+    <div className="max-w-5xl mx-auto px-6 py-12 bg-gray-50">
       {/* Back Button */}
       <Link
         href="/lease/card"
-        className="flex items-center text-gray-600 hover:text-black transition mb-6"
+        className="flex items-center text-blue-500 hover:text-blue-700 transition duration-300 mb-6"
       >
         <FaChevronLeft className="mr-2" />
-        <span className="font-medium text-base">Back to Food Stalls</span>
+        <span className="font-medium text-lg">Back to Food Stalls</span>
       </Link>
 
       {/* Stall Heading */}
       <Heading 
-        title={`Stall #${room.stallNumber || "N/A"}`} 
-        className="text-center text-3xl font-semibold text-gray-800 mb-4" 
+        title={`Stall # ${room.stallNumber}`} 
+        className="text-center text-4xl font-extrabold text-green-700 mb-8" 
       />
 
-      {/* Occupied By Card */}
-      <div className="bg-gray-100 rounded-xl p-6 mb-10 text-center shadow-sm">
-        <h2 className="text-xl text-gray-700 font-medium">Currently Occupied By:</h2>
-        <p className="text-2xl text-blue-600 font-bold mt-2">{room.name}</p>
+      {/* Content Card with Background */}
+      <div 
+        className="relative bg-cover bg-center shadow-xl rounded-xl border border-gray-300 transition-transform transform hover:scale-105 p-8"
+        style={{ backgroundImage: "url('/images/card.jpg')" }}
+      >
+        {/* Overlay for Better Readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-xl"></div>
+
+        {/* Content Inside */}
+        <div className="relative z-10 text-white text-center p-6">
+          <h2 className="text-3xl font-bold">Occupied by: {room.name}</h2>
+        </div>
       </div>
 
-      {/* Calendar View */}
-      <div className="mb-10">
-        <CalendarView roomId={id} room={room} />
-      </div>
+      <LeaseForm room={room} />
+      <CalendarView roomId={id} room={room} />
 
-      {/* Lease Form */}
-      <div className="bg-gray-50 rounded-xl p-6 shadow-sm">
-        <LeaseForm room={room} />
-      </div>
+      
     </div>
   );
 };
