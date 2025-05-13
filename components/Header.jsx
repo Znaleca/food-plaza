@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import logo from '@/assets/images/logo.svg';
 import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus, FaHome, FaUtensils, FaBoxOpen, FaTools, FaStore } from 'react-icons/fa';
-import { FaGear, FaCircleUser, FaCartShopping, FaGift } from "react-icons/fa6";
+import { FaGear, FaCircleUser, FaCartShopping, FaGift, FaHandHoldingDollar } from "react-icons/fa6";
 import { useState } from "react";
 import destroySession from "@/app/actions/destroySession";
 import { toast } from "react-toastify";
@@ -97,6 +97,9 @@ const Header = () => {
                   <span className="text-gray-400">|</span>
                   <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition">
                     <FaTools className="text-lg" /> Admin Panel
+                  </Link>
+                  <Link href="/lease/management" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                    <FaHandHoldingDollar className="text-lg" /> Lease Management
                   </Link>
                 </>
               )}

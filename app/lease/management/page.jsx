@@ -1,21 +1,18 @@
 import Link from "next/link";
-import { FaChartBar, FaStar, FaUser, FaUsers} from "react-icons/fa";
+import { FaNewspaper, FaClipboardList, FaCalendarAlt,} from "react-icons/fa";
 import Heading from "@/components/Heading";
-import { FaBagShopping } from "react-icons/fa6";
 
 const links = [
-  
-  { href: "/admin/all-orders", icon: <FaBagShopping className="text-3xl" />, label: "Orders" },
-  { href: "/foodstall/sales", icon: <FaChartBar className="text-3xl" />, label: "Sales" },
-  { href: "/reviews", icon: <FaStar className="text-3xl" />, label: "Reviews" }, 
-  { href: "/admin/create-account", icon: <FaUser className="text-3xl" />, label: "Create Account" }, 
-  { href: "/admin/accounts", icon: <FaUsers className="text-3xl" />, label: "All Accounts" }, 
+  { href: "/lease/card", icon: <FaNewspaper className="text-3xl" />, label: "Lease Food Stall" },
+  { href: "/bookings", icon: <FaClipboardList className="text-3xl" />, label: "Lease Status" },
+  { href: "/calendarView", icon: <FaCalendarAlt className="text-3xl" />, label: "Calendar" },
+
 
 
   
 ];
 
-const AdminPage = () => {
+const LeasePage = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
 
@@ -36,4 +33,4 @@ const AdminPage = () => {
   );
 };
 
-export default AdminPage;
+export default LeasePage;
