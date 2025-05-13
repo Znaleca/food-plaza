@@ -104,16 +104,22 @@ const EditSpacePage = ({ params }) => {
     <>
       <Heading title="Edit Food Stall" className="text-center mb-8 text-3xl font-extrabold text-gray-900" />
 
-      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl mx-auto">
+      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-5xl mx-auto"> {/* Increased max-width */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Food Stall Name</label>
-            <input type="text" name="name" defaultValue={stall.name} required className="border border-gray-300 rounded-lg w-full py-2 px-4" />
+            <input
+              type="text"
+              name="name"
+              defaultValue={stall.name}
+              required
+              className="border border-gray-300 rounded-lg w-full py-3 px-6" // Increased padding
+            />
           </div>
 
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Type</label>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-4 gap-4"> {/* Adjusted grid layout */}
               {foodTypes.map((type) => (
                 <label key={type} className="flex items-center space-x-2 text-sm">
                   <input
@@ -132,35 +138,90 @@ const EditSpacePage = ({ params }) => {
 
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Description</label>
-            <textarea name="description" defaultValue={stall.description} required className="border border-gray-300 rounded-lg w-full h-24 py-2 px-4" />
+            <textarea
+              name="description"
+              defaultValue={stall.description}
+              required
+              className="border border-gray-300 rounded-lg w-full h-32 py-3 px-6" // Increased height
+            />
           </div>
 
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Menu</label>
             {menuItems.map((item, index) => (
-              <div key={index} className="flex space-x-2 mb-2">
-                <input type="text" placeholder="Item Name" required value={item.name} onChange={(e) => handleMenuChange(index, 'name', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-full" />
-                <input type="number" placeholder="₱ Price" required value={item.price} onChange={(e) => handleMenuChange(index, 'price', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-24" />
-                <textarea placeholder="Description" value={item.description} onChange={(e) => handleMenuChange(index, 'description', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-full" />
-                <input type="file" accept="image/*" onChange={(e) => handleMenuImageChange(index, e.target.files[0])} className="border border-gray-300 rounded-lg py-2 px-3" />
-                <button type="button" onClick={() => removeMenuItem(index)} className="bg-black text-white px-3 py-2 rounded">Remove</button>
+              <div key={index} className="flex space-x-4 mb-4 items-center"> {/* Increased spacing */}
+                <input
+                  type="text"
+                  placeholder="Item Name"
+                  required
+                  value={item.name}
+                  onChange={(e) => handleMenuChange(index, 'name', e.target.value)}
+                  className="border border-gray-300 rounded-lg py-3 px-6 w-full"
+                />
+                <input
+                  type="number"
+                  placeholder="₱ Price"
+                  required
+                  value={item.price}
+                  onChange={(e) => handleMenuChange(index, 'price', e.target.value)}
+                  className="border border-gray-300 rounded-lg py-3 px-6 w-32"
+                />
+                <textarea
+                  placeholder="Description"
+                  value={item.description}
+                  onChange={(e) => handleMenuChange(index, 'description', e.target.value)}
+                  className="border border-gray-300 rounded-lg py-3 px-6 w-full"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleMenuImageChange(index, e.target.files[0])}
+                  className="border border-gray-300 rounded-lg py-3 px-6"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeMenuItem(index)}
+                  className="bg-black text-white px-6 py-3 rounded-lg"
+                >
+                  Remove
+                </button>
               </div>
             ))}
-            <button type="button" onClick={addMenuItem} className="bg-yellow-400 text-white px-4 py-2 rounded mt-2">+ Add Menu Item</button>
+            <button
+              type="button"
+              onClick={addMenuItem}
+              className="bg-yellow-400 text-white px-6 py-3 rounded-lg mt-4"
+            >
+              + Add Menu Item
+            </button>
           </div>
 
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Stall #</label>
-            <input type="number" name="stallNumber" defaultValue={stall.stallNumber} className="border border-gray-300 rounded-lg w-full py-2 px-4" />
+            <input
+              type="number"
+              name="stallNumber"
+              defaultValue={stall.stallNumber}
+              className="border border-gray-300 rounded-lg w-full py-3 px-6"
+            />
           </div>
 
           <div>
             <label className="block text-gray-700 font-semibold mb-2">Upload New Food Stall Images (Optional)</label>
-            <input type="file" multiple accept="image/*" onChange={(e) => setNewImages([...e.target.files])} className="border border-gray-300 rounded-lg w-full py-2 px-4" />
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => setNewImages([...e.target.files])}
+              className="border border-gray-300 rounded-lg w-full py-3 px-6"
+            />
           </div>
 
           <div className="flex justify-center">
-            <button type="submit" className="bg-pink-600 text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-pink-700 transition-all">
+            <button
+              type="submit"
+              className="bg-pink-600 text-white px-8 py-4 rounded-lg font-semibold shadow-md hover:bg-pink-700 transition-all"
+            >
               Update Food Stall
             </button>
           </div>

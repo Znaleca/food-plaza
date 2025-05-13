@@ -49,8 +49,9 @@ async function createSpaces(previousState, formData) {
     // Convert types from JSON string
     const type = JSON.parse(formData.get('selectedTypes')) || [];
 
-    // Get menu names and prices
+    // Get menu names, descriptions, and prices
     const menuNames = formData.getAll('menuNames').filter((item) => item.trim() !== '');
+    const menuDescriptions = formData.getAll('menuDescriptions').filter((item) => item.trim() !== '');
     const menuPrices = formData.getAll('menuPrices')
       .map((value) => parseFloat(value))
       .filter((value) => !isNaN(value));
@@ -88,6 +89,7 @@ async function createSpaces(previousState, formData) {
         description: formData.get('description'),
         type: type,
         menuName: menuNames,
+        menuDescription: menuDescriptions,  // Add the menu descriptions here
         menuPrice: menuPrices,
         stallNumber: parseInt(formData.get('stallNumber'), 10) || null,
         images: imageIDs,
