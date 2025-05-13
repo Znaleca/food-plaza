@@ -130,10 +130,6 @@ const Header = () => {
             <div className="flex items-center">
               {!isAuthenticated ? (
                 <div className="relative">
-                  <Link href="/order/cart" className="mr-3 text-white hover:text-gray-500">
-                    <FaCartShopping className="inline" />
-                  </Link>
-
                   <button
                     onClick={toggleDropdown}
                     className="mx-3 py-2 text-sm font-medium text-white hover:text-gray-500"
