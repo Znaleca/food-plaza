@@ -44,7 +44,7 @@ const SpaceCard = ({ room }) => {
 
         {/* Description */}
         <p className="mt-3 text-gray-700 text-center text-sm italic">
-          A must-visit spot for delicious bites!
+        "Your next great meal starts at The Corner."
         </p>
 
         {/* Call-to-Action */}

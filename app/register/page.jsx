@@ -1,52 +1,77 @@
 'use client';
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useFormState } from "react-dom";
-import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
-import createUser from "@/app/actions/createUser";
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from "react-icons/fa";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
+import createUser from '@/app/actions/createUser';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
 
 const RegisterPage = () => {
-  const [state, formAction] = useFormState(createUser, {});
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [matchError, setMatchError] = useState("");
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [matchError, setMatchError] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
 
-  useEffect(() => {
-    if (state.error) toast.error(state.error);
-    if (state.success) {
-      toast.success("Account created! Check your email.");
-      router.push("/login");
-    }
-  }, [state, router]);
+  // Handle changes in form inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
 
+  // Handle password validation
   const handlePasswordChange = (e) => {
     const value = e.target.value;
     setPassword(value);
-    setPasswordError(value.length < 8 ? "Password must be at least 8 characters long." : "");
+    setPasswordError(value.length < 8 ? 'Password must be at least 8 characters long.' : '');
   };
 
+  // Handle confirm password validation
   const handleConfirmPasswordChange = (e) => {
     const value = e.target.value;
     setConfirmPassword(value);
-    setMatchError(value !== password ? "Passwords do not match." : "");
+    setMatchError(value !== password ? 'Passwords do not match.' : '');
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // Call the backend user creation function
+    const response = await createUser(null, new FormData(e.target));
+
+    if (response.error) {
+      toast.error(response.error);
+    } else if (response.success) {
+      toast.success('Account created! Check your email.');
+      router.push('/login');
+    }
+  };
+
+  useEffect(() => {
+    if (formData.password && formData.confirmPassword) {
+      setMatchError(formData.password !== formData.confirmPassword ? 'Passwords do not match.' : '');
+    }
+  }, [formData.password, formData.confirmPassword]);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-yellow-400/50 to-pink-600/50 flex items-center justify-center p-6">
       <div
-  className="relative z-10 bg-cover bg-center bg-no-repeat rounded-3xl shadow-lg w-full max-w-2xl"
-  style={{ backgroundImage: "url('/images/card.jpg')" }}
->
-
+        className="relative z-10 bg-cover bg-center bg-no-repeat rounded-3xl shadow-lg w-full max-w-2xl"
+        style={{ backgroundImage: 'url("/images/card.jpg")' }}
+      >
         <div className="bg-white bg-opacity-80 rounded-3xl p-12">
-          <form action={formAction} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8">
             <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-6">
               Join <span className="text-pink-600">THE CORNER</span>!
             </h2>
@@ -61,6 +86,8 @@ const RegisterPage = () => {
                   type="text"
                   id="name"
                   name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
                   className="border rounded-lg w-full py-4 px-12 text-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
                   placeholder="Your nickname"
                   required
@@ -81,6 +108,8 @@ const RegisterPage = () => {
                   type="email"
                   id="email"
                   name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   className="border rounded-lg w-full py-4 px-12 text-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
                   placeholder="Enter your email"
                   required
@@ -98,7 +127,7 @@ const RegisterPage = () => {
               </label>
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
                   value={password}
@@ -128,7 +157,7 @@ const RegisterPage = () => {
               </label>
               <div className="relative">
                 <input
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={showConfirmPassword ? 'text' : 'password'}
                   id="confirmPassword"
                   name="confirmPassword"
                   value={confirmPassword}
@@ -154,13 +183,13 @@ const RegisterPage = () => {
             <button
               type="submit"
               className="w-full py-4 bg-pink-600 text-white rounded-lg text-xl font-medium hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition duration-300"
-              disabled={!!passwordError || !!matchError}
+              disabled={!!passwordError || !!matchError || !formData.name || !formData.email || !password || !confirmPassword}
             >
               Register
             </button>
 
             <p className="text-center mt-4 text-sm text-gray-700">
-              Already have an account?{" "}
+              Already have an account?{' '}
               <Link href="/login" className="text-pink-600 hover:underline">
                 Log in
               </Link>

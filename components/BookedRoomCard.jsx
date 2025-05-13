@@ -99,14 +99,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
               <span>Delete Booking</span>
             </button>
           )}
-          <Link
-            href={`/rooms/${room.$id}`}
-            className={`border border-blue-600 text-blue-600 px-4 py-2 rounded hover:bg-blue-600 hover:text-white transition-all ${
-              isDeclined ? 'pointer-events-none opacity-50' : ''
-            }`}
-          >
-            View Stall
-          </Link>
+          
         </div>
       )}
     </div>
