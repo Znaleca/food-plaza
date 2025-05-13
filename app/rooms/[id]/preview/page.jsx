@@ -165,6 +165,11 @@ const PreviewStallPage = ({ params }) => {
                 ₱{stall.menuPrice?.[idx]?.toFixed(2) ?? '0.00'}
               </p>
 
+              {/* Displaying Menu Description */}
+              {stall.menuDescription && stall.menuDescription[idx] && (
+                <p className="text-sm text-gray-500 italic mb-4">{stall.menuDescription[idx]}</p>
+              )}
+
               <div className="flex items-center gap-6 mt-4">
                 <button
                   onClick={() => handleQuantityChange(idx, -1)}
