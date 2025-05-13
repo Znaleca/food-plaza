@@ -8,7 +8,7 @@ const links = [
   { href: "/admin/all-orders", icon: <FaBagShopping className="text-3xl" />, label: "Orders" },
   { href: "/foodstall/sales", icon: <FaChartBar className="text-3xl" />, label: "Sales" },
   { href: "/reviews", icon: <FaStar className="text-3xl" />, label: "Reviews" }, 
-  { href: "/admin/create-account", icon: <FaUser className="text-3xl" />, label: "Create Stall Account" }, 
+  { href: "/admin/create-account", icon: <FaUser className="text-3xl" />, label: "Create Account" }, 
   { href: "/admin/accounts", icon: <FaUsers className="text-3xl" />, label: "All Accounts" }, 
 
 

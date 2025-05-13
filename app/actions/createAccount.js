@@ -21,7 +21,7 @@ async function createAccount(previousState, formData) {
     return { error: 'Passwords do not match' };
   }
 
-  const allowedLabels = ['foodstall'];
+  const allowedLabels = ['admin', 'customer', 'foodstall'];
   if (!allowedLabels.includes(label)) {
     return { error: 'Invalid role selected' };
   }
