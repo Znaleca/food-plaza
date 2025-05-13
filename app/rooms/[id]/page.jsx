@@ -9,7 +9,6 @@ import SpacesImage from "@/components/SpacesImage";
 import MenuPopUp from "@/components/MenuPopUp";
 import CustomerRatingCard from "@/components/CustomerRatingCard";
 
-
 const RoomSpace = ({ params }) => {
   const { id } = params;
   const [room, setRoom] = useState(null);
@@ -132,6 +131,7 @@ const RoomSpace = ({ params }) => {
                     price: room.menuPrice[index]?.toFixed(2),
                     image: menuImageUrls[index] || null,
                     roomName: room.name,
+                    description: room.menuDescription[index] || '' // Add description here
                   })
                 }
               >
@@ -142,8 +142,15 @@ const RoomSpace = ({ params }) => {
                     className="w-32 h-32 object-cover rounded-full mb-3 shadow-md"
                   />
                 )}
-<h4 className="text-lg font-normal text-gray-700 text-center">{item}</h4>
-<p className="text-sm text-gray-500">{`₱${room.menuPrice[index]?.toFixed(2)}`}</p>
+                <h4 className="text-lg font-normal text-gray-700 text-center">{item}</h4>
+
+                {room.menuDescription && room.menuDescription[index] && (
+                  <p className="text-sm text-gray-600 text-center italic mb-1">
+                    {room.menuDescription[index]}
+                  </p>
+                )}
+
+                <p className="text-sm text-gray-500">{`₱${room.menuPrice[index]?.toFixed(2)}`}</p>
               </div>
             ))
           ) : (
@@ -167,6 +174,7 @@ const RoomSpace = ({ params }) => {
           price={selectedMenu.price}
           menuImage={selectedMenu.image}
           roomName={selectedMenu.roomName} // Pass roomName
+          description={selectedMenu.description} // Pass description
           onClose={() => setSelectedMenu(null)}
           onAddToCart={addToCart}
         />

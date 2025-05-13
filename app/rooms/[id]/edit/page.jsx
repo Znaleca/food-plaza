@@ -34,6 +34,7 @@ const EditSpacePage = ({ params }) => {
         (data.menuName || []).map((name, index) => ({
           name,
           price: data.menuPrice?.[index] || '',
+          description: data.menuDescription?.[index] || '', // Add description here
           menuImage: null,
           existingImage: data.menuImages?.[index] || null
         }))
@@ -62,7 +63,7 @@ const EditSpacePage = ({ params }) => {
   };
 
   const addMenuItem = () => {
-    setMenuItems([...menuItems, { name: '', price: '', menuImage: null, existingImage: null }]);
+    setMenuItems([...menuItems, { name: '', price: '', description: '', menuImage: null, existingImage: null }]);
   };
 
   const removeMenuItem = (index) => {
@@ -80,6 +81,7 @@ const EditSpacePage = ({ params }) => {
     menuItems.forEach((item, index) => {
       formData.append('menuNames', item.name);
       formData.append('menuPrices', item.price);
+      formData.append('menuDescriptions', item.description); // Add description to formData
       if (item.menuImage) formData.append('menuImages[]', item.menuImage);
       else formData.append('menuImages[]', new Blob([], { type: 'text/plain' })); // Placeholder
       formData.append('existingMenuImages[]', item.existingImage || '');
@@ -139,6 +141,7 @@ const EditSpacePage = ({ params }) => {
               <div key={index} className="flex space-x-2 mb-2">
                 <input type="text" placeholder="Item Name" required value={item.name} onChange={(e) => handleMenuChange(index, 'name', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-full" />
                 <input type="number" placeholder="₱ Price" required value={item.price} onChange={(e) => handleMenuChange(index, 'price', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-24" />
+                <textarea placeholder="Description" value={item.description} onChange={(e) => handleMenuChange(index, 'description', e.target.value)} className="border border-gray-300 rounded-lg py-2 px-3 w-full" />
                 <input type="file" accept="image/*" onChange={(e) => handleMenuImageChange(index, e.target.files[0])} className="border border-gray-300 rounded-lg py-2 px-3" />
                 <button type="button" onClick={() => removeMenuItem(index)} className="bg-black text-white px-3 py-2 rounded">Remove</button>
               </div>

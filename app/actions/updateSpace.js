@@ -27,6 +27,8 @@ async function updateSpace(_, formData) {
       .map((value) => parseFloat(value))
       .filter((value) => !isNaN(value));
 
+    const menuDescriptions = formData.getAll('menuDescriptions').filter((item) => item.trim() !== ''); // Retrieve all menu descriptions
+
     const menuImageFiles = formData.getAll('menuImages[]'); // Retrieve all menu images
     const existingMenuImages = formData.getAll('existingMenuImages[]');
     const newStallImages = formData.getAll('images'); // Optional new stall images
@@ -61,6 +63,11 @@ async function updateSpace(_, formData) {
       }
     }
 
+    // Ensure the number of descriptions matches the number of menu items
+    if (menuNames.length !== menuDescriptions.length) {
+      throw new Error('The number of descriptions must match the number of menu items.');
+    }
+
     // Update the document
     const updated = await databases.updateDocument(DB_ID, COLLECTION_ID, id, {
       name,
@@ -69,6 +76,7 @@ async function updateSpace(_, formData) {
       stallNumber,  // Ensure it's an integer
       menuName: menuNames, // Array of menu names
       menuPrice: finalMenuPrices,  // Array of prices
+      menuDescription: menuDescriptions, // Array of descriptions
       menuImages: menuImages, // Array of image IDs
       ...(stallImageIDs.length > 0 && { images: stallImageIDs }), // Optionally include new images
     });
