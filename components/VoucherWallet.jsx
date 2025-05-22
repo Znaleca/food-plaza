@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaPercent } from 'react-icons/fa';
 import getAllClaimedVouchers from '@/app/actions/getAllClaimedVoucher';
 import checkAuth from '@/app/actions/checkAuth';
 import UseVoucherButton from './UseVoucherButton';
@@ -41,11 +41,11 @@ const VoucherWallet = ({ onVoucherUsed }) => {
         });
     };
 
-    if (loading) return <p className="text-center text-gray-600">Loading vouchers...</p>;
+    if (loading) return <p className="text-center text-gray-400">Loading vouchers...</p>;
 
     return (
-        <div className="w-full max-w-3xl mx-auto mt-6 p-4 bg-white shadow-sm rounded-lg">
-            <h2 className="text-2xl font-medium text-gray-900 text-center mb-6">Voucher Wallet</h2>
+        <div className="w-full max-w-3xl mx-auto mt-6 p-4 bg-neutral-900 shadow-sm rounded-lg">
+            <h2 className="text-2xl font-medium text-pink-600 text-center mb-6">Voucher Wallet</h2>
 
             {vouchers.length > 0 ? (
                 <div className="space-y-6">
@@ -56,26 +56,25 @@ const VoucherWallet = ({ onVoucherUsed }) => {
                         return (
                             <div
                                 key={voucher.$id}
-                                className={`relative w-full max-w-md mx-auto p-4 bg-white text-gray-900 rounded-lg transition-all duration-300 
+                                className={`relative w-full max-w-md mx-auto p-4 bg-neutral-900 text-white rounded-lg transition-all duration-300 
                                 ${!isActive ? 'opacity-60' : 'shadow-md hover:shadow-lg'} border-2 border-pink-600 
-                                ${!isActive ? 'border-opacity-50' : ''} `}
+                                ${!isActive ? 'border-opacity-50' : ''}`}
                             >
                                 {!isActive && (
-                                    <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-4xl font-semibold opacity-40 pointer-events-none">
+                                    <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-4xl font-semibold opacity-40 pointer-events-none">
                                         EXPIRED
                                     </div>
                                 )}
 
                                 <div className="flex items-center space-x-4">
-                                    <div
-                                        className="w-16 h-16 bg-cover bg-center rounded-full"
-                                        style={{ backgroundImage: `url('/images/percentage.jpg')` }}
-                                    ></div>
+                                    <div className="w-16 h-16 flex items-center justify-center bg-neutral-700 rounded-full">
+                                        <FaPercent className="text-white text-2xl" />
+                                    </div>
 
                                     <div className="flex-1">
-                                        <h3 className="text-lg font-semibold text-gray-800">{voucher.title || 'Voucher Title'}</h3>
-                                        <p className="text-sm text-gray-600">{voucher.discount}% OFF</p>
-                                        <div className="mt-1 flex items-center space-x-2 text-sm text-gray-500">
+                                        <h3 className="text-lg font-semibold text-white">{voucher.title || 'Voucher Title'}</h3>
+                                        <p className="text-sm text-pink-400">{voucher.discount}% OFF</p>
+                                        <div className="mt-1 flex items-center space-x-2 text-sm text-gray-400">
                                             <span><strong>Valid From:</strong> {formatDate(voucher.valid_from)}</span>
                                             <span><strong>Valid To:</strong> {formatDate(voucher.valid_to)}</span>
                                         </div>
@@ -83,7 +82,7 @@ const VoucherWallet = ({ onVoucherUsed }) => {
                                 </div>
 
                                 {voucher.description && (
-                                    <p className="mt-2 text-gray-600 text-xs italic">{voucher.description}</p>
+                                    <p className="mt-2 text-gray-400 text-xs italic">{voucher.description}</p>
                                 )}
 
                                 <div className="mt-3 flex items-center space-x-3">
@@ -92,7 +91,7 @@ const VoucherWallet = ({ onVoucherUsed }) => {
                                     ) : (
                                         <FaTimesCircle className="text-red-500 text-lg" />
                                     )}
-                                    <span className={`text-sm ${isActive ? 'text-green-600' : 'text-red-600'}`}>
+                                    <span className={`text-sm ${isActive ? 'text-green-400' : 'text-red-400'}`}>
                                         {isActive ? 'Active' : 'Expired'}
                                     </span>
                                 </div>
@@ -116,7 +115,7 @@ const VoucherWallet = ({ onVoucherUsed }) => {
                     })}
                 </div>
             ) : (
-                <p className="text-center text-gray-600">No claimed vouchers found.</p>
+                <p className="text-center text-gray-400">No claimed vouchers found.</p>
             )}
         </div>
     );

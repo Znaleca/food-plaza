@@ -2,28 +2,22 @@
 
 import { useEffect, useState } from "react";
 import getAllSpaces from "@/app/actions/getAllSpaces";
-import Image from "next/image";
 import Link from "next/link";
 
 const ImagePreview = () => {
   const [rooms, setRooms] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [isManual, setIsManual] = useState(false);
 
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const fetchedRooms = await getAllSpaces();
-        const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
-        const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
         const formattedRooms = fetchedRooms.map((room) => ({
           id: room.$id,
           name: room.name,
-          imageUrl: room.images?.length > 0
-            ? `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${room.images[0]}/view?project=${projectId}`
-            : "/placeholder.jpg",
+          type: room.type?.join(" • ") || 'N/A',
+          stallNumber: room.stallNumber || 'N/A',
         }));
 
         setRooms(formattedRooms);
@@ -37,26 +31,6 @@ const ImagePreview = () => {
     fetchRooms();
   }, []);
 
-  useEffect(() => {
-    if (rooms.length === 0 || isManual) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % rooms.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [rooms, isManual]);
-
-  useEffect(() => {
-    if (!isManual) return;
-
-    const resetTimer = setTimeout(() => {
-      setIsManual(false);
-    }, 10000);
-
-    return () => clearTimeout(resetTimer);
-  }, [isManual]);
-
   if (loading) {
     return <p className="text-center text-lg font-semibold text-gray-400">Loading...</p>;
   }
@@ -65,63 +39,36 @@ const ImagePreview = () => {
     return <p className="text-center text-lg font-semibold text-gray-400">No food stalls available.</p>;
   }
 
-  const handleNext = () => {
-    setIsManual(true);
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % rooms.length);
-  };
-
-  const handleBack = () => {
-    setIsManual(true);
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + rooms.length) % rooms.length);
-  };
-
-  const currentRoom = rooms[currentIndex];
-
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg border-2 border-pink-600">
-      <Link href={`/rooms/${currentRoom.id}`} passHref>
-        <div className="relative group cursor-pointer rounded-xl overflow-hidden shadow-xl transition-transform duration-500">
-          {/* Image with Fade Effect */}
-          <div className="relative w-full h-[500px] overflow-hidden rounded-xl p-4">
-            {rooms.map((room, index) => (
-              <Image
-                key={room.id}
-                src={room.imageUrl}
-                alt={room.name}
-                width={1400}  // Reduced the width of the image
-                height={750}  // Reduced the height of the image
-                className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
-                  index === currentIndex ? "opacity-100" : "opacity-0"
-                }`}
-              />
-            ))}
-          </div>
+    <div className="w-full py-12 bg-stone-800">
+      <div className="text-center mb-12 px-4">
+        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">OUR STALLS</h2>
+        <p className="mt-4 text-xl sm:text-5xl font-bold text-white">Explore the variety of food stalls.</p>
+      </div>
 
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/40 rounded-xl"></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
+        {rooms.map((room) => (
+          <Link href={`/rooms/${room.id}`} key={room.id}>
+            <div className="aspect-square bg-neutral-900 border border-pink-600 rounded-xl p-6 flex flex-col justify-center items-center text-center hover:bg-neutral-950 transition-all duration-300">
+              
+              {/* Decorative Line Above Title */}
+              <div className="w-16 h-0.5 bg-pink-600 mb-6" /> {/* Shorter line with more spacing */}
 
-          {/* Text & Button */}
-          <div className="absolute bottom-8 left-8 text-white z-10">
-            <h2 className="text-3xl md:text-4xl font-bold">{currentRoom.name}</h2>
-            <button className="mt-4 px-8 py-4 bg-black text-white font-semibold text-xl rounded-full shadow-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105">
-  Explore
-</button>
+              <h3 className="text-base font-bold text-white tracking-widest uppercase mb-4">
+                {room.name}
+              </h3>
 
-          </div>
-        </div>
-      </Link>
+              {/* Decorative Line Below Title */}
+              <div className="w-16 h-0.5 bg-gray-600 mb-6" /> {/* Full width line with spacing */}
 
-     
-
-      {/* Pagination Dots */}
-      <div className="flex justify-center mt-6">
-        {rooms.map((_, index) => (
-          <div
-            key={index}
-            className={`w-4 h-4 mx-2 rounded-full transition-all duration-300 ${
-              index === currentIndex ? "bg-yellow-500 opacity-100" : "bg-gray-400 opacity-80"
-            }`}
-          />
+              <p className="text-gray-400 text-sm mb-2">
+                <span className="font-semibold text-white">Type:</span> {room.type}
+              </p>
+              <p className="text-gray-400 text-sm">
+                <span className="font-semibold text-white">Stall:</span> {room.stallNumber}
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
     </div>

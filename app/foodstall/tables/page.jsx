@@ -5,7 +5,6 @@ import { FaUserCheck } from 'react-icons/fa';
 import { FaUser } from 'react-icons/fa6';
 import getAllOrders from '@/app/actions/getAllOrders';
 import updateTableNumber from '@/app/actions/updateTableNumber';
-import Heading from '@/components/Heading';
 
 const TableViewPage = () => {
   const [orders, setOrders] = useState([]);
@@ -86,22 +85,17 @@ const TableViewPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4">
-      {/* Header Section */}
-      <div className="text-center mb-8">
-        <Heading
-          title="Dining Table Overview"
-          className="text-3xl font-extrabold text-gray-900"
-        />
-        <p className="mt-2 text-gray-500 text-sm">
-          Tap a table to see who’s seated or to clear its assignment.
-        </p>
+    <div className="bg-neutral-900 min-h-screen text-white p-6">
+      {/* New Header Section */}
+      <div className="text-center mb-10">
+        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">Food Plaza</h2>
+        <p className="mt-4 text-2xl sm:text-5xl font-extrabold text-white leading-tight">Table View</p>
       </div>
 
       {/* Table Grid */}
-      <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-3xl p-8">
+      <div className="max-w-6xl mx-auto bg-neutral-800 border border-neutral-700 rounded-xl p-8 shadow-lg">
         {loading ? (
-          <p className="text-gray-500 text-center">Loading...</p>
+          <p className="text-neutral-400 text-center">Loading...</p>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
         ) : (
@@ -113,18 +107,21 @@ const TableViewPage = () => {
                 <div
                   key={tableNumber}
                   onClick={() => handleClick(tableNumber)}
-                  className={`cursor-pointer flex flex-col items-center justify-center rounded-xl shadow-md p-3 aspect-square transition-transform duration-200 border-2 ${
-                    isOccupied(tableNumber)
-                      ? 'bg-pink-100 border-pink-600 hover:bg-pink-200'
-                      : 'bg-white border-gray-300 hover:bg-gray-100'
-                  } hover:scale-105`}
+                  className={`cursor-pointer flex flex-col items-center justify-center rounded-xl shadow-md p-3 aspect-square transition-transform duration-200 border-2
+                    ${
+                      isOccupied(tableNumber)
+                        ? 'bg-pink-100 border-pink-600 hover:bg-pink-200 text-pink-900'
+                        : 'bg-neutral-900 border-neutral-700 hover:bg-neutral-700'
+                    }
+                    hover:scale-105
+                  `}
                 >
-                  <div className="text-lg font-bold text-gray-800">T{tableNumber}</div>
+                  <div className="text-lg font-bold">{`T${tableNumber}`}</div>
                   <div className="mt-2 text-2xl">
                     {isOccupied(tableNumber) ? (
                       <FaUserCheck className="text-pink-600" />
                     ) : (
-                      <FaUser className="text-black" />
+                      <FaUser className="text-neutral-300" />
                     )}
                   </div>
                 </div>
@@ -136,21 +133,21 @@ const TableViewPage = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center space-y-4">
-            <h2 className="text-lg font-bold text-gray-800">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center">
+          <div className="bg-neutral-800 rounded-xl shadow-lg p-6 max-w-sm w-full text-center space-y-4 text-white">
+            <h2 className="text-lg font-bold text-pink-500">
               Remove Table Assignment?
             </h2>
-            <p className="text-sm text-gray-600">
-              Are you sure you want to remove table T{selectedTable} from the order?
+            <p className="text-sm text-neutral-300">
+              Are you sure you want to remove table <strong>T{selectedTable}</strong> from the order?
             </p>
-            <div className="mt-2 text-gray-600">
+            <div className="mt-2 text-neutral-300">
               {usersInfo.length > 1 ? (
                 <p className="font-semibold">Multiple users assigned to this table:</p>
               ) : (
                 <p className="font-semibold">{usersInfo[0]?.user}</p>
               )}
-              <ul className="text-sm text-gray-400 space-y-1">
+              <ul className="text-sm text-neutral-400 space-y-1">
                 {usersInfo.map((user, index) => (
                   <li key={index}>
                     {user.user} - {user.email}
@@ -161,7 +158,7 @@ const TableViewPage = () => {
             <div className="flex justify-center gap-4 mt-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                className="px-4 py-2 bg-neutral-700 rounded-lg hover:bg-neutral-600 transition"
               >
                 Cancel
               </button>

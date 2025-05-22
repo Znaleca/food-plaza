@@ -1,13 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import getFeaturedMenu from '@/app/actions/getFeaturedMenu';
-import Link from 'next/link';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const FeaturedPage = () => {
   const [featuredMenus, setFeaturedMenus] = useState([]);
-  const scrollRef = useRef(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -18,82 +16,82 @@ const FeaturedPage = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) =>
+        featuredMenus.length > 0
+          ? (prev + 4) % featuredMenus.length
+          : 0
+      );
+    }, 10000); // every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [featuredMenus]);
+
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
-  // Scroll left
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+  const getCurrentBatch = () => {
+    if (!featuredMenus.length) return [];
+    const batch = featuredMenus.slice(currentIndex, currentIndex + 4);
+    if (batch.length < 4) {
+      return [...batch, ...featuredMenus.slice(0, 4 - batch.length)];
     }
+    return batch;
   };
 
-  // Scroll right
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-    }
-  };
+  const currentMenus = getCurrentBatch();
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      
+    <div className="max-w-7xl mx-auto px-6 py-12 bg-neutral-900 transition-all duration-700">
+      <div className="text-center mb-12 px-4">
+        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">
+          OUR MENU
+        </h2>
+        <p className="mt-4 text-xl sm:text-5xl font-bold text-white tracking-widest">
+        Enjoy a taste of comfort and flavor.
+        </p>
+      </div>
 
-      {featuredMenus.length > 0 ? (
-        <div className="relative">
-          {/* Left Scroll Button */}
-          <button 
-            onClick={scrollLeft} 
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black p-3 rounded-full text-white hover:bg-gray-950 transition shadow-lg z-10"
-            aria-label="Scroll left"
-          >
-            <FaChevronLeft size={20} />
-          </button>
-
-          {/* Scrollable Container */}
-          <div 
-            ref={scrollRef} 
-            className="flex space-x-6 overflow-x-auto scrollbar-hide p-4"
-          >
-            {featuredMenus.map((menu) => (
-              <div 
-                key={menu.id} 
-                className="min-w-[250px] border-2 border-pink-600 p-4 shadow-lg rounded-lg bg-white flex flex-col items-center"
-              >
-                {/* Circular Menu Image */}
+      {currentMenus.length > 0 ? (
+        <div className="grid grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="flex flex-col space-y-6">
+            {currentMenus.slice(0, 2).map((menu) => (
+              <div key={menu.id} className="bg-black rounded-xl overflow-hidden shadow-md">
                 {menu.menuImage ? (
                   <img
                     src={`https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${menu.menuImage}/view?project=${projectId}`}
                     alt={menu.menuName}
-                    className="w-32 h-32 object-cover rounded-full mb-3 shadow-md"
+                    className="w-full h-64 object-cover"
                   />
                 ) : (
-                  <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-full mb-3">
-                    <p className="text-gray-500 text-center">No Image</p>
+                  <div className="w-full h-64 bg-gray-300 flex items-center justify-center">
+                    <span className="text-gray-600">No Image</span>
                   </div>
                 )}
-
-                <h2 className="text-lg font-semibold">{menu.menuName}</h2>
-                <p className="text-gray-600">₱{menu.menuPrice.toFixed(2)}</p>
-                <p className="text-gray-500 text-sm">Food Stall: {menu.roomName}</p>
-                <Link
-                  href={`/rooms/${menu.roomId}`}
-                  className="block mt-4 text-yellow-400 font-medium hover:underline"
-                >
-                  View Stall
-                </Link>
               </div>
             ))}
           </div>
 
-          {/* Right Scroll Button */}
-          <button 
-            onClick={scrollRight} 
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black p-3 rounded-full text-white hover:bg-gray-950 transition shadow-lg z-10"
-            aria-label="Scroll right"
-          >
-            <FaChevronRight size={20} />
-          </button>
+          {/* Right Column */}
+          <div className="flex flex-col space-y-6">
+            {currentMenus.slice(2, 4).map((menu) => (
+              <div key={menu.id} className="bg-black rounded-xl overflow-hidden shadow-md">
+                {menu.menuImage ? (
+                  <img
+                    src={`https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${menu.menuImage}/view?project=${projectId}`}
+                    alt={menu.menuName}
+                    className="w-full h-64 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-64 bg-gray-300 flex items-center justify-center">
+                    <span className="text-gray-600">No Image</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <p className="text-center text-gray-500">No featured menus available.</p>

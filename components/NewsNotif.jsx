@@ -11,17 +11,21 @@ const NewsNotifPage = () => {
   const [editMode, setEditMode] = useState(false);
   const [visible, setVisible] = useState(true);
   const [loading, setLoading] = useState(false);
-  const { labels } = useAuth(); // Uses labels for access control
+  const { labels } = useAuth();
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
         const { databases } = await createSessionClient();
-        const response = await databases.getDocument(
-          process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
-          process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_NEWS,
-          'news'
-        );
+        const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
+        const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_NEWS;
+
+        if (!databaseId || !collectionId) {
+          console.error('Missing Appwrite environment variables.');
+          return;
+        }
+
+        const response = await databases.getDocument(databaseId, collectionId, 'news');
         setNews(response.news || 'No news available.');
       } catch (error) {
         console.error('Failed to fetch news:', error);
@@ -49,64 +53,62 @@ const NewsNotifPage = () => {
   const isAdmin = labels?.includes('admin');
 
   return (
-    <div className="fixed bottom-4 right-4 w-[500px] p-6 bg-white shadow-lg rounded-xl border z-50">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-extrabold text-black">New Deals!</h1>
-        <button
-          className="text-black hover:text-gray-400"
-          onClick={() => setVisible(false)}
-        >
-          <FaTimes size={24} />
+    <div className="fixed bottom-8 right-8 z-50 w-[480px] bg-white border border-gray-300 shadow-2xl rounded-2xl animate-fade-in overflow-hidden">
+      {/* Header */}
+      <div className="flex justify-between items-center px-6 py-5 bg-gradient-to-r from-black to-zinc-800 text-white">
+        <div>
+          <h2 className="text-xl font-bold">Announcement</h2>
+          <p className="text-sm opacity-90">Stay informed with real-time updates</p>
+        </div>
+        <button onClick={() => setVisible(false)} className="hover:text-black transition">
+          <FaTimes size={20} />
         </button>
       </div>
 
-      {editMode ? (
-        <textarea
-          className="w-full p-4 mt-2 border-2 border-black rounded-lg bg-white text-gray-800"
-          value={news}
-          onChange={(e) => setNews(e.target.value)}
-          disabled={loading}
-          rows="6"
-        />
-      ) : (
-        <p className="mt-2 text-black whitespace-pre-line">{news}</p>
-      )}
+      {/* Body */}
+      <div className="px-6 py-5 bg-white">
+        {editMode ? (
+          <textarea
+            value={news}
+            onChange={(e) => setNews(e.target.value)}
+            disabled={loading}
+            rows={6}
+            className="w-full p-4 text-base border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-pink-500 outline-none"
+          />
+        ) : (
+          <p className="text-base text-gray-800 whitespace-pre-line">{news}</p>
+        )}
 
-      {isAdmin && (
-        <div className="mt-4 flex space-x-4">
-          {editMode ? (
-            <>
+        {isAdmin && (
+          <div className="mt-6 flex justify-end gap-4">
+            {editMode ? (
+              <>
+                <button
+                  onClick={handleSave}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-5 py-2.5 text-sm font-medium rounded-lg transition disabled:opacity-60"
+                >
+                  {loading ? 'Saving...' : (<><FaSave /> Save</>)}
+                </button>
+                <button
+                  onClick={() => setEditMode(false)}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-5 py-2.5 text-sm font-medium rounded-lg transition"
+                >
+                  <FaTimes /> Cancel
+                </button>
+              </>
+            ) : (
               <button
-                className="flex items-center px-6 py-3 text-white bg-pink-600 rounded-lg hover:bg-pink-700 transition"
-                onClick={handleSave}
-                disabled={loading}
+                onClick={() => setEditMode(true)}
+                className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 text-sm font-medium rounded-lg transition"
               >
-                {loading ? (
-                  <span>Saving...</span>
-                ) : (
-                  <>
-                    <FaSave className="mr-2" /> Save
-                  </>
-                )}
+                <FaEdit /> Edit
               </button>
-              <button
-                className="flex items-center px-6 py-3 text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition"
-                onClick={() => setEditMode(false)}
-                disabled={loading}
-              >
-                <FaTimes className="mr-2" /> Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              className="flex items-center px-6 py-3 text-white bg-pink-600 rounded-lg hover:bg-pink-700 transition"
-              onClick={() => setEditMode(true)}
-            >
-              <FaEdit className="mr-2" /> Edit News
-            </button>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

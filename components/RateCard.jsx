@@ -11,7 +11,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
 } from 'recharts';
 
 const RateCard = () => {
@@ -82,7 +81,7 @@ const RateCard = () => {
         <FontAwesomeIcon
           key={star}
           icon={solidStar}
-          className={ratingValue >= star ? 'text-yellow-400' : 'text-gray-300'}
+          className={ratingValue >= star ? 'text-yellow-400' : 'text-neutral-600'}
         />
       ))}
     </div>
@@ -96,13 +95,13 @@ const RateCard = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8">
+    <div className="bg-neutral-900 text-white rounded-2xl border border-pink-600 shadow-lg p-8">
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-neutral-400">Loading...</p>
       ) : error ? (
         <p className="text-red-500">{error}</p>
       ) : Object.keys(groupedReviews).length === 0 ? (
-        <p className="text-gray-500">No reviews found.</p>
+        <p className="text-neutral-400">No reviews found.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Object.entries(groupedReviews).map(([roomName, reviews]) => {
@@ -114,72 +113,85 @@ const RateCard = () => {
             }));
 
             return (
-              <div key={roomName} className="bg-gray-50 border rounded-xl shadow p-5">
-                <div className="flex justify-between items-center mb-2">
-                  <h2 className="text-lg font-semibold text-gray-700">{roomName}</h2>
+              <div
+                key={roomName}
+                className="bg-neutral-950 border border-neutral-700 rounded-xl shadow p-6 hover:border-pink-600 transition-all"
+              >
+                <div className="w-16 h-0.5 bg-pink-600 mb-4 mx-auto" />
+
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold text-white uppercase tracking-wider">
+                    {roomName}
+                  </h2>
                   <div className="flex items-center gap-2 text-sm">
-                    {renderStarRating(averageRating)}
-                    <span className="text-gray-500">({percentage}%)</span>
-                  </div>
+  {renderStarRating(averageRating)}
+  <span className="text-neutral-400">
+    {percentage}% ({reviews.length})
+  </span>
+</div>
+
                 </div>
 
-                {/* Mini Wave Chart */}
                 <div className="h-32">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
                         <linearGradient id="miniChart" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8} />
+                          <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <XAxis dataKey="index" hide />
                       <YAxis domain={[0, 5]} hide />
-                      <Tooltip />
+                      <Tooltip contentStyle={{ backgroundColor: "#1f2937", borderColor: "#ec4899" }} />
                       <Area
                         type="monotone"
                         dataKey="rating"
-                        stroke="#3b82f6"
+                        stroke="#ec4899"
                         fill="url(#miniChart)"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
 
-                {/* Toggle */}
                 <button
                   onClick={() => handleToggleExpand(roomName)}
-                  className="text-sm text-blue-500 hover:underline mt-3"
+                  className="text-sm text-pink-500 hover:underline mt-4"
                 >
                   {expandedRooms[roomName] ? 'Hide Reviews' : 'View More'}
                 </button>
 
-                {/* Expanded Reviews */}
                 {expandedRooms[roomName] && (
                   <div className="mt-4 grid grid-cols-1 gap-4">
                     {reviews.map((review, idx) => (
                       <div
                         key={idx}
-                        className="bg-white border rounded-lg p-4 shadow-sm flex flex-col gap-2"
+                        className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 shadow-sm flex flex-col gap-2"
                       >
-                        <h3 className="font-semibold text-gray-700">{review.item.menuName}</h3>
-                        <p className="text-xs text-gray-500">Order ID: {review.orderId}</p>
-                        <p className="text-xs text-gray-500">
+                        <h3 className="font-semibold text-white">{review.item.menuName}</h3>
+                        <p className="text-xs text-neutral-500">Order ID: {review.orderId}</p>
+                        <p className="text-xs text-neutral-500">
                           Reviewed by: {review.user} ({review.email})
                         </p>
                         {review.item.menuImage && (
                           <img
                             src={review.item.menuImage}
-                            alt={review.item.menuName}
+                            alt={review.item.menuName || 'Menu Item'}
                             className="w-24 h-24 object-cover rounded-md"
                           />
                         )}
-                        <p className="text-sm text-gray-600">
-                          ₱{(Number(review.item.menuPrice) * Number(review.item.quantity || 1)).toFixed(2)}
+                        <p className="text-sm text-neutral-300">
+                          ₱
+                          {(
+                            Number(review.item.menuPrice) *
+                            Number(review.item.quantity || 1)
+                          ).toFixed(2)}
                         </p>
-                        <p className="text-sm text-gray-600">Quantity: {review.item.quantity || 1}</p>
-                        <div className="mt-2">{renderStarRating(review.rating)}</div>
-                        <p className="italic text-gray-700 mt-1">"{review.comment}"</p>
+                        <p className="text-sm text-neutral-300">
+                          Quantity: {review.item.quantity || 1}
+                        </p>
+                        <div className="mt-1">{renderStarRating(review.rating)}</div>
+                        <p className="italic text-pink-400 mt-2">"{review.comment}"</p>
                       </div>
                     ))}
                   </div>

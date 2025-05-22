@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import getPromos from '@/app/actions/getPromos';
 import getAllClaimedVouchers from '@/app/actions/getAllClaimedVoucher';
 import VouchersCard from '@/components/VouchersCard';
-import Heading from '@/components/Heading';
 
 const CustomerPromoPage = () => {
   const [promos, setPromos] = useState([]);
@@ -33,8 +32,14 @@ const CustomerPromoPage = () => {
   };
 
   return (
-    <div className="container mx-auto py-12">
-      <Heading title="Customer Vouchers" />
+    <div className="container mx-auto py-12 bg-neutral-900 text-white">
+      {/* New Header */}
+      <div className="text-center mb-40 mt-5 px-4">
+        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">PROMOTIONS</h2>
+        <p className="mt-4 text-xl sm:text-5xl font-bold text-white tracking-widest">
+        Unlock exclusive deals and discounts.        </p>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {promos && promos.length > 0 ? (
           promos.map((voucher) => (

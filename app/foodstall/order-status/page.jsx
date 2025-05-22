@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import getAllOrders from '@/app/actions/getAllOrders';
 import OrderReceiveCard from '@/components/OrderReceiveCard';
-import getMySpaces from '@/app/actions/getMySpaces'; 
+import getMySpaces from '@/app/actions/getMySpaces';
 
 const MyOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -36,7 +36,6 @@ const MyOrdersPage = () => {
     loadOrders();
   }, []);
 
-  // Filter orders that contain at least one item for this room
   const filteredOrders = orders.filter(order =>
     order.items.some(itemString => {
       try {
@@ -49,18 +48,24 @@ const MyOrdersPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10">
-      <div className="max-w-6xl mx-auto bg-white shadow-md rounded-2xl p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
-          {roomName ? `${roomName} | ORDER(S)` : 'ORDER(S)'}
-        </h1>
+    <div className="min-h-screen bg-neutral-950 text-white px-4 py-10">
+      <div className="max-w-6xl mx-auto bg-neutral-900 text-white shadow-xl border-2 border-pink-600 rounded-2xl p-8">
+        {/* Header style like FoodStallPage */}
+        <div className="text-center mb-12">
+          <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">
+            Orders
+          </h2>
+          <p className="mt-4 text-2xl sm:text-5xl font-extrabold text-white leading-tight">
+            {roomName}
+          </p>
+        </div>
 
         {loading ? (
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-gray-400 text-center">Loading...</p>
         ) : error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500 text-center">{error}</p>
         ) : filteredOrders.length === 0 ? (
-          <p className="text-gray-600">No orders found for this room.</p>
+          <p className="text-gray-400 text-center">No orders found for this room.</p>
         ) : (
           <div className="space-y-6">
             {filteredOrders.map((order) => (

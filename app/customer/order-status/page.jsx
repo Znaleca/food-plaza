@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import getUserOrders from '@/app/actions/getUserOrders';
-import Heading from '@/components/Heading';
 import OrderCard from '@/components/OrderCard';
 
 const OrderStatusPage = () => {
@@ -31,24 +30,27 @@ const OrderStatusPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10">
-      <div className="max-w-5xl mx-auto bg-white shadow-md rounded-2xl p-8">
-        <Heading title="My Orders" />
+    <div className="w-full min-h-screen bg-neutral-900 text-white">
+      <section className="w-full py-32 px-4 sm:px-6">
+        <div className="text-center mb-12">
+          <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">MY ORDERS</h2>
+          <p className="mt-4 text-xl sm:text-5xl font-bold">Track and rate your meals.</p>
+        </div>
 
         {loading ? (
-          <p className="text-gray-500">Loading...</p>
+          <p className="text-gray-400 text-center">Loading...</p>
         ) : error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500 text-center">{error}</p>
         ) : orders.length === 0 ? (
-          <p className="text-gray-600">No orders found.</p>
+          <p className="text-gray-500 text-center">No orders found.</p>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {orders.map((order) => (
               <OrderCard key={order.$id} order={order} setOrders={setOrders} />
             ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };

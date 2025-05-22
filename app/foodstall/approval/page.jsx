@@ -8,7 +8,6 @@ import getMySpaces from '@/app/actions/getMySpaces';
 import approveBooking from '@/app/actions/approveBooking';
 import declineBooking from '@/app/actions/declineBooking';
 import ReservationTicket from '@/components/reservationTicket';
-import Heading from '@/components/Heading';
 
 const ApprovalPage = () => {
   const { currentUser } = useAuth();
@@ -65,38 +64,43 @@ const ApprovalPage = () => {
   };
 
   return (
-    <div className="mt-8 mx-4 md:mx-12">
-      <Heading title="Lease Approvals" />
-      <div className="space-y-4">
+    <div className="min-h-screen bg-neutral-900 text-white p-6">
+      <div className="text-center mb-12 px-4">
+        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">ALL STALL</h2>
+        <p className="mt-4 text-xl sm:text-5xl font-bold">Lease</p>
+      </div>
+
+      <div className="space-y-6">
         {bookings.length === 0 ? (
-          <p className="text-lg text-gray-600">No Lease for your food stalls</p>
+          <p className="text-gray-400 text-center">No Lease for your food stalls</p>
         ) : (
           bookings.map((booking) => (
             <div
               key={booking.$id}
-              className="bg-white shadow-lg rounded-lg p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between"
+              className="bg-neutral-900   p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between "
             >
               <div className="flex-1">
                 <ReservationTicket booking={booking} showActions={false} />
               </div>
               <div className="flex flex-col sm:flex-row sm:space-x-4 mt-4 sm:mt-0">
-                {booking.status === 'pending' && (
-                  <>
-                    <button
-                      onClick={() => handleApprove(booking.$id)}
-                      className="bg-green-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-green-600 transition-all"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleDecline(booking.$id)}
-                      className="bg-red-500 text-white px-6 py-2 rounded-md shadow-md hover:bg-red-600 transition-all mt-2 sm:mt-0"
-                    >
-                      Decline
-                    </button>
-                  </>
-                )}
-              </div>
+  {booking.status === 'pending' && (
+    <>
+      <button
+        onClick={() => handleApprove(booking.$id)}
+        className="bg-pink-600 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500 hover:text-white"
+      >
+        Approve
+      </button>
+      <button
+        onClick={() => handleDecline(booking.$id)}
+        className="bg-neutral-800 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500 hover:text-white mt-2 sm:mt-0"
+      >
+        Decline
+      </button>
+    </>
+  )}
+</div>
+
             </div>
           ))
         )}

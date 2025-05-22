@@ -1,78 +1,131 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import getSales from '@/app/actions/getSales';
+import { useEffect, useState, useMemo } from 'react';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  Legend,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend, LineChart, Line,
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { FaUtensils } from 'react-icons/fa6';
+import getSales from '@/app/actions/getSales';
+
+// Colors for pie chart
+const COLORS = ['#FF69B4', '#FFD700', '#36A2EB', '#FF8C00'];
+
+// Utility to get day name from Date object
+const getDayName = (date) => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()];
+
+// Aggregate sales by day of week (Mon-Sun)
+const aggregateByDay = (orders, roomName) => {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayMap = days.reduce((acc, day) => ({ ...acc, [day]: 0 }), {});
+
+  orders.forEach(order => {
+    (order.items || []).forEach(itemString => {
+      try {
+        const item = JSON.parse(itemString);
+        if (item.room_name !== roomName) return;
+
+        const dayName = getDayName(new Date(order.created_at));
+        const dayKey = dayName === 'Sun' ? 'Sun' : dayName;
+        dayMap[dayKey] += Number(item.quantity || 1);
+      } catch { /* ignore malformed items */ }
+    });
+  });
+
+  return days.map(day => ({ day, sales: dayMap[day] || 0 }));
+};
+
+// Aggregate sales by ISO week number
+const aggregateByWeek = (orders, roomName) => {
+  const weekMap = {};
+
+  const getWeekNumber = (date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  };
+
+  orders.forEach(order => {
+    (order.items || []).forEach(itemString => {
+      try {
+        const item = JSON.parse(itemString);
+        if (item.room_name !== roomName) return;
+
+        const weekNum = getWeekNumber(new Date(order.created_at));
+        weekMap[weekNum] = (weekMap[weekNum] || 0) + Number(item.quantity || 1);
+      } catch { }
+    });
+  });
+
+  return Object.entries(weekMap)
+    .sort((a, b) => a[0] - b[0])
+    .map(([week, sales]) => ({ week: `Week ${week}`, sales }));
+};
+
+// Aggregate sales by month (Jan-Dec)
+const aggregateByMonth = (orders, roomName) => {
+  const monthMap = {};
+
+  orders.forEach(order => {
+    (order.items || []).forEach(itemString => {
+      try {
+        const item = JSON.parse(itemString);
+        if (item.room_name !== roomName) return;
+
+        const date = new Date(order.created_at);
+        const month = date.toLocaleString('default', { month: 'short' });
+        monthMap[month] = (monthMap[month] || 0) + Number(item.quantity || 1);
+      } catch { }
+    });
+  });
+
+  const monthsOrder = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  return monthsOrder
+    .filter(m => monthMap[m])
+    .map(m => ({ month: m, sales: monthMap[m] }));
+};
+
+// Static promo data for pie chart
+const generatePromoData = () => [
+  { name: 'Discounts', value: 400 },
+  { name: 'Buy 1 Get 1', value: 300 },
+  { name: 'Free Drinks', value: 200 },
+  { name: 'Loyalty Points', value: 100 },
+];
+
+// Loading Spinner Component
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center text-white">
+    <svg className="animate-spin h-10 w-10 text-pink-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+    </svg>
+  </div>
+);
 
 const SalesCard = ({ roomName }) => {
-  const [salesData, setSalesData] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [timeRange, setTimeRange] = useState('day'); // 'day' | 'week' | 'month'
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Load sales orders once or when roomName changes
   useEffect(() => {
+    if (!roomName) return;
+
     const loadSales = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const res = await getSales();
-        const allOrders = res.orders || [];
-
-        const stallSalesMap = {};
-
-        allOrders.forEach((order) => {
-          (order.items || []).forEach((itemString) => {
-            try {
-              const item = JSON.parse(itemString);
-              const stallName = item.room_name || 'Unknown Stall';
-              const quantity = Number(item.quantity || 1);
-              const revenue = Number(item.menuPrice || 0) * quantity;
-
-              if (stallName !== roomName) return;  // Filter by roomName (stall)
-
-              if (!stallSalesMap[stallName]) {
-                stallSalesMap[stallName] = {
-                  stall: stallName,
-                  itemsSold: 0,
-                  totalRevenue: 0,
-                  items: [],
-                };
-              }
-
-              stallSalesMap[stallName].itemsSold += quantity;
-              stallSalesMap[stallName].totalRevenue += revenue;
-
-              // Track individual items and their sales
-              const existingItem = stallSalesMap[stallName].items.find(i => i.menuName === item.menuName);
-              if (existingItem) {
-                existingItem.quantity += quantity;
-                existingItem.totalRevenue += revenue;
-              } else {
-                stallSalesMap[stallName].items.push({
-                  menuName: item.menuName,
-                  menuImage: item.menuImage,
-                  quantity,
-                  totalRevenue: revenue,
-                });
-              }
-            } catch (err) {
-              console.warn('Invalid item format:', itemString);
-            }
-          });
-        });
-
-        const salesList = Object.values(stallSalesMap);
-        salesList.sort((a, b) => b.totalRevenue - a.totalRevenue);
-        setSalesData(salesList);
+        setOrders(res.orders || []);
       } catch (err) {
         console.error('Failed to fetch sales data:', err);
+        setError('Failed to load sales data.');
       } finally {
         setLoading(false);
       }
@@ -81,137 +134,137 @@ const SalesCard = ({ roomName }) => {
     loadSales();
   }, [roomName]);
 
+  // Memoize aggregated sales data depending on timeRange or orders
+  const salesData = useMemo(() => {
+    if (!orders.length) return [];
+
+    if (timeRange === 'day') return aggregateByDay(orders, roomName);
+    if (timeRange === 'week') return aggregateByWeek(orders, roomName);
+    if (timeRange === 'month') return aggregateByMonth(orders, roomName);
+    return [];
+  }, [orders, timeRange, roomName]);
+
+  // Promo data never changes, so generate once
+  const promoData = useMemo(generatePromoData, []);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return (
+    <div className="min-h-screen flex flex-col items-center justify-center text-red-500 space-y-4">
+      <p>{error}</p>
+      <button
+        onClick={() => {
+          setError(null);
+          setLoading(true);
+          getSales().then(res => {
+            setOrders(res.orders || []);
+            setLoading(false);
+          }).catch(() => {
+            setError('Failed to load sales data.');
+            setLoading(false);
+          });
+        }}
+        className="px-4 py-2 bg-pink-600 rounded hover:bg-pink-700 text-white"
+      >
+        Retry
+      </button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 py-10 px-4">
-      <div className="max-w-7xl mx-auto">
-        <motion.h1
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-indigo-600 text-transparent bg-clip-text mb-8 text-center"
-        >
-          Sales Overview for {roomName}
-        </motion.h1>
+    <div className="min-h-screen bg-neutral-900 text-white p-6">
+      
 
-        {loading ? (
-          <p className="text-center text-gray-500 text-lg">Loading sales data...</p>
-        ) : salesData.length === 0 ? (
-          <p className="text-center text-gray-500 text-lg">No sales data available for this food stall.</p>
-        ) : (
-          <>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="bg-white shadow-lg p-6 mb-12 rounded-xl"
-            >
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ddd" />
-                  <XAxis dataKey="stall" tick={{ fontSize: 12, fill: '#444' }} />
-                  <YAxis tick={{ fill: '#444' }} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="totalRevenue" fill="#4F46E5" name="Total Revenue (₱)" />
-                  <Bar dataKey="itemsSold" fill="#F59E0B" name="Items Sold" />
-                </BarChart>
-              </ResponsiveContainer>
-            </motion.div>
+      {/* Time Range Selector */}
+      <div role="tablist" aria-label="Select time range" className="flex justify-center gap-4 mb-8">
+        {['day','week','month'].map(range => (
+          <button
+            key={range}
+            role="tab"
+            aria-selected={timeRange === range}
+            tabIndex={timeRange === range ? 0 : -1}
+            onClick={() => setTimeRange(range)}
+            className={`px-5 py-2 rounded-full font-semibold transition
+              focus:outline-none focus:ring-2 focus:ring-pink-400
+              ${timeRange === range
+                ? 'bg-pink-500 text-white shadow-lg'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+          >
+            {range.charAt(0).toUpperCase() + range.slice(1)}
+          </button>
+        ))}
+      </div>
 
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  transition: {
-                    staggerChildren: 0.1,
-                  },
-                },
-              }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {salesData.map((stall, index) => {
-                // Find the highest and lowest selling items for the stall
-                const highestSellingItem = stall.items.reduce((maxItem, item) => 
-                  item.totalRevenue > maxItem.totalRevenue ? item : maxItem, stall.items[0]);
+      {/* Sales Trend Chart */}
+      <div className="bg-neutral-900 rounded-xl p-6">
+        <ResponsiveContainer width="100%" height={300}>
+          {(timeRange === 'day' || timeRange === 'week') ? (
+            <BarChart data={salesData}>
+              <XAxis
+                dataKey={timeRange === 'day' ? 'day' : 'week'}
+                stroke="#ccc"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis stroke="#ccc" />
+              <Tooltip
+                formatter={(value) => [value, 'Sales']}
+                labelFormatter={(label) => `${label}`}
+                wrapperStyle={{ backgroundColor: '#222', borderRadius: 6 }}
+              />
+              <Bar dataKey="sales" fill="#FF69B4" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          ) : (
+            <LineChart data={salesData}>
+              <XAxis
+                dataKey="month"
+                stroke="#ccc"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis stroke="#ccc" />
+              <Tooltip
+                formatter={(value) => [value, 'Sales']}
+                wrapperStyle={{ backgroundColor: '#222', borderRadius: 6 }}
+              />
+              <Line type="monotone" dataKey="sales" stroke="#36A2EB" strokeWidth={2} />
+            </LineChart>
+          )}
+        </ResponsiveContainer>
+      </div>
 
-                const lowestSellingItem = stall.items.reduce((minItem, item) => 
-                  item.totalRevenue < minItem.totalRevenue ? item : minItem, stall.items[0]);
+      {/* Promotions Pie Chart */}
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-12">
+        <section aria-label="Promotion types distribution">
+          <h3 className="text-xl font-semibold mb-4 text-yellow-400">Promotion Types</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={promoData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                fill="#FF69B4"
+                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                labelLine={false}
+              >
+                {promoData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Legend verticalAlign="bottom" />
+              <Tooltip
+                formatter={(value) => [value, 'Count']}
+                wrapperStyle={{ backgroundColor: '#222', borderRadius: 6 }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </section>
 
-                return (
-                  <motion.div
-                    key={index}
-                    variants={{
-                      hidden: { opacity: 0, y: 10 },
-                      visible: { opacity: 1, y: 0 },
-                    }}
-                    className="bg-white p-5 rounded-xl shadow-md border border-gray-200 hover:shadow-xl transition"
-                  >
-                    <h2 className="text-lg font-semibold text-indigo-600 mb-1 flex items-center gap-2">
-                      <FaUtensils className="text-black" />
-                      {stall.stall}
-                    </h2>
-
-                    <p className="text-sm text-pink-600 mb-1">
-                      Items Sold: <span className="font-semibold text-pink-500">{stall.itemsSold}</span>
-                    </p>
-                    <p className="text-sm text-blue-600">
-                      Total Revenue: <span className="font-semibold text-indigo-600">
-                        ₱{stall.totalRevenue.toFixed(2)}
-                      </span>
-                    </p>
-
-                    <div className="mt-4">
-                      <h3 className="font-semibold text-gray-800">Highest Selling Item</h3>
-                      <div className="flex items-center mt-2">
-                        {highestSellingItem.menuImage && (
-                          <img
-                            src={highestSellingItem.menuImage}
-                            alt={highestSellingItem.menuName}
-                            className="w-16 h-16 object-cover mr-4 rounded"
-                          />
-                        )}
-                        <div>
-                          <p className="text-sm text-gray-700">{highestSellingItem.menuName}</p>
-                          <p className="text-sm text-yellow-500">
-                            Total Revenue: ₱{highestSellingItem.totalRevenue.toFixed(2)}
-                          </p>
-                          <p className="text-sm text-yellow-500">
-                            Quantity Sold: {highestSellingItem.quantity}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <h3 className="font-semibold text-gray-800">Lowest Selling Item</h3>
-                      <div className="flex items-center mt-2">
-                        {lowestSellingItem.menuImage && (
-                          <img
-                            src={lowestSellingItem.menuImage}
-                            alt={lowestSellingItem.menuName}
-                            className="w-16 h-16 object-cover mr-4 rounded"
-                          />
-                        )}
-                        <div>
-                          <p className="text-sm text-gray-700">{lowestSellingItem.menuName}</p>
-                          <p className="text-sm text-red-400">
-                            Total Revenue: ₱{lowestSellingItem.totalRevenue.toFixed(2)}
-                          </p>
-                          <p className="text-sm text-red-400">
-                            Quantity Sold: {lowestSellingItem.quantity}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          </>
-        )}
+        {/* Placeholder for future charts or info */}
+        <section className="flex flex-col justify-center items-center text-gray-400 italic">
+          <FaUtensils size={64} />
+          <p className="mt-4">More insights coming soon...</p>
+        </section>
       </div>
     </div>
   );

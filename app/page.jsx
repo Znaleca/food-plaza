@@ -1,36 +1,37 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import getAllSpaces from '@/app/actions/getAllSpaces';
-import Heading from '@/components/Heading';
 import SpaceCard from '@/components/SpaceCard';
 import dynamic from 'next/dynamic';
 
 const MenuBrowse = dynamic(() => import('@/components/MenuBrowse'), { ssr: false });
 
-export default function Home() {
-  const [rooms, setRooms] = useState([]);  // State to hold room data
-  const [showMenu, setShowMenu] = useState(false);  // State to toggle between views
-  const [loading, setLoading] = useState(true);  // Loading state
+export default function BrowsePage() {
+  const searchParams = useSearchParams();
+  const initialView = searchParams.get('view'); // 'menu' or 'stalls'
+
+  const [rooms, setRooms] = useState([]);
+  const [showMenu, setShowMenu] = useState(initialView === 'menu');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRooms = async () => {
       try {
         const data = await getAllSpaces();
-        setRooms(data || []);  // Ensure we set it to an empty array if data is undefined
+        setRooms(data || []);
       } catch (error) {
         console.error('Error fetching rooms:', error);
       } finally {
-        setLoading(false);  // Set loading to false once data is fetched
+        setLoading(false);
       }
     };
 
-    fetchRooms();  // Fetch data when the component mounts
-  }, []);  // Empty dependency array to run only once
+    fetchRooms();
+  }, []);
 
-  const toggleView = () => {
-    setShowMenu((prev) => !prev);  // Toggle between menu and food stalls
-  };
+  const toggleView = () => setShowMenu(prev => !prev);
 
   if (loading) {
     return (
@@ -44,22 +45,23 @@ export default function Home() {
   return (
     <>
       {/* Toggle Button */}
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center -mb-20">
         <button 
           onClick={toggleView} 
-          className="px-8 py-4 text-2xl bg-pink-600 text-white rounded-xl hover:bg-pink-700 transition shadow-lg"
+          className="px-8 py-4 tracking-widest uppercase font-bold text-2xl bg-pink-600 text-white rounded-xl hover:bg-pink-700 transition shadow-lg mb-28"
         >
-          {showMenu ? 'Show Food Stalls' : 'Show Menu'}
+          {showMenu ? 'Food Stalls' : 'Menu'}
         </button>
       </div>
 
-      {/* Heading */}
-      <Heading 
-        title={showMenu ? "Menu" : "Food Stalls"} 
-        className="text-center mb-12 text-4xl font-bold text-gray-900 
-        bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-        bg-clip-text text-transparent" 
-      />
+      <div className="text-center mb-10 px-4">
+        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">
+          {showMenu ? 'BROWSE MENUS' : 'BROWSE FOOD STALLS'}
+        </h2>
+        <p className="mt-4 text-3xl sm:text-5xl font-bold text-white tracking-wider">
+          {showMenu ? 'Find something delicious.' : 'Find something you crave.'}
+        </p>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {showMenu ? (
@@ -71,11 +73,9 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-40">
             {rooms.map((room) => (
-              <div key={room.$id} className="flex justify-center">
-                <SpaceCard room={room} />
-              </div>
+              <SpaceCard key={room.$id} room={room} />
             ))}
           </div>
         )}

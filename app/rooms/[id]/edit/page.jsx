@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import Heading from '@/components/Heading';
 import { getDocumentById } from '@/app/actions/getSpace';
 import updateSpace from '@/app/actions/updateSpace';
+import Link from 'next/link';
+import { FaChevronLeft } from 'react-icons/fa6';
 
 const foodTypes = [
   'Fried', 'Smoked', 'Sushi', 'BBQ', 'Rice Bowl', 'Dessert',
@@ -27,14 +29,17 @@ const EditSpacePage = ({ params }) => {
   useEffect(() => {
     const fetchStall = async () => {
       const data = await getDocumentById(id);
-      if (!data) return toast.error('Food Stall not found.');
+      if (!data) {
+        toast.error('Food Stall not found.');
+        return;
+      }
       setStall(data);
       setSelectedTypes(data.type || []);
       setMenuItems(
         (data.menuName || []).map((name, index) => ({
           name,
           price: data.menuPrice?.[index] || '',
-          description: data.menuDescription?.[index] || '', // Add description here
+          description: data.menuDescription?.[index] || '',
           menuImage: null,
           existingImage: data.menuImages?.[index] || null
         }))
@@ -43,10 +48,10 @@ const EditSpacePage = ({ params }) => {
     fetchStall();
   }, [id]);
 
-  const handleTypeChange = (event) => {
-    const { value, checked } = event.target;
-    setSelectedTypes((prev) =>
-      checked ? [...prev, value] : prev.filter((type) => type !== value)
+  const handleTypeChange = (e) => {
+    const { value, checked } = e.target;
+    setSelectedTypes(prev =>
+      checked ? [...prev, value] : prev.filter(type => type !== value)
     );
   };
 
@@ -67,8 +72,7 @@ const EditSpacePage = ({ params }) => {
   };
 
   const removeMenuItem = (index) => {
-    const updatedMenu = menuItems.filter((_, i) => i !== index);
-    setMenuItems(updatedMenu);
+    setMenuItems(menuItems.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -78,16 +82,16 @@ const EditSpacePage = ({ params }) => {
     formData.append('id', id);
     formData.append('selectedTypes', JSON.stringify(selectedTypes));
 
-    menuItems.forEach((item, index) => {
+    menuItems.forEach(item => {
       formData.append('menuNames', item.name);
       formData.append('menuPrices', item.price);
-      formData.append('menuDescriptions', item.description); // Add description to formData
+      formData.append('menuDescriptions', item.description);
       if (item.menuImage) formData.append('menuImages[]', item.menuImage);
-      else formData.append('menuImages[]', new Blob([], { type: 'text/plain' })); // Placeholder
+      else formData.append('menuImages[]', new Blob([]));
       formData.append('existingMenuImages[]', item.existingImage || '');
     });
 
-    newImages.forEach((img) => formData.append('images', img));
+    newImages.forEach(img => formData.append('images', img));
 
     const result = await updateSpace(null, formData);
     if (result.success) {
@@ -98,136 +102,148 @@ const EditSpacePage = ({ params }) => {
     }
   };
 
-  if (!stall) return <div className="text-center mt-10">Loading...</div>;
+  if (!stall) return <div className="text-center mt-10 text-white">Loading...</div>;
 
   return (
-    <>
-      <Heading title="Edit Food Stall" className="text-center mb-8 text-3xl font-extrabold text-gray-900" />
+    <div className="bg-neutral-900 min-h-screen text-white p-6">
+      <Link
+        href="/rooms/my"
+        className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6"
+      >
+        <FaChevronLeft className="mr-2" />
+        <span className="font-medium text-lg">Back</span>
+      </Link>
 
-      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-5xl mx-auto"> {/* Increased max-width */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Food Stall Name</label>
-            <input
-              type="text"
-              name="name"
-              defaultValue={stall.name}
-              required
-              className="border border-gray-300 rounded-lg w-full py-3 px-6" // Increased padding
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Type</label>
-            <div className="grid grid-cols-4 gap-4"> {/* Adjusted grid layout */}
-              {foodTypes.map((type) => (
-                <label key={type} className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    name="type"
-                    value={type}
-                    checked={selectedTypes.includes(type)}
-                    onChange={handleTypeChange}
-                    className="accent-blue-500"
-                  />
-                  <span>{type}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Description</label>
-            <textarea
-              name="description"
-              defaultValue={stall.description}
-              required
-              className="border border-gray-300 rounded-lg w-full h-32 py-3 px-6" // Increased height
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Menu</label>
-            {menuItems.map((item, index) => (
-              <div key={index} className="flex space-x-4 mb-4 items-center"> {/* Increased spacing */}
-                <input
-                  type="text"
-                  placeholder="Item Name"
-                  required
-                  value={item.name}
-                  onChange={(e) => handleMenuChange(index, 'name', e.target.value)}
-                  className="border border-gray-300 rounded-lg py-3 px-6 w-full"
-                />
-                <input
-                  type="number"
-                  placeholder="₱ Price"
-                  required
-                  value={item.price}
-                  onChange={(e) => handleMenuChange(index, 'price', e.target.value)}
-                  className="border border-gray-300 rounded-lg py-3 px-6 w-32"
-                />
-                <textarea
-                  placeholder="Description"
-                  value={item.description}
-                  onChange={(e) => handleMenuChange(index, 'description', e.target.value)}
-                  className="border border-gray-300 rounded-lg py-3 px-6 w-full"
-                />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleMenuImageChange(index, e.target.files[0])}
-                  className="border border-gray-300 rounded-lg py-3 px-6"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeMenuItem(index)}
-                  className="bg-black text-white px-6 py-3 rounded-lg"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addMenuItem}
-              className="bg-yellow-400 text-white px-6 py-3 rounded-lg mt-4"
-            >
-              + Add Menu Item
-            </button>
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Stall #</label>
-            <input
-              type="number"
-              name="stallNumber"
-              defaultValue={stall.stallNumber}
-              className="border border-gray-300 rounded-lg w-full py-3 px-6"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 font-semibold mb-2">Upload New Food Stall Images (Optional)</label>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={(e) => setNewImages([...e.target.files])}
-              className="border border-gray-300 rounded-lg w-full py-3 px-6"
-            />
-          </div>
-
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              className="bg-pink-600 text-white px-8 py-4 rounded-lg font-semibold shadow-md hover:bg-pink-700 transition-all"
-            >
-              Update Food Stall
-            </button>
-          </div>
-        </form>
+      <div className="text-center mb-8 px-4">
+        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">Edit Stall</h2>
+        <p className="mt-4 text-2xl sm:text-5xl font-extrabold text-white leading-tight">Edit Food Stall</p>
       </div>
-    </>
+
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-6xl mx-auto">
+        <div>
+          <label className="block font-semibold mb-2">Food Stall Name</label>
+          <input
+            type="text"
+            name="name"
+            defaultValue={stall.name}
+            required
+            className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6"
+          />
+        </div>
+
+        <div>
+          <label className="block font-semibold mb-2">Type</label>
+          <div className="grid grid-cols-4 gap-4">
+            {foodTypes.map(type => (
+              <label key={type} className="flex items-center space-x-2 text-sm">
+                <input
+                  type="checkbox"
+                  value={type}
+                  checked={selectedTypes.includes(type)}
+                  onChange={handleTypeChange}
+                  className="accent-pink-500"
+                />
+                <span>{type}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <input type="hidden" name="selectedTypes" value={JSON.stringify(selectedTypes)} />
+
+        <div>
+          <label className="block font-semibold mb-2">Description</label>
+          <textarea
+            name="description"
+            defaultValue={stall.description}
+            required
+            className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full h-32 py-3 px-6"
+          />
+        </div>
+
+        <div>
+          <label className="block font-semibold mb-2">Menu</label>
+          {menuItems.map((item, index) => (
+            <div key={index} className="flex flex-wrap gap-4 mb-4 items-center">
+              <input
+                type="text"
+                name="menuNames"
+                placeholder="Item Name"
+                required
+                value={item.name}
+                onChange={e => handleMenuChange(index, 'name', e.target.value)}
+                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 flex-1 min-w-[150px]"
+              />
+              <input
+                type="number"
+                name="menuPrices"
+                placeholder="₱ Price"
+                required
+                value={item.price}
+                onChange={e => handleMenuChange(index, 'price', e.target.value)}
+                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 w-32"
+              />
+              <input
+                type="text"
+                name="menuDescriptions"
+                placeholder="Description"
+                value={item.description}
+                onChange={e => handleMenuChange(index, 'description', e.target.value)}
+                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 flex-1 min-w-[150px]"
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => handleMenuImageChange(index, e.target.files[0])}
+                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6"
+              />
+              <button
+                type="button"
+                onClick={() => removeMenuItem(index)}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addMenuItem}
+            className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg mt-2"
+          >
+            + Add Menu Item
+          </button>
+        </div>
+
+        <div>
+          <label className="block font-semibold mb-2">Stall #</label>
+          <input
+            type="number"
+            name="stallNumber"
+            defaultValue={stall.stallNumber}
+            className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6"
+          />
+        </div>
+
+        <div>
+          <label className="block font-semibold mb-2">Upload New Food Stall Images (Optional)</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={e => setNewImages([...e.target.files])}
+            className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full py-4 bg-pink-600 hover:bg-pink-700 rounded-lg font-bold text-white text-xl tracking-widest"
+        >
+          Update Food Stall
+        </button>
+      </form>
+    </div>
   );
 };
 

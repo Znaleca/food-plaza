@@ -8,6 +8,8 @@ import Heading from '@/components/Heading';
 import StocksChart from '@/components/StocksChart';
 import SalesCard from '@/components/SalesCard';
 import CustomerRatingCard from '@/components/CustomerRatingCard';
+import Link from 'next/link';
+import { FaChevronLeft } from 'react-icons/fa6';
 
 const PreviewStallPage = ({ params }) => {
   const { id } = params;
@@ -113,6 +115,13 @@ const PreviewStallPage = ({ params }) => {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-12 bg-white text-black rounded-2xl shadow-lg">
+      <Link
+        href="/rooms/my"
+        className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6"
+      >
+        <FaChevronLeft className="mr-2" />
+        <span className="font-medium text-lg">Back</span>
+      </Link>
       <Heading title={stall.name} className="text-4xl font-bold mb-6 text-center text-gray-900" />
 
       <div

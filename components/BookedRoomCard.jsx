@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { useAuth } from '@/context/authContext';
 import CancelBookingButton from './CancelBookingButton';
 import deleteBooking from '@/app/actions/deleteBooking';
@@ -10,32 +9,27 @@ import { FaTrashAlt } from 'react-icons/fa';
 const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
   const { currentUser } = useAuth();
 
-  const room = booking?.room_id || { name: 'Unknown Room', $id: '' };
-  const userName = booking?.user_name || currentUser?.name || 'Unknown User';
-  const userEmail = currentUser?.email || 'Unknown Email';
+  const room = booking?.room_id || { name: 'Unknown Stall', stallNumber: 'N/A', $id: '' };
+  const stallName = room?.name || 'Unnamed Stall';
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Invalid Date';
     const date = new Date(dateString);
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    const timeOptions = {
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: true,
-    };
+    const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
     return `${date.toLocaleDateString(undefined, options)} at ${date.toLocaleTimeString(undefined, timeOptions)}`;
   };
 
   const getStatus = (status) => {
     switch (status) {
       case 'pending':
-        return { text: 'Pending', color: 'text-yellow-600' };
+        return { text: 'Pending', color: 'text-yellow-400' };
       case 'approved':
-        return { text: 'Approved', color: 'text-green-700' };
+        return { text: 'Approved', color: 'text-green-400' };
       case 'declined':
-        return { text: 'Declined', color: 'text-red-600' };
+        return { text: 'Declined', color: 'text-red-500' };
       default:
-        return { text: 'Unknown', color: 'text-gray-500' };
+        return { text: 'Unknown', color: 'text-gray-400' };
     }
   };
 
@@ -53,40 +47,42 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
     }
   };
 
-  if (!room || !room.name || !booking.check_in || !booking.check_out) {
+  if (!room || !booking.check_in || !booking.check_out) {
     return <div className="text-red-500">Error: Lease or stall data is incomplete.</div>;
   }
 
   return (
-    <div className="bg-white shadow-md border border-gray-300 rounded-md p-8 max-w-3xl mx-auto font-serif text-gray-800 leading-relaxed">
-      <h2 className="text-2xl font-bold text-center mb-6 underline">Food Stall Lease Agreement</h2>
+    <div className="bg-neutral-900 border border-pink-600 rounded-xl p-6 text-center text-white hover:bg-neutral-950 transition-all duration-300">
+      {/* Decorative Line */}
+      <div className="w-16 h-0.5 bg-pink-600 mx-auto mb-4" />
 
-      <p className="mb-4">
-  This document confirms that <strong>{userName}</strong> (<em>{userEmail}</em>), as the <strong>THE CORNER FOOD PLAZA</strong> owner, has officially confirmed the lease of Food Stall <strong>{room.name}</strong> here at <strong>The Corner Food Plaza</strong> under the following terms:
-</p>
+      {/* Title */}
+      <h3 className="text-base font-bold tracking-widest uppercase mb-2">
+        Food Stall Lessee: {stallName} (Stall #{room.stallNumber || 'N/A'})
+      </h3>
 
+      {/* Decorative Line */}
+      <div className="w-16 h-0.5 bg-gray-600 mx-auto mb-6" />
 
-
-
-      <div className="mb-6">
-        <p><strong>Lease ID:</strong> {booking?.$id || 'N/A'}</p>
-        <p><strong>Agenda:</strong> {booking?.agenda || 'N/A'}</p>
-        <p><strong>Lease Start:</strong> {formatDate(booking.check_in)}</p>
-        <p><strong>Lease End:</strong> {formatDate(booking.check_out)}</p>
-        <p><strong>Status:</strong> <span className={`${statusColor}`}>{statusText}</span></p>
+      {/* Details */}
+      <div className="text-sm space-y-2 font-light">
+        <p><span className="font-semibold">Lease ID:</span> {booking?.$id || 'N/A'}</p>
+        <p><span className="font-semibold">Agenda:</span> {booking?.agenda || 'N/A'}</p>
+        <p><span className="font-semibold">Start:</span> {formatDate(booking.check_in)}</p>
+        <p><span className="font-semibold">End:</span> {formatDate(booking.check_out)}</p>
+        <p><span className="font-semibold">Status:</span> <span className={statusColor}>{statusText}</span></p>
       </div>
 
-      <hr className="my-6 border-gray-400" />
-
-      <div className="text-sm mb-6">
-      <p>
-  As the management of <strong>The Corner Food Plaza</strong>, we require all stall lessees to strictly adhere to our terms, conditions, and operational guidelines. These include, but are not limited to, maintaining cleanliness and sanitation, controlling noise levels, disposing of waste properly, respecting assigned stall boundaries, and conducting themselves professionally toward customers and fellow vendors. We reserve the right to revoke or terminate any lease agreement at our discretion in cases of violations, non-compliance, or any circumstances that may compromise the safety, order, or integrity of the premises.
-</p>
-
+      {/* Agreement Notice */}
+      <div className="mt-6 text-xs text-gray-300 font-extralight text-left">
+        <p>
+          As the management of <strong className="text-white">The Corner Food Plaza</strong>, we confirm that the food stall named <strong className="text-white">{stallName}</strong> is the official lessee of this leased space. All lessees must comply with our policies regarding cleanliness, behavior, waste disposal, and noise management. Non-compliance may result in immediate termination of the lease.
+        </p>
       </div>
 
+      {/* Actions */}
       {showActions && (
-        <div className="flex justify-end space-x-4 mt-10">
+        <div className="flex justify-center mt-6 space-x-4">
           {!isDeclined && (
             <CancelBookingButton bookingId={booking.$id} />
           )}
@@ -99,7 +95,6 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
               <span>Delete Booking</span>
             </button>
           )}
-          
         </div>
       )}
     </div>

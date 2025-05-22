@@ -5,7 +5,7 @@ import ReservationsCalendarPage from '@/components/CalendarView';
 
 const ReservationsCalendar = () => {
   return (
-    <div className="container mx-auto p-6">
+    <div className="w-full h-screen">
       <ReservationsCalendarPage />
     </div>
   );

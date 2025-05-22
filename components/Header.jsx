@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import logo from '@/assets/images/logo.svg';
 import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus, FaHome, FaUtensils, FaBoxOpen, FaTools, FaStore } from 'react-icons/fa';
-import { FaGear, FaCircleUser, FaCartShopping, FaGift, FaHandHoldingDollar } from "react-icons/fa6";
+import { FaGear, FaCircleUser, FaCartShopping, FaGift, FaBarsProgress, FaCaretRight } from "react-icons/fa6";
 import { useState } from "react";
 import destroySession from "@/app/actions/destroySession";
 import { toast } from "react-toastify";
@@ -45,7 +45,7 @@ const Header = () => {
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
 
   return (
-    <header className="bg-black shadow-md">
+    <header className="bg-neutral-800 shadow-md">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Title */}
@@ -54,16 +54,16 @@ const Header = () => {
               <div className="flex items-center cursor-default">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
-                  <span className="bg-clip-text text-transparent bg-white">THE</span>
-                  <span className="text-white"> CORNER</span>
+                  <span className="bg-clip-text text-transparent bg-white tracking-widest">THE</span>
+                  <span className="text-white tracking-widest"> CORNER</span>
                 </span>
               </div>
             ) : (
               <Link href="/home" className="flex items-center">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
-                  <span className="bg-clip-text text-transparent bg-white">THE</span>
-                  <span className="text-white"> CORNER</span>
+                  <span className="bg-clip-text text-transparent bg-white tracking-widest">THE</span>
+                  <span className="text-white tracking-widest"> CORNER</span>
                 </span>
               </Link>
             )}
@@ -74,21 +74,21 @@ const Header = () => {
             <div className="ml-10 flex items-center gap-6 text-sm font-medium text-white">
               {isAuthenticated && !isAdmin && !isFoodstall && (
                 <>
-                  <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaHome className="text-lg" /> Home
+                  <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition tracking-wider">
+                     Home
                   </Link>
-                  <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaUtensils className="text-lg" /> Browse
+                  <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition tracking-wider">
+                    Browse
                   </Link>
-                  <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaBoxOpen className="text-lg" /> Order Status
+                  <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition tracking-wider">
+                    My Orders
                   </Link>
                 </>
               )}
 
               {isCustomer && (
-                <Link href="/customer/promos" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                  <FaGift className="text-lg" /> Promotions
+                <Link href="/customer/promos" className="flex items-center gap-2 hover:text-yellow-400 transition tracking-wider">
+                   Promotions
                 </Link>
               )}
 
@@ -96,10 +96,7 @@ const Header = () => {
                 <>
                   <span className="text-gray-400">|</span>
                   <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaTools className="text-lg" /> Admin Panel
-                  </Link>
-                  <Link href="/lease/management" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaHandHoldingDollar className="text-lg" /> Lease Management
+                    <FaCaretRight className="text-lg" /> Admin Panel
                   </Link>
                 </>
               )}
@@ -107,8 +104,8 @@ const Header = () => {
               {isFoodstall && (
                 <>
                   <span className="text-gray-400">|</span>
-                  <Link href="/foodstall" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                    <FaStore className="text-lg" /> Food Stall Panel
+                  <Link href="/foodstall" className="flex items-center gap-2 tracking-widest hover:text-yellow-400 transition">
+                    <FaCaretRight className="text-lg" /> Stall Panel
                   </Link>
                 </>
               )}
@@ -159,7 +156,7 @@ const Header = () => {
                   <div className="relative">
                     <button
                       onClick={toggleDropdown}
-                      className="relative flex items-center px-4 py-2 space-x-2 text-sm font-medium text-white bg-black border-2 border-gray-300 rounded-full shadow hover:border-yellow-400 focus:outline-none"
+                      className="relative flex items-center px-4 py-2 space-x-2 text-sm font-medium text-white bg-neutral-800 border-2 border-gray-300 rounded-full shadow hover:border-yellow-400 focus:outline-none"
                     >
                       <FaBars className="text-lg" />
                       <FaCircleUser className="text-lg" />
@@ -186,7 +183,7 @@ const Header = () => {
 
         {/* Mobile Menu Content */}
         {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 space-y-2 text-white bg-zinc-900 rounded-md p-4 z-50">
+          <div className="md:hidden mt-4 space-y-2 text-white bg-neutral-800 rounded-md p-4 z-50">
             {isAuthenticated && !isAdmin && !isFoodstall && (
               <>
                 <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
@@ -196,7 +193,7 @@ const Header = () => {
                   <FaUtensils className="text-lg" /> Browse
                 </Link>
                 <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                  <FaBoxOpen className="text-lg" /> Order Status
+                  <FaBoxOpen className="text-lg" /> My Orders
                 </Link>
               </>
             )}
@@ -209,15 +206,17 @@ const Header = () => {
 
             {isAdmin && (
               <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                <FaTools className="text-lg" /> Admin Panel
+                <FaCaretRight className="text-lg" /> Admin Panel
               </Link>
             )}
-
-            {isFoodstall && (
-              <Link href="/foodstall" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                <FaStore className="text-lg" /> Food Stall Panel
-              </Link>
-            )}
+ {isFoodstall && (
+                
+                  <Link href="/foodstall" className="flex items-center gap-2 tracking-widest hover:text-yellow-400 transition">
+                    <FaCaretRight className="text-lg" /> Stall Panel
+                  </Link>
+                
+              )}
+            
 
             <hr className="border-gray-600 my-2" />
 

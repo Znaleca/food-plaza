@@ -23,7 +23,7 @@ const DeleteRoomButton = ({ roomId }) => {
   return (
     <button
       onClick={handleDelete}
-      className="bg-pink-600 hover:bg-pink-700 text-white py-2 px-4 rounded-full shadow-md text-sm font-semibold flex items-center justify-center gap-2 transform hover:scale-105 transition-all"
+      className="bg-pink-600 hover:bg-pink-700 text-white py-2 px-4 rounded-full shadow-md text-xs font-semibold flex items-center justify-center gap-2 transform hover:scale-105 transition-all"
     >
       <FaTrash /> Delete
     </button>

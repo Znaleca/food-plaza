@@ -1,17 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaPercent } from 'react-icons/fa';
 import DeletePromosButton from './DeletePromosButton';
 
 const PromosCard = ({ promo, onDelete }) => {
   const [isDeleted, setIsDeleted] = useState(false);
 
-  if (!promo || isDeleted) {
-    return null;
-  }
-
-  const imageSrc = '/images/percentage.jpg';
+  if (!promo || isDeleted) return null;
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -26,59 +22,53 @@ const PromosCard = ({ promo, onDelete }) => {
   const isActive = new Date(promo.valid_to).setHours(23, 59, 59, 999) >= new Date();
 
   return (
-    <div 
-      className={`relative w-full max-w-md p-3 bg-white text-gray-900 border-2 border-yellow-400 rounded-lg shadow-lg flex items-center justify-between transform hover:scale-105 transition-all duration-300 
-        ${!isActive ? 'opacity-50' : ''}`} // Makes expired cards look disabled
+    <div
+      className={`relative w-full max-w-md mx-auto p-4 bg-neutral-900 text-white rounded-lg shadow-md border-2 border-pink-600 transition-all duration-300 
+      ${!isActive ? 'opacity-60' : 'hover:shadow-lg'}`}
     >
-      {/* Expired Watermark */}
+      {/* "Expired" Overlay */}
       {!isActive && (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-5xl font-bold opacity-20 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-4xl font-semibold opacity-40 pointer-events-none">
           EXPIRED
         </div>
       )}
 
-      {/* Strikethrough Effect */}
-      {!isActive && (
-        <div className="absolute inset-0 w-full h-full border-t-4 border-b-4 border-gray-500 rotate-[-5deg] opacity-50 pointer-events-none"></div>
-      )}
-
-      {/* Promo Image */}
-      <div className="w-24 h-24 bg-cover bg-center mr-4" style={{ backgroundImage: `url(${imageSrc})` }}></div>
-      
-      {/* Promo Content */}
-      <div className="flex flex-col flex-grow border-l-4 border-blue-400 pl-4">
-        {/* Promo Header */}
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-md font-bold text-gray-800">{promo.title || 'Promo Title'}</h3>
-          <span className="px-2 py-1 text-xs font-semibold bg-gray-200 text-gray-800 rounded-full">
-            {promo.discount || 'N/A'}% OFF
-          </span>
+      {/* Promo Icon */}
+      <div className="flex items-center space-x-4">
+        <div className="w-16 h-16 flex items-center justify-center bg-neutral-700 rounded-full">
+          <FaPercent className="text-white text-2xl" />
         </div>
 
         {/* Promo Details */}
-        <div className="text-xs text-gray-700">
-          <p><span className="font-semibold">Valid From:</span> {formatDate(promo.valid_from)}</p>
-          <p><span className="font-semibold">Valid To:</span> {formatDate(promo.valid_to)}</p>
-        </div>
-        
-        {/* Description */}
-        {promo.description && (
-          <p className="mt-2 text-gray-600 text-xs italic">{promo.description}</p>
-        )}
-
-        {/* Status */}
-        <div className="mt-2 flex items-center space-x-2 text-xs font-bold">
-          {isActive ? (
-            <FaCheckCircle className="text-green-400" />
-          ) : (
-            <FaTimesCircle className="text-red-400" />
-          )}
-          <span className={isActive ? 'text-green-600' : 'text-red-600'}>{isActive ? 'Active' : 'Expired'}</span>
+        <div className="flex-1">
+          <h3 className="text-lg font-semibold">{promo.title || 'Promo Title'}</h3>
+          <p className="text-sm text-pink-400">{promo.discount || 'N/A'}% OFF</p>
+          <div className="mt-1 flex flex-col text-sm text-gray-400">
+            <span><strong>Valid From:</strong> {formatDate(promo.valid_from)}</span>
+            <span><strong>Valid To:</strong> {formatDate(promo.valid_to)}</span>
+          </div>
         </div>
       </div>
-      
-      {/* Delete Button */}
-      <div className="ml-4">
+
+      {/* Description */}
+      {promo.description && (
+        <p className="mt-2 text-gray-400 text-xs italic">{promo.description}</p>
+      )}
+
+      {/* Status (Active/Expired) */}
+      <div className="mt-3 flex items-center space-x-3">
+        {isActive ? (
+          <FaCheckCircle className="text-green-500 text-lg" />
+        ) : (
+          <FaTimesCircle className="text-red-500 text-lg" />
+        )}
+        <span className={`text-sm ${isActive ? 'text-green-400' : 'text-red-400'}`}>
+          {isActive ? 'Active' : 'Expired'}
+        </span>
+      </div>
+
+      {/* Delete Button (for Admins) */}
+      <div className="mt-4 text-right">
         <DeletePromosButton promoId={promo.$id} onDelete={() => setIsDeleted(true)} />
       </div>
     </div>

@@ -5,61 +5,62 @@ import { useRouter } from 'next/navigation';
 import FeaturedPage from '@/components/FeaturedPage';
 import ImagePreview from '@/components/ImagePreview';
 import SearchBar from '@/components/SearchBar';
+import FeaturesSection from '@/components/FeaturesSection';
+import AboutSection from '@/components/AboutSection';
+import { FaArrowRight } from 'react-icons/fa6';
 
 const HomePage = () => {
   const router = useRouter();
 
   const handleReserveClick = () => {
-    router.push('/'); // Navigate to rooms page
+    router.push('/');
   };
 
   return (
-    <div 
-      className="w-full min-h-screen bg-cover bg-center text-gray-900"
-      style={{ backgroundImage: "url('/images/backdrop.jpg')" }}
-    >
-      {/* Overlay for better text contrast */}
-      <div className="w-full min-h-screen flex flex-col items-center justify-center text-center px-6">
-        <div className="container mx-auto px-4"> {/* Container added here */}
-        <h1 className="text-6xl md:text-8xl font-black tracking-tight leading-tight text-white">
-  <span className="relative inline-block px-6 py-2 bg-black rounded-xl shadow-lg">
-    <span className="font-poppins text-7xl md:text-9xl leading-tight text-gradient">
-      THE CORNER
-    </span>
-  </span>
-  <br />
-  <span className="mt-4 block text-4xl md:text-5xl font-bold text-pink-600">
-    FOOD PLAZA
-  </span>
-</h1>
+    <div className="w-full min-h-screen -mt-20 bg-neutral-900 text-white overflow-x-hidden">
+      {/* Hero Section */}
+      <section className="flex flex-col items-center justify-center w-full min-h-[80vh] text-center px-4 sm:px-6 pt-24 sm:pt-32 bg-neutral-900">
+        <h1 className="text-4xl sm:text-6xl md:text-8xl font-extrabold tracking-tight leading-tight text-white">
+          <span className="font-poppins text-5xl sm:text-7xl md:text-9xl tracking-widest">THE CORNER</span>
+          <br />
+          <span className="mt-4 block text-xl sm:text-3xl md:text-2xl font-light text-pink-600 tracking-widest">
+            FOOD PLAZA
+          </span>
+        </h1>
 
-
-          {/* Search Bar */}
-          <div className="mt-8 w-full">
-            <SearchBar />
-          </div>
-
-          <button
-            className="mt-12 px-10 py-4 text-xl md:text-2xl font-medium text-white rounded-full shadow-lg 
-            bg-black hover:bg-gray-900 transition-transform transform hover:scale-105"
-            onClick={handleReserveClick}
-          >
-            Order Now!
-          </button>
+        {/* Search Bar */}
+        <div className="mt-6 w-full max-w-xs sm:max-w-md">
+          <SearchBar />
         </div>
-      </div>
 
-      {/* Full-Width Image Preview */}
-      <div className="w-full">
-        <div className="container mx-auto px-4"> {/* Container added here */}
-          <ImagePreview />
-        </div>
-      </div>
+        {/* Call To Action Button */}
+        <button
+          onClick={handleReserveClick}
+          className="mt-6 px-8 py-3 text-lg sm:text-xl font-bold tracking-widest text-white bg-black rounded-full hover:bg-pink-600 transition-transform transform hover:scale-105 flex items-center gap-2"
+        >
+          Browse <FaArrowRight className="text-white text-xl" />
+        </button>
+      </section>
 
-      {/* Featured Menu Preview */}
-      <div className="container mx-auto px-4 mt-12"> {/* Container added here */}
+      {/* Features Section */}
+      <section className="w-full py-7 bg-neutral-900">
+        <FeaturesSection />
+      </section>
+
+      {/* Food Stall Gallery Section */}
+      <section className="w-full py-7 bg-stone-800">
+        <ImagePreview />
+      </section>
+
+      {/* Featured Menu Section */}
+      <section className="py-7 w-full bg-neutral-900">
         <FeaturedPage />
-      </div>
+      </section>
+
+      {/* About Section */}
+      <section className="py-10 w-full bg-neutral-900">
+        <AboutSection />
+      </section>
     </div>
   );
 };
