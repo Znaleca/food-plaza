@@ -1,6 +1,5 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import getAllSpaces from '@/app/actions/getAllSpaces';
 import SpaceCard from '@/components/SpaceCard';
@@ -9,12 +8,15 @@ import dynamic from 'next/dynamic';
 const MenuBrowse = dynamic(() => import('@/components/MenuBrowse'), { ssr: false });
 
 export default function BrowsePage() {
-  const searchParams = useSearchParams();
-  const initialView = searchParams.get('view'); // 'menu' or 'stalls'
-
   const [rooms, setRooms] = useState([]);
-  const [showMenu, setShowMenu] = useState(initialView === 'menu');
+  const [showMenu, setShowMenu] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+    setShowMenu(viewParam === 'menu');
+  }, []);
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -27,11 +29,10 @@ export default function BrowsePage() {
         setLoading(false);
       }
     };
-
     fetchRooms();
   }, []);
 
-  const toggleView = () => setShowMenu(prev => !prev);
+  const toggleView = () => setShowMenu((prev) => !prev);
 
   if (loading) {
     return (
@@ -46,8 +47,8 @@ export default function BrowsePage() {
     <>
       {/* Toggle Button */}
       <div className="flex justify-center -mb-20">
-        <button 
-          onClick={toggleView} 
+        <button
+          onClick={toggleView}
           className="px-8 py-4 tracking-widest uppercase font-bold text-2xl bg-pink-600 text-white rounded-xl hover:bg-pink-700 transition shadow-lg mb-28"
         >
           {showMenu ? 'Food Stalls' : 'Menu'}
@@ -74,8 +75,8 @@ export default function BrowsePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-40">
-            {rooms.map((room) => (
-              <SpaceCard key={room.$id} room={room} />
+            {rooms.map((room, index) => (
+              <SpaceCard key={room.$id} room={room} priority={index < 4} />
             ))}
           </div>
         )}
