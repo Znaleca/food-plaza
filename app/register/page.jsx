@@ -2,16 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
-import createUser from '@/app/actions/createUser';
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
+import { sendVerificationEmail } from '@/app/actions/sendVerificationEmail';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 const RegisterPage = () => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
   const [matchError, setMatchError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -20,34 +19,66 @@ const RegisterPage = () => {
     confirmPassword: ''
   });
 
+  const passwordRules = {
+    length: formData.password.length >= 8,
+    capital: /[A-Z]/.test(formData.password),
+    number: /\d/.test(formData.password),
+  };
+
+  const allRulesPassed = Object.values(passwordRules).every(Boolean);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    if (name === 'password') {
-      setPasswordError(value.length < 8 ? 'Password must be at least 8 characters long.' : '');
-    }
-
     if (name === 'confirmPassword') {
       setMatchError(value !== formData.password ? 'Passwords do not match.' : '');
+    }
+
+    if (name === 'password') {
+      if (formData.confirmPassword && value !== formData.confirmPassword) {
+        setMatchError('Passwords do not match.');
+      } else {
+        setMatchError('');
+      }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await createUser(null, new FormData(e.target));
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    if (response.error) {
-      toast.error(response.error);
-    } else if (response.success) {
-      toast.success('Account created! Check your email.');
-      router.push('/login');
+    const form = new FormData(e.target);
+    const name = form.get('name');
+    const email = form.get('email');
+
+    const emailResponse = await sendVerificationEmail(email, name, code);
+    if (emailResponse.error) {
+      toast.error(emailResponse.error);
+      return;
     }
+
+    localStorage.setItem('registrationData', JSON.stringify({
+      name,
+      email,
+      password: form.get('password'),
+      confirmPassword: form.get('confirmPassword'),
+      code,
+      label: 'customer'
+    }));
+
+    toast.success('Verification code sent to your email.');
+    router.push('/verify');
   };
+
+  const renderRule = (label, passed) => (
+    <li className={`flex items-center gap-2 text-sm ${passed ? 'text-green-400' : 'text-red-500'}`}>
+      {passed ? <FaCheckCircle /> : <FaTimesCircle />} {label}
+    </li>
+  );
 
   return (
     <div className="w-full min-h-screen -mt-20 bg-neutral-900 text-white flex flex-col items-center justify-center px-4 py-16">
-      {/* Page Heading */}
       <div className="mt-12 sm:mt-16 text-center mb-12 px-4">
         <h2 className="text-lg sm:text-4xl text-pink-600 font-light tracking-widest uppercase">Register</h2>
         <p className="mt-4 text-2xl sm:text-7xl font-extrabold text-white leading-tight">
@@ -55,11 +86,9 @@ const RegisterPage = () => {
         </p>
       </div>
 
-      {/* Form Card */}
       <div className="w-full max-w-md bg-neutral-800 p-8 rounded-3xl shadow-lg border border-pink-600">
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Name Field */}
-          <div className="relative">
+          <div>
             <label htmlFor="name" className="block text-sm font-medium mb-2">Nickname</label>
             <div className="relative">
               <input
@@ -68,7 +97,7 @@ const RegisterPage = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
+                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
                 placeholder="Your nickname"
                 required
               />
@@ -76,8 +105,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* Email Field */}
-          <div className="relative">
+          <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2">Email</label>
             <div className="relative">
               <input
@@ -86,7 +114,7 @@ const RegisterPage = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
+                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
                 placeholder="you@example.com"
                 required
               />
@@ -94,8 +122,7 @@ const RegisterPage = () => {
             </div>
           </div>
 
-          {/* Password Field */}
-          <div className="relative">
+          <div>
             <label htmlFor="password" className="block text-sm font-medium mb-2">Password</label>
             <div className="relative">
               <input
@@ -104,7 +131,7 @@ const RegisterPage = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
+                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
                 placeholder="••••••••"
                 required
               />
@@ -117,11 +144,15 @@ const RegisterPage = () => {
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
             </div>
-            {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
+
+            <ul className="mt-2 space-y-1">
+              {renderRule('At least 8 characters', passwordRules.length)}
+              {renderRule('At least 1 capital letter', passwordRules.capital)}
+              {renderRule('At least 1 number', passwordRules.number)}
+            </ul>
           </div>
 
-          {/* Confirm Password Field */}
-          <div className="relative">
+          <div>
             <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">Confirm Password</label>
             <div className="relative">
               <input
@@ -130,7 +161,7 @@ const RegisterPage = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
+                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
                 placeholder="Re-enter password"
                 required
               />
@@ -146,19 +177,17 @@ const RegisterPage = () => {
             {matchError && <p className="text-red-500 text-sm mt-1">{matchError}</p>}
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full py-3 bg-pink-600 hover:bg-pink-700 rounded-lg text-lg font-semibold transition duration-300"
-            disabled={!!passwordError || !!matchError}
+            disabled={!allRulesPassed || !!matchError}
           >
             Register
           </button>
 
-          {/* Links */}
           <div className="flex justify-between text-sm text-neutral-400 mt-4">
             <p>
-              Already have an account?{" "}
+              Already have an account?{' '}
               <Link href="/login" className="text-pink-500 hover:underline">
                 Log in
               </Link>

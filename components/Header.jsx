@@ -222,9 +222,6 @@ const Header = () => {
 
             {!isAuthenticated ? (
               <>
-                <Link href="/order/cart" className="flex items-center gap-2 hover:text-yellow-400 transition">
-                  <FaCartShopping className="text-lg" /> Cart
-                </Link>
                 <Link href="/login" className="flex items-center gap-2 hover:text-yellow-400 transition">
                   <FaSignInAlt className="text-lg" /> Login
                 </Link>

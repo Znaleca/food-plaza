@@ -1,32 +1,25 @@
+'use server';
 
-import { NextResponse } from 'next/server';
-import { createAdminClient, createSessionClient } from '@/config/appwrite';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { createSessionClient } from '@/config/appwrite';
 
-export async function GET() {
+async function getCurrentUser() {
   const sessionCookie = cookies().get('appwrite-session');
 
   if (!sessionCookie) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    redirect('/login');
   }
 
   try {
     const { account } = await createSessionClient(sessionCookie.value);
-    const sessionUser = await account.get();
+    const user = await account.get();
 
-    const { users } = await createAdminClient();
-    const userDetails = await users.get(sessionUser.$id);
-
-    return NextResponse.json({
-      $id: userDetails.$id,
-      name: userDetails.name,
-      email: userDetails.email,
-      labels: userDetails.labels || [],
-      createdAt: userDetails.$createdAt,
-      status: userDetails.status,
-    });
-  } catch (error) {
-    console.error('Failed to get current user details:', error);
-    return NextResponse.redirect(new URL('/error', request.url));
+    return user;
+  } catch (err) {
+    console.error('Failed to fetch current user:', err);
+    redirect('/error');
   }
 }
+
+export default getCurrentUser;
