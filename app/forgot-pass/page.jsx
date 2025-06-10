@@ -26,7 +26,7 @@ const ForgotPasswordPage = () => {
     localStorage.setItem('resetCode', code);
 
     toast.success('Reset code sent to your email!');
-    router.push('/reset-password'); // change to your reset form route
+    router.push('/reset-pass'); // change to your reset form route
   };
 
   return (

@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function sendVerificationEmail(email, name, code) {
   try {
     await resend.emails.send({
-      from: 'TheCorner <no-reply@thecornerfoodplaza.me>', // ✅ your domain here
+      from: 'TheCorner <no-reply@thecornerfoodplaza.me>',
       to: email,
       subject: 'Verify your TheCorner account',
       html: `

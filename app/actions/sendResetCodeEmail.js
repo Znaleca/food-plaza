@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function sendResetCodeEmail(email, name, code) {
   try {
     await resend.emails.send({
-      from: 'TheCorner <onboarding@resend.dev>',
+      from: 'TheCorner <no-reply@thecornerfoodplaza.me>',
       to: email,
       subject: 'Reset your TheCorner password',
       html: `
