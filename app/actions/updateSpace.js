@@ -14,70 +14,64 @@ async function updateSpace(_, formData) {
     const id = formData.get('id');
     const name = formData.get('name');
     const description = formData.get('description');
-    const type = JSON.parse(formData.get('selectedTypes')) || []; // Ensure it's an array
-    
-    // Ensure 'stallNumber' is an integer
+    const type = JSON.parse(formData.get('selectedTypes')) || [];
     const stallNumber = parseInt(formData.get('stallNumber'), 10);
     if (isNaN(stallNumber)) {
       throw new Error('Invalid stall number. It must be an integer.');
     }
 
-    const menuNames = formData.getAll('menuNames').filter((item) => item.trim() !== '');
+    const menuNames = formData.getAll('menuNames').filter(item => item.trim() !== '');
     const menuPrices = formData.getAll('menuPrices')
-      .map((value) => parseFloat(value))
-      .filter((value) => !isNaN(value));
+      .map(value => parseFloat(value))
+      .filter(value => !isNaN(value));
+    const menuDescriptions = formData.getAll('menuDescriptions').filter(item => item.trim() !== '');
+    const menuTypes = formData.getAll('menuType[]');
 
-    const menuDescriptions = formData.getAll('menuDescriptions').filter((item) => item.trim() !== ''); // Retrieve all menu descriptions
+    const menuSmall = formData.getAll('menuSmall[]').map(v => parseFloat(v) || 0);
+    const menuMedium = formData.getAll('menuMedium[]').map(v => parseFloat(v) || 0);
+    const menuLarge = formData.getAll('menuLarge[]').map(v => parseFloat(v) || 0);
 
-    const menuImageFiles = formData.getAll('menuImages[]'); // Retrieve all menu images
+    const menuImageFiles = formData.getAll('menuImages[]');
     const existingMenuImages = formData.getAll('existingMenuImages[]');
-    const newStallImages = formData.getAll('images'); // Optional new stall images
+    const newStallImages = formData.getAll('images');
 
-    // Ensure each menu price is a valid float
-    const finalMenuPrices = menuPrices.map((price) => {
-      const parsedPrice = parseFloat(price);
-      if (isNaN(parsedPrice)) {
-        throw new Error('Invalid menu price. Price must be a valid float.');
-      }
-      return parsedPrice;
-    });
-
-    // Handle menu images
     const menuImages = [];
     for (let i = 0; i < menuNames.length; i++) {
       const newImageFile = menuImageFiles[i];
       if (newImageFile instanceof File && newImageFile.size > 0) {
         const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), newImageFile);
-        menuImages.push(uploaded.$id); // Store image ID, not URL
+        menuImages.push(uploaded.$id);
       } else {
-        menuImages.push(existingMenuImages[i] || null); // If no new image, keep the existing one or null
+        menuImages.push(existingMenuImages[i] || null);
       }
     }
 
-    // Upload new stall images
     const stallImageIDs = [];
     for (const image of newStallImages) {
       if (image && image.size > 0) {
         const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), image);
-        stallImageIDs.push(uploaded.$id); // Store image ID
+        stallImageIDs.push(uploaded.$id);
       }
     }
 
-    // Now, menuDescriptions is optional, so no validation for the count
-    // If there are fewer descriptions than menu items, the missing ones will default to null.
-    const finalMenuDescriptions = menuDescriptions.length > 0 ? menuDescriptions : new Array(menuNames.length).fill(null);
+    const finalMenuDescriptions = menuDescriptions.length > 0
+      ? menuDescriptions
+      : new Array(menuNames.length).fill(null);
 
-    // Update the document
     const updated = await databases.updateDocument(DB_ID, COLLECTION_ID, id, {
       name,
       description,
-      type, // Array type field
-      stallNumber,  // Ensure it's an integer
-      menuName: menuNames, // Array of menu names
-      menuPrice: finalMenuPrices,  // Array of prices
-      menuDescription: finalMenuDescriptions, // Optional array of descriptions (defaults to null if missing)
-      menuImages: menuImages, // Array of image IDs
-      ...(stallImageIDs.length > 0 && { images: stallImageIDs }), // Optionally include new images
+      type,
+      stallNumber,
+      menuName: menuNames,
+      menuPrice: menuPrices,
+      menuDescription: finalMenuDescriptions,
+      menuType: menuTypes,
+      menuSmall,
+      menuMedium,
+      menuLarge,
+      menuImages,
+      ...(stallImageIDs.length > 0 && { images: stallImageIDs })
     });
 
     return { success: true, data: updated };

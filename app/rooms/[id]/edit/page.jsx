@@ -18,6 +18,8 @@ const foodTypes = [
   'Steak', 'Soup', 'Noodles', 'Sizzling'
 ];
 
+const menuTypeOptions = ['Meals', 'Dessert', 'Snacks', 'Add-ons', 'Drinks'];
+
 const EditSpacePage = ({ params }) => {
   const router = useRouter();
   const { id } = params;
@@ -40,8 +42,15 @@ const EditSpacePage = ({ params }) => {
           name,
           price: data.menuPrice?.[index] || '',
           description: data.menuDescription?.[index] || '',
+          menuType: data.menuType?.[index] || '',
+          smallFee: data.menuSmall?.[index] || '',
+          mediumFee: data.menuMedium?.[index] || '',
+          largeFee: data.menuLarge?.[index] || '',
+          smallChecked: !!data.menuSmall?.[index],
+          mediumChecked: !!data.menuMedium?.[index],
+          largeChecked: !!data.menuLarge?.[index],
           menuImage: null,
-          existingImage: data.menuImages?.[index] || null
+          existingImage: data.menuImages?.[index] || null,
         }))
       );
     };
@@ -68,7 +77,12 @@ const EditSpacePage = ({ params }) => {
   };
 
   const addMenuItem = () => {
-    setMenuItems([...menuItems, { name: '', price: '', description: '', menuImage: null, existingImage: null }]);
+    setMenuItems([...menuItems, {
+      name: '', price: '', description: '', menuType: '',
+      smallFee: '', mediumFee: '', largeFee: '',
+      smallChecked: false, mediumChecked: false, largeChecked: false,
+      menuImage: null, existingImage: null
+    }]);
   };
 
   const removeMenuItem = (index) => {
@@ -86,6 +100,10 @@ const EditSpacePage = ({ params }) => {
       formData.append('menuNames', item.name);
       formData.append('menuPrices', item.price);
       formData.append('menuDescriptions', item.description);
+      formData.append('menuType[]', item.menuType);
+      formData.append('menuSmall[]', item.smallChecked ? item.smallFee : '');
+      formData.append('menuMedium[]', item.mediumChecked ? item.mediumFee : '');
+      formData.append('menuLarge[]', item.largeChecked ? item.largeFee : '');
       if (item.menuImage) formData.append('menuImages[]', item.menuImage);
       else formData.append('menuImages[]', new Blob([]));
       formData.append('existingMenuImages[]', item.existingImage || '');
@@ -191,6 +209,35 @@ const EditSpacePage = ({ params }) => {
                 onChange={e => handleMenuChange(index, 'description', e.target.value)}
                 className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 flex-1 min-w-[150px]"
               />
+              <select
+                value={item.menuType}
+                onChange={(e) => handleMenuChange(index, 'menuType', e.target.value)}
+                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 w-40"
+              >
+                <option value="">Select Type</option>
+                {menuTypeOptions.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              {['small', 'medium', 'large'].map((size) => (
+                <div key={size} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={item[`${size}Checked`]}
+                    onChange={(e) => handleMenuChange(index, `${size}Checked`, e.target.checked)}
+                    className="accent-pink-500"
+                  />
+                  <span className="text-xs">{size.charAt(0).toUpperCase() + size.slice(1)}</span>
+                  <input
+                    type="number"
+                    placeholder="Price"
+                    value={item[`${size}Fee`]}
+                    disabled={!item[`${size}Checked`]}
+                    onChange={(e) => handleMenuChange(index, `${size}Fee`, e.target.value)}
+                    className="bg-neutral-800 border border-neutral-700 rounded-lg py-2 px-3 w-20 text-xs"
+                  />
+                </div>
+              ))}
               <input
                 type="file"
                 accept="image/*"

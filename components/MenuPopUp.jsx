@@ -1,70 +1,146 @@
-import React, { useState } from "react";
-import { FaPlus, FaMinus } from "react-icons/fa6";
+'use client';
 
-const MenuPopUp = ({ item, price, menuImage, roomName, onClose, onAddToCart }) => {
-  const [quantity, setQuantity] = useState(1);
-  const totalPrice = (price * quantity).toFixed(2);
+import { useState, useMemo } from 'react';
+import { FaPlus, FaMinus } from 'react-icons/fa6';
 
-  const handleAddToCart = () => {
-    onAddToCart(item, price, quantity, menuImage, roomName);
+export default function MenuPopUp({
+  item,
+  price,          // base price
+  smallFee = 0,   // extra fees
+  mediumFee = 0,
+  largeFee = 0,
+  menuImage,
+  roomName,
+  description = '',
+  onClose,
+  onAddToCart,
+}) {
+  /* ---------- size logic ---------- */
+  const sizeDefs = useMemo(
+    () => [
+      { key: 'S', fee: Number(smallFee)  || 0 },
+      { key: 'M', fee: Number(mediumFee) || 0 },
+      { key: 'L', fee: Number(largeFee)  || 0 },
+    ],
+    [smallFee, mediumFee, largeFee],
+  );
+
+  const availableSizes = sizeDefs.filter((s) => s.fee !== 0);
+  const isOneSize      = availableSizes.length === 0;
+
+  const [size, setSize] = useState(
+    isOneSize ? 'ONE' : availableSizes[0].key,
+  );
+  const [qty, setQty]   = useState(1);
+
+  const fee =
+    isOneSize
+      ? 0
+      : availableSizes.find((s) => s.key === size)?.fee ?? 0;
+
+  const unitPrice = Number(price) + fee;
+  const total     = (unitPrice * qty).toFixed(2);
+
+  /* ---------- actions ---------- */
+  const adjustQty = (d) => setQty((q) => Math.max(1, q + d));
+
+  const handleAdd = () => {
+    onAddToCart({
+      name: item,
+      size: isOneSize ? 'One-size' : size,
+      quantity: qty,
+      basePrice: Number(price),
+      extraFee: fee,
+      image: menuImage,
+    });
     onClose();
   };
 
+  /* ---------- ui ---------- */
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-      <div className="bg-neutral-900 p-6 rounded-xl shadow-xl w-96 text-center border border-neutral-700">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-neutral-900 w-96 p-6 rounded-xl border border-neutral-700 text-center relative">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-3 text-2xl hover:text-pink-500"
+        >
+          ×
+        </button>
+
         {menuImage && (
           <img
             src={menuImage}
             alt={item}
-            className="w-40 h-40 object-cover rounded-full mx-auto mb-4 shadow-md"
+            className="w-40 h-40 rounded-full object-cover mx-auto mb-4 shadow-md"
           />
         )}
-        <h2 className="text-2xl font-semibold text-white mb-2">{item}</h2>
-        <p className="text-2xl font-bold text-pink-500 mb-4">₱{price}</p>
 
-        <div className="flex items-center justify-center space-x-4 mb-4">
-          <label className="text-neutral-300 font-medium">Quantity:</label>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setQuantity(quantity > 1 ? quantity - 1 : 1)}
-              className="bg-neutral-800 text-white font-bold p-2 rounded-lg transition hover:bg-neutral-700"
-            >
-              <FaMinus size={16} />
-            </button>
-            <span className="text-xl font-semibold w-8 text-center text-white">{quantity}</span>
-            <button
-              onClick={() => setQuantity(quantity + 1)}
-              className="bg-neutral-800 text-white font-bold p-2 rounded-lg transition hover:bg-neutral-700"
-            >
-              <FaPlus size={16} />
-            </button>
-          </div>
+        <h2 className="text-2xl font-semibold mb-1">{item}</h2>
+        {description && (
+          <p className="text-xs italic text-neutral-400 mb-1">{description}</p>
+        )}
+        <p className="text-xs text-neutral-500 mb-4">{roomName}</p>
+
+        {/* size selector or One-size label */}
+        {isOneSize ? (
+          <p className="text-sm font-medium text-neutral-300 mb-4">
+            One-size
+          </p>
+        ) : (
+          <>
+            <div className="flex justify-center space-x-4 mb-4">
+              {availableSizes.map(({ key }) => (
+                <button
+                  key={key}
+                  onClick={() => setSize(key)}
+                  className={`w-10 h-10 rounded-full border font-semibold
+                    ${size === key ? 'bg-pink-600' : 'bg-neutral-800 hover:bg-pink-500'}`}
+                >
+                  {key}
+                </button>
+              ))}
+            </div>
+            
+          </>
+        )}
+
+        {/* quantity */}
+        <div className="flex items-center justify-center space-x-3 mb-4">
+          <button
+            onClick={() => adjustQty(-1)}
+            className="bg-neutral-800 p-2 rounded-lg hover:bg-neutral-700"
+          >
+            <FaMinus size={16} />
+          </button>
+          <span className="text-xl font-semibold w-8 text-center">{qty}</span>
+          <button
+            onClick={() => adjustQty(1)}
+            className="bg-neutral-800 p-2 rounded-lg hover:bg-neutral-700"
+          >
+            <FaPlus size={16} />
+          </button>
         </div>
 
-        <hr className="border-t border-neutral-700 my-4" />
-
-        <p className="text-sm font-semibold text-neutral-400">
-          Total: <span className="text-neutral-200 font-normal">₱{totalPrice}</span>
+        {/* total */}
+        <p className="text-sm font-semibold text-neutral-400 mb-4">
+          Total:&nbsp;
+          <span className="text-neutral-200 font-normal">₱{total}</span>
         </p>
 
-        <div className="space-y-3 mt-4">
-          <button
-            onClick={handleAddToCart}
-            className="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 rounded-lg shadow-md transition duration-300"
-          >
-            Add to Cart
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full bg-neutral-800 hover:bg-neutral-700 text-white font-medium py-3 rounded-lg transition duration-300"
-          >
-            Close
-          </button>
-        </div>
+        {/* buttons */}
+        <button
+          onClick={handleAdd}
+          className="w-full bg-pink-600 hover:bg-pink-700 py-3 rounded-lg font-semibold shadow-md"
+        >
+          Add to Cart
+        </button>
+        <button
+          onClick={onClose}
+          className="w-full mt-3 bg-neutral-800 hover:bg-neutral-700 py-3 rounded-lg"
+        >
+          Close
+        </button>
       </div>
     </div>
   );
-};
-
-export default MenuPopUp;
+}
