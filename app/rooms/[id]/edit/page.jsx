@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-import Heading from '@/components/Heading';
 import { getDocumentById } from '@/app/actions/getSpace';
 import updateSpace from '@/app/actions/updateSpace';
 import Link from 'next/link';

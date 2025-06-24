@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import getSingleSpace from '@/app/actions/getSingleSpace';
-import getSales from '@/app/actions/getAllOrders';
-import Heading from '@/components/Heading';
+import updateAvailability from '@/app/actions/updateAvailability';
 import SalesCard from '@/components/SalesCard';
 import CustomerRatingCard from '@/components/CustomerRatingCard';
+import InventoryPreview from '@/components/InventoryPreview';
 import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa6';
+import { toast } from 'react-toastify';
 
 const categories = ['Drinks', 'Add-ons', 'Meals', 'Snacks', 'Dessert'];
 
@@ -15,7 +16,7 @@ const PreviewStallPage = ({ params }) => {
   const { id } = params;
   const [stall, setStall] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [salesData, setSalesData] = useState([]);
+  const [menuAvailability, setMenuAvailability] = useState([]);
 
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
@@ -25,6 +26,13 @@ const PreviewStallPage = ({ params }) => {
       try {
         const data = await getSingleSpace(id);
         setStall(data);
+
+        const defaultAvailability =
+          Array.isArray(data.menuAvailability) && data.menuAvailability.length === data.menuName?.length
+            ? data.menuAvailability
+            : new Array(data.menuName?.length || 0).fill(true);
+
+        setMenuAvailability(defaultAvailability);
       } catch (err) {
         console.error('Error loading stall:', err);
       } finally {
@@ -34,27 +42,6 @@ const PreviewStallPage = ({ params }) => {
 
     fetchStall();
   }, [id]);
-
-  useEffect(() => {
-    if (!stall) return;
-
-    const loadSalesData = async () => {
-      try {
-        const res = await getSales();
-        const allSales = res.orders || [];
-
-        const filteredSales = allSales.filter((order) =>
-          order.items.some((item) => item.room_name === stall.name)
-        );
-
-        setSalesData(filteredSales);
-      } catch (err) {
-        console.error('Failed to fetch sales data:', err);
-      }
-    };
-
-    loadSalesData();
-  }, [stall]);
 
   const toURL = (fid) =>
     `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${fid}/view?project=${projectId}`;
@@ -72,7 +59,32 @@ const PreviewStallPage = ({ params }) => {
       small: stall.menuSmall?.[idx] ?? 0,
       medium: stall.menuMedium?.[idx] ?? 0,
       large: stall.menuLarge?.[idx] ?? 0,
+      index: idx,
     })) || [];
+
+  const toggleAvailability = async (index) => {
+    const updated = [...menuAvailability];
+    updated[index] = !updated[index];
+    setMenuAvailability(updated);
+
+    try {
+      const result = await updateAvailability({
+        id: stall.$id,
+        menuAvailability: updated,
+      });
+
+      if (result.success) {
+        toast.success(
+          `"${menuData[index].name}" is now ${updated[index] ? 'Available' : 'Not Available'}`
+        );
+      } else {
+        toast.error('Failed to update availability');
+      }
+    } catch (err) {
+      console.error('Failed to update availability:', err);
+      toast.error('Unexpected error occurred');
+    }
+  };
 
   if (loading)
     return (
@@ -131,23 +143,32 @@ const PreviewStallPage = ({ params }) => {
         </p>
       </div>
 
-      {/* Grouped Menu Display */}
       <div className="mt-20 bg-neutral-900 rounded-xl p-4">
         {categories.map((cat) => {
           const items = menuData.filter((m) => m.type === cat);
           if (!items.length) return null;
+
           return (
             <div key={cat} className="mb-10">
               <h3 className="text-pink-500 font-semibold mb-4">{cat}</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-7">
-                {items.map((m, idx) => {
+                {items.map((m) => {
                   const hasSizes = m.small > 0 || m.medium > 0 || m.large > 0;
+                  const isAvailable = menuAvailability[m.index];
 
                   return (
                     <div
-                      key={idx}
-                      className="border border-pink-600 rounded-md bg-neutral-800 p-3 flex flex-col items-center"
+                      key={m.index}
+                      onClick={() => toggleAvailability(m.index)}
+                      className={`relative border border-pink-600 rounded-md bg-neutral-800 p-3 flex flex-col items-center cursor-pointer transition ${
+                        !isAvailable ? 'grayscale opacity-70' : ''
+                      }`}
                     >
+                      {!isAvailable && (
+                        <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
+                          Not Available
+                        </div>
+                      )}
                       {m.image && (
                         <img
                           src={m.image}
@@ -161,30 +182,21 @@ const PreviewStallPage = ({ params }) => {
                           {m.description}
                         </p>
                       )}
-
                       <div className="mt-2 flex gap-2 flex-wrap justify-center">
                         {hasSizes ? (
                           <>
                             {m.small > 0 && (
-                              <span className="bg-pink-600 text-white text-xs px-2 py-1 rounded-full">
-                                S
-                              </span>
+                              <span className="bg-pink-600 text-white text-xs px-2 py-1 rounded-full">S</span>
                             )}
                             {m.medium > 0 && (
-                              <span className="bg-pink-600 text-white text-xs px-2 py-1 rounded-full">
-                                M
-                              </span>
+                              <span className="bg-pink-600 text-white text-xs px-2 py-1 rounded-full">M</span>
                             )}
                             {m.large > 0 && (
-                              <span className="bg-pink-600 text-white text-xs px-2 py-1 rounded-full">
-                                L
-                              </span>
+                              <span className="bg-pink-600 text-white text-xs px-2 py-1 rounded-full">L</span>
                             )}
                           </>
                         ) : (
-                          <span className="bg-pink-600 text-white text-xs px-2 py-1 rounded-full">
-                            One-size
-                          </span>
+                          <span className="bg-pink-600 text-white text-xs px-2 py-1 rounded-full">One-size</span>
                         )}
                       </div>
                     </div>
@@ -203,6 +215,8 @@ const PreviewStallPage = ({ params }) => {
       <div className="bg-neutral-900 rounded-xl p-6 mt-6">
         <CustomerRatingCard roomName={stall.name} />
       </div>
+
+      <InventoryPreview stocks={stall?.stocks} />
     </div>
   );
 };

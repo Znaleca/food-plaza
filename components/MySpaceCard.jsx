@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaEye, FaEdit } from 'react-icons/fa';
+import { FaEye, FaEdit, FaBoxes } from 'react-icons/fa';
 import DeleteRoomButton from './DeleteRoomButton';
 
 const MySpaceCard = ({ room }) => {
@@ -50,7 +50,7 @@ const MySpaceCard = ({ room }) => {
         </p>
 
         {/* Action Buttons */}
-        <div className="mt-4 flex flex-col sm:flex-row justify-center gap-3">
+        <div className="mt-4 flex flex-col sm:flex-row justify-center gap-3 flex-wrap">
           <Link
             href={`/rooms/${room.$id}/preview`}
             className="bg-white hover:bg-gray-300 text-black py-1.5 px-4 rounded-full shadow-md text-xs font-semibold flex items-center justify-center gap-2 transform hover:scale-105 transition-all"
@@ -63,6 +63,13 @@ const MySpaceCard = ({ room }) => {
             className="bg-yellow-400 hover:bg-yellow-500 text-black py-1.5 px-4 rounded-full shadow-md text-xs font-semibold flex items-center justify-center gap-2 transform hover:scale-105 transition-all"
           >
             <FaEdit /> Edit
+          </Link>
+
+          <Link
+            href={`/rooms/${room.$id}/inventory`}
+            className="bg-blue-500 hover:bg-blue-600 text-white py-1.5 px-4 rounded-full shadow-md text-xs font-semibold flex items-center justify-center gap-2 transform hover:scale-105 transition-all"
+          >
+            <FaBoxes /> Inventory
           </Link>
 
           <DeleteRoomButton roomId={room.$id} />

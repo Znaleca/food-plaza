@@ -16,7 +16,6 @@ function RoomSpace({ params }) {
   const [loading, setLoading] = useState(true);
   const [selectedMenu, setSelectedMenu] = useState(null);
 
-  /* fetch room */
   useEffect(() => {
     (async () => {
       try {
@@ -30,7 +29,6 @@ function RoomSpace({ params }) {
     })();
   }, [id]);
 
-  /* loading / 404 */
   if (loading)
     return (
       <div className="flex justify-center items-center min-h-screen bg-neutral-900">
@@ -42,30 +40,33 @@ function RoomSpace({ params }) {
       <div className="text-white text-center mt-20 text-xl">Food Stall Not Found</div>
     );
 
-  /* helpers */
-  const bucketId  = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
+  const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
   const toURL = (fid) =>
     `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${fid}/view?project=${projectId}`;
 
-  const imageUrls     = (room.images     || []).map(toURL);
+  const imageUrls = (room.images || []).map(toURL);
   const menuImageUrls = (room.menuImages || []).map(toURL);
 
-  /* menu flat array */
+  const menuAvailability =
+    Array.isArray(room.menuAvailability) && room.menuAvailability.length === room.menuName?.length
+      ? room.menuAvailability
+      : new Array(room.menuName?.length || 0).fill(true);
+
   const menuData =
     (room.menuName || []).map((name, idx) => ({
       name,
-      price:       room.menuPrice?.[idx]      ?? 0,
-      description: room.menuDescription?.[idx]?? '',
-      image:       menuImageUrls[idx]         || null,
-      type:        room.menuType?.[idx]       || 'Others',
-      smallFee:    room.menuSmall?.[idx]      ?? 0,
-      mediumFee:   room.menuMedium?.[idx]     ?? 0,
-      largeFee:    room.menuLarge?.[idx]      ?? 0,
+      price: room.menuPrice?.[idx] ?? 0,
+      description: room.menuDescription?.[idx] ?? '',
+      image: menuImageUrls[idx] || null,
+      type: room.menuType?.[idx] || 'Others',
+      smallFee: room.menuSmall?.[idx] ?? 0,
+      mediumFee: room.menuMedium?.[idx] ?? 0,
+      largeFee: room.menuLarge?.[idx] ?? 0,
+      isAvailable: menuAvailability[idx] ?? true,
       idx,
     })) || [];
 
-  /* add to cart */
   const addToCart = ({ name, basePrice, extraFee, quantity, size, image }) => {
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     cart.push({
@@ -82,10 +83,8 @@ function RoomSpace({ params }) {
     alert('Item added to cart!');
   };
 
-  /* component */
   return (
     <div className="w-full min-h-screen bg-neutral-900 text-white px-8 pb-8">
-      {/* back */}
       <Link
         href="/"
         className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6"
@@ -94,7 +93,6 @@ function RoomSpace({ params }) {
         <span className="font-medium text-lg">Back</span>
       </Link>
 
-      {/* header */}
       <div className="mt-12 sm:mt-16 text-center mb-8 px-4">
         <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">
           Food Stall
@@ -104,7 +102,6 @@ function RoomSpace({ params }) {
         </p>
       </div>
 
-      {/* images & basics */}
       <div className="bg-neutral-900 rounded-xl p-6">
         <SpacesImage imageUrls={imageUrls} />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12 mb-20">
@@ -123,14 +120,12 @@ function RoomSpace({ params }) {
         </div>
       </div>
 
-      {/* description */}
       <div className="bg-pink-600 text-white p-6 rounded-lg -mt-9 shadow-lg text-center">
         <p className="mt-2 italic text-lg">
           {room.description || 'Delicious food available here!'}
         </p>
       </div>
 
-      {/* menu grouped */}
       <div className="mt-20 bg-neutral-900 rounded-xl p-4">
         {categories.map((cat) => {
           const items = menuData.filter((m) => m.type === cat);
@@ -142,20 +137,30 @@ function RoomSpace({ params }) {
                 {items.map((m) => (
                   <div
                     key={m.idx}
-                    onClick={() =>
+                    onClick={() => {
+                      if (!m.isAvailable) return;
                       setSelectedMenu({
                         name: m.name,
                         price: m.price,
                         image: m.image,
                         roomName: room.name,
                         description: m.description,
-                        smallFee:  m.smallFee,
+                        smallFee: m.smallFee,
                         mediumFee: m.mediumFee,
-                        largeFee:  m.largeFee,
-                      })
-                    }
-                    className="border border-pink-600 rounded-md bg-neutral-800 p-3 flex flex-col items-center cursor-pointer hover:shadow-xl hover:scale-105 transition"
+                        largeFee: m.largeFee,
+                      });
+                    }}
+                    className={`relative border border-pink-600 rounded-md bg-neutral-800 p-3 flex flex-col items-center transition ${
+                      m.isAvailable
+                        ? 'cursor-pointer hover:shadow-xl hover:scale-105'
+                        : 'grayscale opacity-60 cursor-not-allowed'
+                    }`}
                   >
+                    {!m.isAvailable && (
+                      <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
+                        Not Available
+                      </div>
+                    )}
                     {m.image && (
                       <img
                         src={m.image}
@@ -168,7 +173,7 @@ function RoomSpace({ params }) {
                       <p className="text-xs italic text-neutral-400 text-center mb-1">
                         {m.description}
                       </p>
-                    )}       
+                    )}
                   </div>
                 ))}
               </div>
@@ -177,12 +182,10 @@ function RoomSpace({ params }) {
         })}
       </div>
 
-      {/* ratings */}
       <div className="bg-neutral-900 rounded-xl p-6 mt-6">
         <CustomerRatingCard roomName={room.name} />
       </div>
 
-      {/* popup */}
       {selectedMenu && (
         <MenuPopUp
           item={selectedMenu.name}

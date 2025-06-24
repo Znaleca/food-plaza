@@ -1,7 +1,7 @@
 'use server';
 
 import { createAdminClient } from '@/config/appwrite';
-import { ID } from 'appwrite';
+
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
 const COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS;
