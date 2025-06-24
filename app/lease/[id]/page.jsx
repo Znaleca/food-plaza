@@ -5,7 +5,6 @@ import Heading from "@/components/Heading";
 import Link from "next/link";
 import { FaChevronLeft } from "react-icons/fa6";
 import getSingleSpace from "@/app/actions/getSingleSpace";
-import CalendarView from "@/components/CalendarView";
 import LeaseForm from "@/components/LeaseForm";
 
 const LeaseSpace = ({ params }) => {

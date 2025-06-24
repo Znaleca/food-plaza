@@ -51,6 +51,11 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
     return <div className="text-red-500">Error: Lease or stall data is incomplete.</div>;
   }
 
+  // ✅ Use /view endpoint to avoid transformation limits
+  const pdfLink = booking.pdf_attachment
+    ? `https://cloud.appwrite.io/v1/storage/buckets/${process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS}/files/${booking.pdf_attachment}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`
+    : null;
+
   return (
     <div className="bg-neutral-900 border border-pink-600 rounded-xl p-6 text-center text-white hover:bg-neutral-950 transition-all duration-300">
       {/* Decorative Line */}
@@ -67,10 +72,18 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
       {/* Details */}
       <div className="text-sm space-y-2 font-light">
         <p><span className="font-semibold">Lease ID:</span> {booking?.$id || 'N/A'}</p>
-        <p><span className="font-semibold">Agenda:</span> {booking?.agenda || 'N/A'}</p>
         <p><span className="font-semibold">Start:</span> {formatDate(booking.check_in)}</p>
         <p><span className="font-semibold">End:</span> {formatDate(booking.check_out)}</p>
         <p><span className="font-semibold">Status:</span> <span className={statusColor}>{statusText}</span></p>
+
+        {/* 📄 PDF Link */}
+        {pdfLink && (
+          <p className="pt-2 text-yellow-400 text-sm underline">
+            <a href={pdfLink} target="_blank" rel="noopener noreferrer">
+              📄 View Lease Document (PDF)
+            </a>
+          </p>
+        )}
       </div>
 
       {/* Agreement Notice */}

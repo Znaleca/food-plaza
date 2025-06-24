@@ -1,6 +1,6 @@
 'use server';
 
-import { createSessionClient } from '@/config/appwrite';
+import { createAdminClient } from '@/config/appwrite';
 import { cookies } from 'next/headers';
 import { ID } from 'node-appwrite';
 import { redirect } from 'next/navigation';
@@ -9,77 +9,56 @@ import { revalidatePath } from 'next/cache';
 import checkSpaceAvailability from './checkSpaceAvailability';
 
 async function bookSpace(previousState, formData) {
+  const { databases, storage } = await createAdminClient();
   const sessionCookie = cookies().get('appwrite-session');
-  if (!sessionCookie) {
-    redirect('/login');
-  }
+  if (!sessionCookie) redirect('/login');
 
   try {
-    const { databases } = await createSessionClient(sessionCookie.value);
-
-    // Get user's ID
     const { user } = await checkAuth();
-    if (!user) {
-      return {
-        error: 'You must be logged in to book a room',
-      };
-    }
+    if (!user) return { error: 'You must be logged in to book a room.' };
 
-    // Extract form data
     const checkInDate = formData.get('check_in_date');
     const checkInTime = formData.get('check_in_time');
     const checkOutDate = formData.get('check_out_date');
     const checkOutTime = formData.get('check_out_time');
     const roomId = formData.get('room_id');
-    const agenda = formData.get('agenda'); // Extract agenda from form
+    const pdf = formData.get('attachment');
 
-    // Combine date and time to ISO 8601 format
     const checkInDateTime = `${checkInDate}T${checkInTime}`;
     const checkOutDateTime = `${checkOutDate}T${checkOutTime}`;
 
-    // Check if room is available
-    const isAvailable = await checkSpaceAvailability(
-      roomId,
-      checkInDateTime,
-      checkOutDateTime
-    );
+    const isAvailable = await checkSpaceAvailability(roomId, checkInDateTime, checkOutDateTime);
+    if (!isAvailable) return { error: 'This room is already booked for the selected time.' };
 
-    if (!isAvailable) {
-      return {
-        error: 'This room is already booked for the selected time',
-      };
+    let pdfFileId = null;
+    if (pdf && pdf.size > 0 && pdf.type === 'application/pdf') {
+      const uploaded = await storage.createFile(
+        process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS,
+        ID.unique(),
+        pdf
+      );
+      pdfFileId = uploaded.$id;
     }
 
-    // Prepare booking data
-    const bookingData = {
-      check_in: checkInDateTime,
-      check_out: checkOutDateTime,
-      user_id: user.id,
-      room_id: roomId,
-      agenda: agenda || 'No agenda provided',
-      status: 'pending',  // Use a string instead of a boolean
-    };
-    
-
-    // Create booking
     await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS,
       ID.unique(),
-      bookingData
+      {
+        check_in: checkInDateTime,
+        check_out: checkOutDateTime,
+        user_id: user.id,
+        room_id: roomId,
+        status: 'pending',
+        pdf_attachment: pdfFileId,
+      }
     );
 
-    // Revalidate cache
     revalidatePath('/bookings', 'layout');
-
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.log('Failed to book room', error);
-    return {
-      error: 'Something went wrong booking the room',
-    };
+    return { success: true };
+  } catch (err) {
+    console.error('Booking Error:', err);
+    return { error: err.response?.message || 'An unexpected error occurred during booking.' };
   }
 }
 

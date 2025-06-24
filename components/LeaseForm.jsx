@@ -1,27 +1,29 @@
 'use client';
+
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { useFormState } from 'react-dom';
 import { toast } from 'react-toastify';
 import bookSpace from '@/app/actions/bookSpace';
 
 const BookingForm = ({ room }) => {
-  const [state, formAction] = useFormState(bookSpace, {});
   const router = useRouter();
 
-  useEffect(() => {
-    if (state.error) toast.error(state.error);
-    if (state.success) {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    const res = await bookSpace(null, formData);
+    if (res.error) toast.error(res.error);
+    if (res.success) {
       toast.success('Space has been booked!');
       router.push('/bookings');
     }
-  }, [state]);
+  };
 
   return (
-    <div className="mt-10 bg-neutral-900 text-white p-8 rounded-xl shadow-lg ">
+    <div className="mt-10 bg-neutral-900 text-white p-8 rounded-xl shadow-lg">
       <h2 className="text-2xl font-bold text-yellow-400 mb-6">Approve Lease</h2>
 
-      <form action={formAction} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <input type="hidden" name="room_id" value={room.$id} />
         <input type="hidden" name="status" value="pending" />
 
@@ -34,8 +36,8 @@ const BookingForm = ({ room }) => {
               type="date"
               id="check_in_date"
               name="check_in_date"
-              className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
               required
+              className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
             />
           </div>
 
@@ -47,8 +49,8 @@ const BookingForm = ({ room }) => {
               type="time"
               id="check_in_time"
               name="check_in_time"
-              className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
               required
+              className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
             />
           </div>
 
@@ -60,8 +62,8 @@ const BookingForm = ({ room }) => {
               type="date"
               id="check_out_date"
               name="check_out_date"
-              className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
               required
+              className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
             />
           </div>
 
@@ -73,24 +75,23 @@ const BookingForm = ({ room }) => {
               type="time"
               id="check_out_time"
               name="check_out_time"
-              className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
               required
+              className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
             />
           </div>
         </div>
 
-        {/* Agenda Field */}
         <div>
-          <label htmlFor="agenda" className="block text-sm font-medium text-white">
-            Other Request (Optional)
+          <label htmlFor="attachment" className="block text-sm font-medium text-white">
+            Upload PDF (Optional)
           </label>
-          <textarea
-            id="agenda"
-            name="agenda"
-            rows={3}
-            className="mt-1 block w-full px-3 py-2 bg-neutral-900 text-white border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
-            placeholder="Describe your request."
-          ></textarea>
+          <input
+            type="file"
+            id="attachment"
+            name="attachment"
+            accept="application/pdf"
+            className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm focus:ring-yellow-400 focus:border-yellow-400 sm:text-sm"
+          />
         </div>
 
         <div>
