@@ -78,6 +78,7 @@ function RoomSpace({ params }) {
       quantity,
       menuImage: image,
       room_name: room.name,
+      room_id: id, // ✅ add this line
     });
     localStorage.setItem('cart', JSON.stringify(cart));
     alert('Item added to cart!');
@@ -195,6 +196,7 @@ function RoomSpace({ params }) {
           largeFee={selectedMenu.largeFee}
           menuImage={selectedMenu.image}
           roomName={selectedMenu.roomName}
+          roomId={id} 
           description={selectedMenu.description}
           onClose={() => setSelectedMenu(null)}
           onAddToCart={addToCart}

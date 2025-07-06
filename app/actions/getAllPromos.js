@@ -1,18 +1,12 @@
 'use server';
-
 import { createAdminClient } from '@/config/appwrite';
-import { Query } from 'appwrite';
 
-async function getPromos(userId) {
+async function getAllPromos() {
   const { databases } = await createAdminClient();
-
-  if (!userId) return [];
-
   try {
     const response = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
-      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS,
-      [Query.equal('user_id', userId)]
+      process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS
     );
     return response.documents;
   } catch (error) {
@@ -21,4 +15,4 @@ async function getPromos(userId) {
   }
 }
 
-export default getPromos;
+export default getAllPromos;

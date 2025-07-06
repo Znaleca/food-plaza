@@ -5,7 +5,7 @@ import checkAuth from './checkAuth';
 import { ID } from 'node-appwrite';
 import calculateTotals from './calculateTotal';
 
-const processCheckout = async (cart, spaceId = null, voucherId = null) => {
+const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
   if (!cart || cart.length === 0) {
     throw new Error("Cart is empty");
   }
@@ -24,22 +24,27 @@ const processCheckout = async (cart, spaceId = null, voucherId = null) => {
       serviceCharge,
       discountAmount,
       finalTotal,
-    } = await calculateTotals(cart, voucherId, databases);
+    } = await calculateTotals(cart, null, databases);
 
     const stringifiedItems = cleanedCart.map((item) => JSON.stringify(item));
 
+    // Convert voucherMap to readable promo strings
+    const promoStrings = Object.entries(voucherMap).map(([roomId, voucher]) => {
+      const roomName = voucher?.roomName || `Room ${roomId}`;
+      return `${roomName} - ${voucher?.title} (${voucher?.discount}% off)`;
+    });
+
     const orderPayload = {
       user_id: user.id,
-      name: user.name || 'Unknown User', 
-      email: user.email || 'Unknown Email', 
-      status: ["pending"], // This is an array
+      name: user.name || 'Unknown User',
+      email: user.email || 'Unknown Email',
+      status: ['pending'],
       items: stringifiedItems,
       total: [baseTotal, serviceCharge, -discountAmount, finalTotal],
       spaces: spaceId || null,
-      promos: voucherId || null, 
+      promos: promoStrings,
       created_at: new Date().toISOString(),
     };
-    
 
     const response = await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
@@ -53,7 +58,6 @@ const processCheckout = async (cart, spaceId = null, voucherId = null) => {
       message: "Order placed successfully!",
       orderId: response.$id,
       order: response,
-      usedVoucherId: voucherId,
     };
   } catch (error) {
     console.error("Checkout error:", error);
@@ -63,6 +67,5 @@ const processCheckout = async (cart, spaceId = null, voucherId = null) => {
     };
   }
 };
-
 
 export default processCheckout;

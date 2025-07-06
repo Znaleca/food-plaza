@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import getPromos from '@/app/actions/getPromos';
+import getAllPromos from '@/app/actions/getAllPromos';
 import getAllClaimedVouchers from '@/app/actions/getAllClaimedVoucher';
 import VouchersCard from '@/components/VouchersCard';
 
@@ -12,7 +12,7 @@ const CustomerPromoPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       const [allPromos, claimedVouchers] = await Promise.all([
-        getPromos(),
+        getAllPromos(),
         getAllClaimedVouchers(),
       ]);
 

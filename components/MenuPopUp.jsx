@@ -5,43 +5,36 @@ import { FaPlus, FaMinus } from 'react-icons/fa6';
 
 export default function MenuPopUp({
   item,
-  price,          // base price
-  smallFee = 0,   // extra fees
+  price,
+  smallFee = 0,
   mediumFee = 0,
   largeFee = 0,
   menuImage,
   roomName,
+  roomId, // ✅ added
   description = '',
   onClose,
   onAddToCart,
 }) {
-  /* ---------- size logic ---------- */
   const sizeDefs = useMemo(
     () => [
-      { key: 'S', fee: Number(smallFee)  || 0 },
+      { key: 'S', fee: Number(smallFee) || 0 },
       { key: 'M', fee: Number(mediumFee) || 0 },
-      { key: 'L', fee: Number(largeFee)  || 0 },
+      { key: 'L', fee: Number(largeFee) || 0 },
     ],
-    [smallFee, mediumFee, largeFee],
+    [smallFee, mediumFee, largeFee]
   );
 
   const availableSizes = sizeDefs.filter((s) => s.fee !== 0);
-  const isOneSize      = availableSizes.length === 0;
+  const isOneSize = availableSizes.length === 0;
 
-  const [size, setSize] = useState(
-    isOneSize ? 'ONE' : availableSizes[0].key,
-  );
-  const [qty, setQty]   = useState(1);
+  const [size, setSize] = useState(isOneSize ? 'ONE' : availableSizes[0].key);
+  const [qty, setQty] = useState(1);
 
-  const fee =
-    isOneSize
-      ? 0
-      : availableSizes.find((s) => s.key === size)?.fee ?? 0;
-
+  const fee = isOneSize ? 0 : availableSizes.find((s) => s.key === size)?.fee ?? 0;
   const unitPrice = Number(price) + fee;
-  const total     = (unitPrice * qty).toFixed(2);
+  const total = (unitPrice * qty).toFixed(2);
 
-  /* ---------- actions ---------- */
   const adjustQty = (d) => setQty((q) => Math.max(1, q + d));
 
   const handleAdd = () => {
@@ -52,11 +45,12 @@ export default function MenuPopUp({
       basePrice: Number(price),
       extraFee: fee,
       image: menuImage,
+      room_id: roomId,        // ✅ required for grouping
+      room_name: roomName,    // ✅ optional fallback
     });
     onClose();
   };
 
-  /* ---------- ui ---------- */
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
       <div className="bg-neutral-900 w-96 p-6 rounded-xl border border-neutral-700 text-center relative">
@@ -81,30 +75,26 @@ export default function MenuPopUp({
         )}
         <p className="text-xs text-neutral-500 mb-4">{roomName}</p>
 
-        {/* size selector or One-size label */}
         {isOneSize ? (
-          <p className="text-sm font-medium text-neutral-300 mb-4">
-            One-size
-          </p>
+          <p className="text-sm font-medium text-neutral-300 mb-4">One-size</p>
         ) : (
-          <>
-            <div className="flex justify-center space-x-4 mb-4">
-              {availableSizes.map(({ key }) => (
-                <button
-                  key={key}
-                  onClick={() => setSize(key)}
-                  className={`w-10 h-10 rounded-full border font-semibold
-                    ${size === key ? 'bg-pink-600' : 'bg-neutral-800 hover:bg-pink-500'}`}
-                >
-                  {key}
-                </button>
-              ))}
-            </div>
-            
-          </>
+          <div className="flex justify-center space-x-4 mb-4">
+            {availableSizes.map(({ key }) => (
+              <button
+                key={key}
+                onClick={() => setSize(key)}
+                className={`w-10 h-10 rounded-full border font-semibold ${
+                  size === key
+                    ? 'bg-pink-600'
+                    : 'bg-neutral-800 hover:bg-pink-500'
+                }`}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
         )}
 
-        {/* quantity */}
         <div className="flex items-center justify-center space-x-3 mb-4">
           <button
             onClick={() => adjustQty(-1)}
@@ -121,13 +111,10 @@ export default function MenuPopUp({
           </button>
         </div>
 
-        {/* total */}
         <p className="text-sm font-semibold text-neutral-400 mb-4">
-          Total:&nbsp;
-          <span className="text-neutral-200 font-normal">₱{total}</span>
+          Total: <span className="text-neutral-200 font-normal">₱{total}</span>
         </p>
 
-        {/* buttons */}
         <button
           onClick={handleAdd}
           className="w-full bg-pink-600 hover:bg-pink-700 py-3 rounded-lg font-semibold shadow-md"

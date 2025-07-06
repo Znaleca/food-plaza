@@ -78,13 +78,52 @@ const OrderCard = ({ order, setOrders }) => {
     );
   };
 
-  const totalAmount = Array.isArray(order.total)
-    ? order.total[3] || order.total.at(-1) || 0
-    : Number(order.total || 0);
+  const parseItemsGroupedByRoom = () => {
+    const grouped = {};
+    (order.items || []).forEach((itemStr, index) => {
+      try {
+        const item = JSON.parse(itemStr);
+        const roomId = item.room_id || 'unknown';
+        const roomName = item.room_name || 'Unknown Stall';
 
-  const tableNumbers = Array.isArray(order.tableNumber)
-    ? order.tableNumber.join(', ')
-    : order.tableNumber || 'N/A';
+        if (!grouped[roomId]) {
+          grouped[roomId] = {
+            roomName,
+            items: [],
+          };
+        }
+
+        grouped[roomId].items.push({ ...item, index });
+      } catch {
+        // skip broken item
+      }
+    });
+    return grouped;
+  };
+
+  const getRoomSubtotal = (items) =>
+    items.reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
+
+  const groupedItems = parseItemsGroupedByRoom();
+
+  const baseTotal = Object.values(groupedItems).reduce(
+    (acc, { items }) => acc + getRoomSubtotal(items),
+    0
+  );
+
+  const finalTotal = Object.entries(groupedItems).reduce((acc, [roomId, { roomName, items }]) => {
+    const subtotal = getRoomSubtotal(items);
+    const promoEntry = (order.promos || []).find((p) => p.startsWith(roomName));
+    let discount = 0;
+
+    if (promoEntry) {
+      const match = promoEntry.match(/(\d+)%/);
+      if (match) discount = parseInt(match[1]);
+    }
+
+    const discounted = subtotal - (discount / 100) * subtotal;
+    return acc + discounted;
+  }, 0);
 
   return (
     <div className="px-4">
@@ -92,83 +131,124 @@ const OrderCard = ({ order, setOrders }) => {
         <div className="text-center border-b border-dashed border-gray-400 pb-4 mb-4">
           <h2 className="text-xl font-bold text-pink-600">ORDER RECEIPT</h2>
           <p className="text-sm">Order ID: #{order.$id}</p>
-          <p className="text-xs text-gray-500 mt-1">
-            {new Date(order.created_at).toLocaleString()}
-          </p>
+          <p className="text-xs text-gray-500 mt-1">{new Date(order.created_at).toLocaleString()}</p>
         </div>
 
         <div className="text-sm mb-4">
           <p className="mb-1">Customer: <strong>{order.name || 'Unknown'}</strong></p>
           <p className="mb-1">Email: {order.email}</p>
-          <p className="mb-1">Table(s): {tableNumbers}</p>
         </div>
 
-        <div className="mb-4 border-t border-b border-gray-300 py-3 space-y-3">
-          {order.items.map((itemStr, index) => {
-            let item;
-            try {
-              item = JSON.parse(itemStr);
-              item.status = item.status || MENU_STATUS.PENDING;
-            } catch {
-              item = { menuName: 'Invalid Item', status: MENU_STATUS.PENDING };
+        <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
+          {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => {
+            const subtotal = getRoomSubtotal(items);
+            const promoEntry = (order.promos || []).find((p) => p.startsWith(roomName));
+            let discount = 0;
+            let promoTitle = '';
+
+            if (promoEntry) {
+              const parts = promoEntry.split(' - ');
+              const percentMatch = promoEntry.match(/(\d+)%/);
+              if (parts.length === 2 && percentMatch) {
+                promoTitle = parts[1].replace(/\((.*?)\)/, '').trim();
+                discount = parseInt(percentMatch[1]);
+              }
             }
 
-            const itemRated = order.rated?.[index];
-            const itemRating = order.rating?.[index];
-            const itemComment = order.comment?.[index];
+            const discounted = subtotal - (discount / 100) * subtotal;
 
             return (
-              <div key={index}>
-                <div className="flex justify-between">
-                  <span>{item.menuName}</span>
-                  <span>₱{(Number(item.menuPrice) * (item.quantity || 1)).toFixed(2)}</span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Qty: {item.quantity || 1} | Stall: {item.room_name || 'N/A'}
-                </div>
-                <div className="mt-1">{renderStatusBadge(item.status)}</div>
+              <div key={roomId} className="border-b border-gray-200 pb-4">
+                <h3 className="text-base font-bold text-pink-500 mb-2">{roomName}</h3>
+                <ul className="space-y-1 text-sm">
+                  {items.map((item) => {
+                    const itemRated = order.rated?.[item.index];
+                    const itemRating = order.rating?.[item.index];
+                    const itemComment = order.comment?.[item.index];
 
-                {itemRated ? (
-                  <div className="mt-1 text-xs text-green-600">
-                    Rated:
-                    <div className="flex gap-1 mt-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FontAwesomeIcon
-                          key={star}
-                          icon={solidStar}
-                          className={itemRating >= star ? 'text-yellow-400' : 'text-gray-400'}
-                        />
-                      ))}
-                    </div>
-                    {itemComment && (
-                      <p className="italic text-gray-600 mt-1">"{itemComment}"</p>
-                    )}
-                  </div>
-                ) : item.status === MENU_STATUS.COMPLETED ? (
-                  <button
-                    onClick={() => openRatingModal(index)}
-                    className="mt-2 text-xs text-pink-600 underline hover:text-pink-700"
-                  >
-                    Rate Item
-                  </button>
-                ) : null}
+                    return (
+                      <li key={item.index}>
+                        <div className="flex justify-between">
+                          <span>{item.menuName} {item.size && `(${item.size})`} × {item.quantity}</span>
+                          <span>₱{(item.menuPrice * item.quantity).toFixed(2)}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">Stall: {item.room_name || 'N/A'}</div>
+                        <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.PENDING)}</div>
+
+                        {itemRated ? (
+                          <div className="mt-1 text-xs text-green-600">
+                            Rated:
+                            <div className="flex gap-1 mt-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <FontAwesomeIcon
+                                  key={star}
+                                  icon={solidStar}
+                                  className={itemRating >= star ? 'text-yellow-400' : 'text-gray-400'}
+                                />
+                              ))}
+                            </div>
+                            {itemComment && <p className="italic text-gray-600 mt-1">"{itemComment}"</p>}
+                          </div>
+                        ) : item.status === MENU_STATUS.COMPLETED ? (
+                          <button
+                            onClick={() => openRatingModal(item.index)}
+                            className="mt-2 text-xs text-pink-600 underline hover:text-pink-700"
+                          >
+                            Rate Item
+                          </button>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+
+                <div className="mt-2 text-sm">
+                  <p>Subtotal: ₱{subtotal.toFixed(2)}</p>
+                  {discount > 0 && <p className="text-green-500">Discount: {discount}% ({promoTitle})</p>}
+                  <p className="font-semibold text-pink-500">Stall Total: ₱{discounted.toFixed(2)}</p>
+                </div>
               </div>
             );
           })}
         </div>
 
-        <div className="text-right font-semibold text-base text-pink-600">
-          Total: ₱{totalAmount.toFixed(2)}
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-500"> Base Total:</p>
+          <p className="text-lg font-bold text-gray-800">₱{baseTotal.toFixed(2)}</p>
+
+          {order.promos?.length > 0 && (
+            <div className="mt-4 text-sm text-left mx-auto max-w-xs text-gray-700">
+              <p className="font-semibold text-center text-pink-500 mb-2">Applied Promos:</p>
+              <ul className="space-y-1">
+                {order.promos.map((promo, idx) => {
+                  const [stallName, details] = promo.split(' - ');
+                  const discountMatch = details?.match(/(\d+)%/);
+                  const discount = discountMatch ? `${discountMatch[1]}%` : '';
+                  const titleMatch = details?.match(/\((.*?)\)/);
+                  const title = titleMatch ? titleMatch[1] : '';
+
+                  return (
+                    <li key={idx} className="flex justify-between border-b border-dashed border-gray-300 pb-1">
+                      <span className="font-medium text-black">{stallName}</span>
+                      <span className="text-pink-600 font-semibold">
+                        {discount} {title && `(${title})`}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          <div className="mt-6">
+            <p className="text-sm text-gray-500">Final Total:</p>
+            <p className="text-lg font-bold text-pink-600">₱{finalTotal.toFixed(2)}</p>
+          </div>
         </div>
       </div>
 
-      {/* Rating Modal */}
       {selectedItem !== null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
-          aria-modal="true"
-          role="dialog"
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" aria-modal="true" role="dialog">
           <div className="bg-neutral-800 p-6 rounded-lg w-full max-w-md shadow-lg text-white">
             <h3 className="text-lg font-bold text-center mb-4 text-pink-500">Rate This Menu Item</h3>
             <div className="flex justify-center mb-4 gap-2">
@@ -176,9 +256,7 @@ const OrderCard = ({ order, setOrders }) => {
                 <button
                   key={star}
                   onClick={() => setRating(star)}
-                  className={`text-2xl transition ${
-                    rating >= star ? 'text-yellow-400' : 'text-gray-600'
-                  }`}
+                  className={`text-2xl transition ${rating >= star ? 'text-yellow-400' : 'text-gray-600'}`}
                   aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
                 >
                   <FontAwesomeIcon icon={solidStar} />
@@ -193,16 +271,8 @@ const OrderCard = ({ order, setOrders }) => {
               onChange={(e) => setComment(e.target.value)}
             />
             <div className="mt-4 flex justify-end gap-2">
-              <button
-                onClick={closeRatingModal}
-                className="px-4 py-2 text-gray-400 hover:text-white text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmitRating}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md"
-              >
+              <button onClick={closeRatingModal} className="px-4 py-2 text-gray-400 hover:text-white text-sm">Cancel</button>
+              <button onClick={handleSubmitRating} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md">
                 Submit
               </button>
             </div>
