@@ -74,20 +74,20 @@ const Header = () => {
             <div className="ml-10 flex items-center gap-6 text-sm font-medium text-white">
               {isAuthenticated && !isAdmin && !isFoodstall && (
                 <>
-                  <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition tracking-wider">
+                  <Link href="/home" className="flex items-center gap-2 hover:text-pink-600 transition tracking-wider">
                      Home
                   </Link>
-                  <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition tracking-wider">
+                  <Link href="/" className="flex items-center gap-2 hover:text-pink-600 transition tracking-wider">
                     Browse
                   </Link>
-                  <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition tracking-wider">
+                  <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-pink-600 transition tracking-wider">
                     My Orders
                   </Link>
                 </>
               )}
 
               {isCustomer && (
-                <Link href="/customer/promos" className="flex items-center gap-2 hover:text-yellow-400 transition tracking-wider">
+                <Link href="/customer/promos" className="flex items-center gap-2 hover:text-pink-600 transition tracking-wider">
                    Promotions
                 </Link>
               )}
@@ -95,7 +95,7 @@ const Header = () => {
               {isAdmin && (
                 <>
                   <span className="text-gray-400">|</span>
-                  <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                  <Link href="/admin" className="flex items-center gap-2 hover:text-pink-600 transition">
                     <FaCaretRight className="text-lg" /> Admin Panel
                   </Link>
                 </>
@@ -104,7 +104,7 @@ const Header = () => {
               {isFoodstall && (
                 <>
                   <span className="text-gray-400">|</span>
-                  <Link href="/foodstall" className="flex items-center gap-2 tracking-widest hover:text-yellow-400 transition">
+                  <Link href="/foodstall" className="flex items-center gap-2 tracking-widest hover:text-pink-600 transition">
                     <FaCaretRight className="text-lg" /> Stall Panel
                   </Link>
                 </>
@@ -148,7 +148,7 @@ const Header = () => {
               ) : (
                 <>
                   {!isAdmin && !isFoodstall && (
-                    <Link href="/order/cart" className="mr-3 text-white hover:text-yellow-400">
+                    <Link href="/order/cart" className="mr-3 text-white hover:text-pink-600">
                       <FaCartShopping className="inline mr-1" />
                     </Link>
                   )}
@@ -156,7 +156,7 @@ const Header = () => {
                   <div className="relative">
                     <button
                       onClick={toggleDropdown}
-                      className="relative flex items-center px-4 py-2 space-x-2 text-sm font-medium text-white bg-neutral-800 border-2 border-gray-300 rounded-full shadow hover:border-yellow-400 focus:outline-none"
+                      className="relative flex items-center px-4 py-2 space-x-2 text-sm font-medium text-white bg-neutral-800 border-2 border-gray-300 rounded-full shadow hover:border-pink-600 focus:outline-none"
                     >
                       <FaBars className="text-lg" />
                       <FaCircleUser className="text-lg" />
@@ -186,32 +186,32 @@ const Header = () => {
           <div className="md:hidden mt-4 space-y-2 text-white bg-neutral-800 rounded-md p-4 z-50">
             {isAuthenticated && !isAdmin && !isFoodstall && (
               <>
-                <Link href="/home" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                <Link href="/home" className="flex items-center gap-2 hover:text-pink-600 transition">
                   <FaHome className="text-lg" /> Home
                 </Link>
-                <Link href="/" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                <Link href="/" className="flex items-center gap-2 hover:text-pink-600 transition">
                   <FaUtensils className="text-lg" /> Browse
                 </Link>
-                <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-pink-600 transition">
                   <FaBoxOpen className="text-lg" /> My Orders
                 </Link>
               </>
             )}
 
             {isCustomer && (
-              <Link href="/customer/promos" className="flex items-center gap-2 hover:text-yellow-400 transition">
+              <Link href="/customer/promos" className="flex items-center gap-2 hover:text-pink-600 transition">
                 <FaGift className="text-lg" /> Promotions
               </Link>
             )}
 
             {isAdmin && (
-              <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition">
+              <Link href="/admin" className="flex items-center gap-2 hover:text-pink-600 transition">
                 <FaCaretRight className="text-lg" /> Admin Panel
               </Link>
             )}
  {isFoodstall && (
                 
-                  <Link href="/foodstall" className="flex items-center gap-2 tracking-widest hover:text-yellow-400 transition">
+                  <Link href="/foodstall" className="flex items-center gap-2 tracking-widest hover:text-pink-600 transition">
                     <FaCaretRight className="text-lg" /> Stall Panel
                   </Link>
                 
@@ -222,21 +222,21 @@ const Header = () => {
 
             {!isAuthenticated ? (
               <>
-                <Link href="/login" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                <Link href="/login" className="flex items-center gap-2 hover:text-pink-600 transition">
                   <FaSignInAlt className="text-lg" /> Login
                 </Link>
-                <Link href="/register" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                <Link href="/register" className="flex items-center gap-2 hover:text-pink-600 transition">
                   <FaUserPlus className="text-lg" /> Register
                 </Link>
               </>
             ) : (
               <>
                 {!isAdmin && !isFoodstall && (
-                  <Link href="/order/cart" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                  <Link href="/order/cart" className="flex items-center gap-2 hover:text-pink-600 transition">
                     <FaCartShopping className="text-lg" /> Cart
                   </Link>
                 )}
-                <Link href="/account" className="flex items-center gap-2 hover:text-yellow-400 transition">
+                <Link href="/account" className="flex items-center gap-2 hover:text-pink-600 transition">
                   <FaGear className="text-lg" /> Account Settings
                 </Link>
                 <button onClick={handleLogout} className="flex items-center gap-2 text-white hover:text-red-500 transition">

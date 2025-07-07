@@ -38,18 +38,44 @@ export default function MenuPopUp({
   const adjustQty = (d) => setQty((q) => Math.max(1, q + d));
 
   const handleAdd = () => {
-    onAddToCart({
+    const newItem = {
       name: item,
+      menuName: item, // ensure both name and menuName are set
       size: isOneSize ? 'One-size' : size,
       quantity: qty,
       basePrice: Number(price),
       extraFee: fee,
+      menuPrice: Number(price) + fee, // used for subtotal
       image: menuImage,
-      room_id: roomId,        // ✅ required for grouping
-      room_name: roomName,    // ✅ optional fallback
-    });
-    onClose();
+      menuImage: menuImage,
+      room_id: roomId,
+      room_name: roomName,
+    };
+  
+    // Get existing cart from localStorage
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  
+    const existingIndex = cart.findIndex(
+      (i) =>
+        i.menuName === newItem.menuName &&
+        i.size === newItem.size &&
+        i.room_id === newItem.room_id
+    );
+  
+    if (existingIndex !== -1) {
+      // Merge quantity
+      cart[existingIndex].quantity += newItem.quantity;
+    } else {
+      // Add new item
+      cart.push(newItem);
+    }
+  
+    // Save updated cart
+    localStorage.setItem('cart', JSON.stringify(cart));
+  
+    onClose(); // close the popup
   };
+  
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
