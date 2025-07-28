@@ -17,6 +17,8 @@ const OrderCartPage = () => {
   const [selectAllPerRoom, setSelectAllPerRoom] = useState({});
   const [roomNames, setRoomNames] = useState({});
   const [openVoucherRoom, setOpenVoucherRoom] = useState(null);
+  const [usedVoucherStates, setUsedVoucherStates] = useState({});
+
 
   useEffect(() => {
     const loadCartAndGroup = async () => {
@@ -325,10 +327,13 @@ const OrderCartPage = () => {
         <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel className="w-full max-w-3xl bg-neutral-900 rounded-lg p-6 shadow-xl">
-            <VoucherWallet
-              roomIdFilter={openVoucherRoom}
-              onVoucherUsed={handleVoucherUsed}
-            />
+          <VoucherWallet
+  roomIdFilter={openVoucherRoom}
+  onVoucherUsed={handleVoucherUsed}
+  usedVoucherStates={usedVoucherStates}
+  setUsedVoucherStates={setUsedVoucherStates}
+/>
+
             <div className="text-center mt-4">
               <button
                 onClick={() => setOpenVoucherRoom(null)}

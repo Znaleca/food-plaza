@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaCheckCircle, FaTimesCircle, FaPercent, FaStore } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaPercent, FaStore, FaCheck } from 'react-icons/fa';
 import getAllClaimedVouchers from '@/app/actions/getAllClaimedVoucher';
 import checkAuth from '@/app/actions/checkAuth';
 import UseVoucherButton from './UseVoucherButton';
 import CancelVoucherButton from './CancelVoucherButton';
 import getRoomByUserId from '@/app/actions/getRoomByUserId';
 
-const VoucherWallet = ({ onVoucherUsed, roomIdFilter }) => {
+const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsedVoucherStates }) => {
   const [vouchers, setVouchers] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +21,7 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter }) => {
 
       const claimedVouchers = await getAllClaimedVouchers(user);
       const data = {};
+      const usedStates = { ...usedVoucherStates };
 
       for (const voucher of claimedVouchers) {
         if (voucher.user_id) {
@@ -30,35 +31,19 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter }) => {
             name: stall?.name || 'Unknown Stall',
           };
         }
+        if (!(voucher.$id in usedStates)) {
+          usedStates[voucher.$id] = voucher.used_voucher === true;
+        }
       }
 
       setStallData(data);
+      setUsedVoucherStates(usedStates);
       setVouchers(claimedVouchers);
       setLoading(false);
     };
 
     fetchData();
   }, []);
-
-  const refreshVouchers = async () => {
-    if (user) {
-      const claimedVouchers = await getAllClaimedVouchers(user);
-      const data = {};
-
-      for (const voucher of claimedVouchers) {
-        if (voucher.user_id) {
-          const stall = await getRoomByUserId(voucher.user_id);
-          data[voucher.$id] = {
-            id: stall?.$id || '',
-            name: stall?.name || 'Unknown Stall',
-          };
-        }
-      }
-
-      setStallData(data);
-      setVouchers(claimedVouchers);
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -85,7 +70,7 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter }) => {
       <div className="space-y-6">
         {filteredVouchers.map((voucher) => {
           const isActive = new Date(voucher.valid_to).setHours(23, 59, 59, 999) >= new Date();
-          const isUsed = voucher.used_voucher === true;
+          const isUsed = usedVoucherStates[voucher.$id];
           const stallName = stallData[voucher.$id]?.name || 'Unknown Stall';
 
           return (
@@ -95,6 +80,13 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter }) => {
               ${!isActive ? 'opacity-60' : 'shadow-md hover:shadow-lg'} border-2 border-pink-600 
               ${!isActive ? 'border-opacity-50' : ''}`}
             >
+              {isUsed && (
+                <div className="absolute top-2 right-2 bg-green-700 text-white text-xs font-medium px-2 py-1 rounded shadow z-10 flex items-center gap-1">
+                  <FaCheck className="text-white text-xs" />
+                  Applied
+                </div>
+              )}
+
               {!isActive && (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-4xl font-semibold opacity-40 pointer-events-none">
                   EXPIRED
@@ -136,23 +128,27 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter }) => {
 
               {isActive && (
                 <div className="mt-4 flex space-x-3">
-                  <UseVoucherButton
-  voucherId={voucher.$id}
-  isUsed={isUsed}
-  roomId={stallData[voucher.$id]?.id}
-  onUsed={(voucherUpdated) => {
-    if (onVoucherUsed) onVoucherUsed(voucherUpdated);
-  }}
-/>
-
-<CancelVoucherButton
-  voucherId={voucher.$id}
-  roomId={stallData[voucher.$id]?.id}
-  onCancelled={(voucherUpdated) => {
-    if (onVoucherUsed) onVoucherUsed(null);
-  }}
-/>
-
+                  {!isUsed ? (
+                    <UseVoucherButton
+                      voucherId={voucher.$id}
+                      onUsed={() => {
+                        setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: true }));
+                        onVoucherUsed?.({
+                          $id: voucher.$id,
+                          discount: voucher.discount,
+                          title: voucher.title,
+                        });
+                      }}
+                    />
+                  ) : (
+                    <CancelVoucherButton
+                      voucherId={voucher.$id}
+                      onCancelled={() => {
+                        setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: false }));
+                        onVoucherUsed?.(null);
+                      }}
+                    />
+                  )}
                 </div>
               )}
             </div>

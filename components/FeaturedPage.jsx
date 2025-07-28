@@ -23,7 +23,7 @@ const FeaturedPage = () => {
           ? (prev + 4) % featuredMenus.length
           : 0
       );
-    }, 10000); // every 10 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [featuredMenus]);

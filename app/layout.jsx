@@ -19,19 +19,15 @@ export default function RootLayout({ children }) {
     <AuthWrapper>
       <html lang="en">
         <body className={`${inter.className} min-h-screen bg-neutral-900 text-white`}>
-          {/* Highest z-index Header */}
           <div className="fixed top-0 left-0 w-full z-[9999] bg-white shadow-md">
             <Header />
           </div>
 
-          {/* Main Content with padding for fixed header */}
           <div className="pt-16">
-            {/* News Notification */}
             <section className="w-full py-8">
               <NewsNotifPage />
             </section>
 
-            {/* Page Content */}
             <main className="w-full">{children}</main>
           </div>
 

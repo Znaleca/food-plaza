@@ -45,7 +45,6 @@ export default function BrowsePage() {
 
   return (
     <>
-      {/* Toggle Button */}
       <div className="flex justify-center -mb-20">
         <button
           onClick={toggleView}

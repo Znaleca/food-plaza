@@ -9,19 +9,13 @@ const CancelVoucherButton = ({ voucherId, onCancelled }) => {
 
   const handleCancel = async () => {
     setLoading(true);
-    setError('');
-
     const result = await useVoucher(voucherId, false);
     setLoading(false);
 
     if (result.success) {
-      onCancelled?.({
-        $id: voucherId,
-        discount: result.document.discount,
-        title: result.document.title,
-      });
+      onCancelled?.();
     } else {
-      setError(result.error || 'An error occurred while canceling');
+      setError(result.error || 'Failed to cancel voucher');
     }
   };
 
@@ -32,7 +26,7 @@ const CancelVoucherButton = ({ voucherId, onCancelled }) => {
         disabled={loading}
         className="px-3 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition disabled:opacity-50"
       >
-        {loading ? 'Canceling...' : 'Cancel Voucher'}
+        {loading ? 'Canceling...' : 'Cancel'}
       </button>
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>

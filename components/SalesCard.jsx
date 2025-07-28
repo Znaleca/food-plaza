@@ -3,14 +3,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, LineChart, Line,
+  LineChart, Line,
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { FaUtensils } from 'react-icons/fa6';
 import getSales from '@/app/actions/getSales';
-
-// Colors for pie chart
-const COLORS = ['#FF69B4', '#FFD700', '#36A2EB', '#FF8C00'];
 
 // Utility to get day name from Date object
 const getDayName = (date) => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()];
@@ -89,14 +86,6 @@ const aggregateByMonth = (orders, roomName) => {
     .map(m => ({ month: m, sales: monthMap[m] }));
 };
 
-// Static promo data for pie chart
-const generatePromoData = () => [
-  { name: 'Discounts', value: 400 },
-  { name: 'Buy 1 Get 1', value: 300 },
-  { name: 'Free Drinks', value: 200 },
-  { name: 'Loyalty Points', value: 100 },
-];
-
 // Loading Spinner Component
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center text-white">
@@ -109,11 +98,10 @@ const LoadingSpinner = () => (
 
 const SalesCard = ({ roomName }) => {
   const [orders, setOrders] = useState([]);
-  const [timeRange, setTimeRange] = useState('day'); // 'day' | 'week' | 'month'
+  const [timeRange, setTimeRange] = useState('day');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load sales orders once or when roomName changes
   useEffect(() => {
     if (!roomName) return;
 
@@ -134,7 +122,6 @@ const SalesCard = ({ roomName }) => {
     loadSales();
   }, [roomName]);
 
-  // Memoize aggregated sales data depending on timeRange or orders
   const salesData = useMemo(() => {
     if (!orders.length) return [];
 
@@ -143,9 +130,6 @@ const SalesCard = ({ roomName }) => {
     if (timeRange === 'month') return aggregateByMonth(orders, roomName);
     return [];
   }, [orders, timeRange, roomName]);
-
-  // Promo data never changes, so generate once
-  const promoData = useMemo(generatePromoData, []);
 
   if (loading) return <LoadingSpinner />;
   if (error) return (
@@ -172,9 +156,6 @@ const SalesCard = ({ roomName }) => {
 
   return (
     <div className="min-h-screen bg-neutral-900 text-white p-6">
-      
-
-      {/* Time Range Selector */}
       <div role="tablist" aria-label="Select time range" className="flex justify-center gap-4 mb-8">
         {['day','week','month'].map(range => (
           <button
@@ -194,7 +175,6 @@ const SalesCard = ({ roomName }) => {
         ))}
       </div>
 
-      {/* Sales Trend Chart */}
       <div className="bg-neutral-900 rounded-xl p-6">
         <ResponsiveContainer width="100%" height={300}>
           {(timeRange === 'day' || timeRange === 'week') ? (
@@ -230,41 +210,9 @@ const SalesCard = ({ roomName }) => {
         </ResponsiveContainer>
       </div>
 
-      {/* Promotions Pie Chart */}
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-12">
-        <section aria-label="Promotion types distribution">
-          <h3 className="text-xl font-semibold mb-4 text-yellow-400">Promotion Types</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={promoData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#FF69B4"
-                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                labelLine={false}
-              >
-                {promoData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Legend verticalAlign="bottom" />
-              <Tooltip
-                formatter={(value) => [value, 'Count']}
-                wrapperStyle={{ backgroundColor: '#222', borderRadius: 6 }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </section>
-
-        {/* Placeholder for future charts or info */}
-        <section className="flex flex-col justify-center items-center text-gray-400 italic">
-          <FaUtensils size={64} />
-          <p className="mt-4">More insights coming soon...</p>
-        </section>
+      <div className="mt-12 flex flex-col items-center justify-center text-gray-400 italic">
+        <FaUtensils size={64} />
+        <p className="mt-4">More insights coming soon...</p>
       </div>
     </div>
   );

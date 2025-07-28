@@ -95,7 +95,7 @@ const Header = () => {
               {isAdmin && (
                 <>
                   <span className="text-gray-400">|</span>
-                  <Link href="/admin" className="flex items-center gap-2 hover:text-pink-600 transition">
+                  <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition">
                     <FaCaretRight className="text-lg" /> Admin Panel
                   </Link>
                 </>
