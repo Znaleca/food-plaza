@@ -17,7 +17,7 @@ const foodTypes = [
   'Steak', 'Soup', 'Noodles', 'Sizzling'
 ];
 
-const menuTypeOptions = ['Meals', 'Dessert', 'Snacks', 'Add-ons', 'Drinks'];
+const menuTypeOptions = ['Meals', 'Dessert', 'Snacks', 'Add-Ons', 'Drinks'];
 
 const EditSpacePage = ({ params }) => {
   const router = useRouter();
