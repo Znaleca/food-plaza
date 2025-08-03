@@ -24,6 +24,7 @@
     "date-fns": "^4.1.0",
     "formik": "^2.4.6",
     "framer-motion": "^12.6.3",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.511.0",
     "luxon": "^3.5.0",
     "moment": "^2.30.1",
