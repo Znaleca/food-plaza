@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import getAllSpaces from '@/app/actions/getAllSpaces';
+import getAllReviews from '@/app/actions/getAllReviews';
 import SpaceCard from '@/components/SpaceCard';
 import dynamic from 'next/dynamic';
 
@@ -9,6 +10,7 @@ const MenuBrowse = dynamic(() => import('@/components/MenuBrowse'), { ssr: false
 
 export default function BrowsePage() {
   const [rooms, setRooms] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [showMenu, setShowMenu] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -19,17 +21,65 @@ export default function BrowsePage() {
   }, []);
 
   useEffect(() => {
-    const fetchRooms = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getAllSpaces();
-        setRooms(data || []);
+        const [spaces, reviewData] = await Promise.all([
+          getAllSpaces(),
+          getAllReviews(1, 100),
+        ]);
+
+        const allReviews = reviewData?.orders || [];
+
+        // Group and average ratings by room_name
+        const ratingMap = {};
+
+        allReviews.forEach((order) => {
+          const { items, rated, rating } = order;
+
+          items.forEach((itemStr, idx) => {
+            if (!rated?.[idx]) return;
+
+            let item;
+            try {
+              item = JSON.parse(itemStr);
+            } catch {
+              return;
+            }
+
+            const roomName = item.room_name;
+            if (!roomName) return;
+
+            if (!ratingMap[roomName]) {
+              ratingMap[roomName] = { total: 0, count: 0 };
+            }
+
+            const value = Number(rating?.[idx]) || 0;
+            ratingMap[roomName].total += value;
+            ratingMap[roomName].count += 1;
+          });
+        });
+
+        // Add rating data into each space
+        const enrichedRooms = (spaces || []).map((room) => {
+          const ratingData = ratingMap[room.name] || { total: 0, count: 0 };
+          const averageRating =
+            ratingData.count > 0 ? ratingData.total / ratingData.count : 0;
+          return {
+            ...room,
+            averageRating,
+            reviewCount: ratingData.count,
+          };
+        });
+
+        setRooms(enrichedRooms);
       } catch (error) {
-        console.error('Error fetching rooms:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchRooms();
+
+    fetchData();
   }, []);
 
   const toggleView = () => setShowMenu((prev) => !prev);
@@ -75,7 +125,13 @@ export default function BrowsePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-40">
             {rooms.map((room, index) => (
-              <SpaceCard key={room.$id} room={room} priority={index < 4} />
+              <SpaceCard
+                key={room.$id}
+                room={room}
+                averageRating={room.averageRating}
+                reviewCount={room.reviewCount}
+                priority={index < 4}
+              />
             ))}
           </div>
         )}

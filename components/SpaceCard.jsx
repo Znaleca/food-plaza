@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import RatePreview from './RatePreviews';
 
-const SpaceCard = ({ room, priority = false }) => {
+const SpaceCard = ({ room, priority = false, averageRating = 0, reviewCount = 0 }) => {
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
@@ -41,6 +42,9 @@ const SpaceCard = ({ room, priority = false }) => {
             <span className="font-semibold text-white">Type:</span>{' '}
             {room.type?.join(' • ') || 'N/A'}
           </p>
+
+          {/* ⭐ Star Rating Preview */}
+          <RatePreview average={averageRating} count={reviewCount} />
         </div>
       </div>
     </Link>
