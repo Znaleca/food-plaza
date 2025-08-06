@@ -3,9 +3,9 @@
 import { createSessionClient } from '@/config/appwrite';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { Query } from 'appwrite';
+import { Query } from 'node-appwrite';
 
-async function getSpaceCheck() {
+export default async function getSpaceCheck() {
   const sessionCookie = cookies().get('appwrite-session');
   if (!sessionCookie) {
     redirect('/login');
@@ -14,7 +14,7 @@ async function getSpaceCheck() {
   try {
     const { account, databases } = await createSessionClient(sessionCookie.value);
 
-    // Get user ID
+    // Get logged-in user ID
     const user = await account.get();
     const userId = user.$id;
 
@@ -31,5 +31,3 @@ async function getSpaceCheck() {
     return false;
   }
 }
-
-export default getSpaceCheck;

@@ -27,7 +27,7 @@ export default function FoodStallLayout({ children }) {
 
   const baseLinks = [
     { href: '/foodstall', icon: <FaHouse />, label: 'Dashboard' },
-    !hasSpace && { href: '/rooms/add', icon: <FaSquarePlus />, label: 'Add Food Stall' },
+    hasSpace === false && { href: '/rooms/add', icon: <FaSquarePlus />, label: 'Add Food Stall' },
     { href: '/foodstall/add-promos', icon: <FaBullhorn />, label: 'Create Promos' },
     { href: '/foodstall/promos', icon: <FaTags />, label: 'Promotions' },
     { href: '/foodstall/order-status', icon: <FaBagShopping />, label: 'Orders' },
@@ -36,16 +36,18 @@ export default function FoodStallLayout({ children }) {
     { href: '/foodstall/tables', icon: <FaTableColumns />, label: 'Tables' },
   ];
 
-  const links = baseLinks.filter(Boolean); // Remove falsy values
+  const links = baseLinks.filter(Boolean);
 
   return (
     <div className="flex min-h-screen bg-neutral-900 text-neutral-100 relative">
+      {/* Hover trigger for mobile */}
       <div
         className="fixed top-0 left-0 h-full w-4 z-40 md:hidden"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       />
 
+      {/* Sidebar */}
       <aside
         className={`bg-neutral-800 shadow-xl px-6 py-8 w-64 z-50 transition-transform duration-300 
         fixed top-0 left-0 h-full overflow-y-auto scrollbar-thin
@@ -79,6 +81,7 @@ export default function FoodStallLayout({ children }) {
         </div>
       </aside>
 
+      {/* Main Content */}
       <main className="flex-1 px-6 py-8 overflow-y-auto">{children}</main>
     </div>
   );
