@@ -5,7 +5,7 @@ import ReservationsCalendarPage from '@/components/CalendarView';
 
 const ReservationsCalendar = () => {
   return (
-    <div className="w-full h-screen">
+    <div className="w-full min-h-screen bg-neutral-900 text-white px-4 py-12">
       <ReservationsCalendarPage />
     </div>
   );

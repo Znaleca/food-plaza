@@ -1,193 +1,250 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import React, { useEffect, useState, useRef } from 'react';
 import moment from 'moment';
-import getAllReservations from '@/app/actions/getAllReservations';
-import { Spinner, Button } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import Heading from './Heading';
-
-const localizer = momentLocalizer(moment);
+import getAllReservations from '@/app/actions/getAllReservations';
 
 const ReservationsCalendarPage = () => {
   const [reservations, setReservations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState(Views.MONTH);
+  const [currentDate, setCurrentDate] = useState(moment());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDateEvents, setSelectedDateEvents] = useState([]);
+
+  const calendarRef = useRef(null);
 
   useEffect(() => {
     const fetchReservations = async () => {
       try {
         const data = await getAllReservations();
-        if (!data || data.error) {
-          throw new Error(data?.error || 'Failed to fetch reservations');
-        }
+        if (!data || data.error) throw new Error(data?.error || 'Failed to fetch reservations');
         setReservations(data);
       } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        console.error(err.message);
       }
     };
-
     fetchReservations();
   }, []);
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner animation="border" />
-      </div>
+  const startOfMonth = currentDate.clone().startOf('month').startOf('week');
+  const endOfMonth = currentDate.clone().endOf('month').endOf('week');
+  const day = startOfMonth.clone().subtract(1, 'day');
+  const calendar = [];
+
+  while (day.isBefore(endOfMonth, 'day')) {
+    calendar.push(
+      Array(7)
+        .fill(0)
+        .map(() => day.add(1, 'day').clone())
     );
+  }
 
-  if (error)
-    return (
-      <div className="text-center text-red-500 mt-4">
-        <p>Error: {error}</p>
-      </div>
-    );
+  const eventsByDay = reservations.reduce((acc, booking) => {
+    const date = moment(booking.check_in).format('YYYY-MM-DD');
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(booking);
+    return acc;
+  }, {});
 
-  const events = reservations.map((booking) => ({
-    id: booking.$id,
-    title: booking.room_id?.name || 'Unknown Room',
-    start: new Date(booking.check_in),
-    end: new Date(booking.check_out),
-    resource: booking,
-  }));
+  const goToPrevMonth = () => setCurrentDate(currentDate.clone().subtract(1, 'month'));
+  const goToNextMonth = () => setCurrentDate(currentDate.clone().add(1, 'month'));
 
-  const eventStyleGetter = (event) => {
-    const colors = ['#f59e0b', '#10b981', '#ef4444', '#3b82f6', '#a855f7'];
-    const roomIndex = event.resource?.room_id?.$id.charCodeAt(0) % colors.length;
-    return {
-      style: {
-        backgroundColor: colors[roomIndex],
-        color: 'white',
-        borderRadius: '4px',
-        padding: '4px',
-        border: 'none',
-      },
-    };
-  };
-
-  const handleEventClick = (event) => {
-    setSelectedEvent(event);
+  const handleDateClick = (date) => {
+    const formatted = date.format('YYYY-MM-DD');
+    setSelectedDate(date);
+    setSelectedDateEvents(eventsByDay[formatted] || []);
     setShowModal(true);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedEvent(null);
-  };
-
-  const navigateToToday = () => setCurrentDate(new Date());
-
-  const navigateBack = () => {
-    const newDate = moment(currentDate).subtract(1, view === Views.MONTH ? 'month' : 'week').toDate();
-    setCurrentDate(newDate);
-  };
-
-  const navigateNext = () => {
-    const newDate = moment(currentDate).add(1, view === Views.MONTH ? 'month' : 'week').toDate();
-    setCurrentDate(newDate);
-  };
-
-  const changeView = (newView) => setView(newView);
-
   const handleDateChange = (date) => {
-    setCurrentDate(date);
+    setCurrentDate(moment(date));
     setShowDatePicker(false);
   };
 
   return (
-    <div className="p-4 bg-gray-100 w-full h-screen flex flex-col">
-      
+    <div className="w-full min-h-screen bg-neutral-900 text-white px-4 py-12 sm:px-10">
+      <div className="text-center mb-8">
+        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-widest">LEASE MAP</h1>
+        <p className="mt-4 text-lg sm:text-xl mb-20 font-light text-gray-400">
+          View Food Stall Lease like a traditional calendar layout.
+        </p>
+      </div>
 
-      
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center max-w-4xl mx-auto gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <button onClick={goToPrevMonth} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md">
+            ← Prev
+          </button>
+          <h2 className="text-xl font-semibold text-gray-200">{currentDate.format('MMMM YYYY')}</h2>
+          <button onClick={goToNextMonth} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md">
+            Next →
+          </button>
+        </div>
 
-      {/* Date Picker */}
-      <div className="mb-4 w-full max-w-sm">
-        <label className="block text-sm font-medium text-gray-700">Search Date</label>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <input
             type="text"
-            placeholder="Select Date"
-            className="mt-2 p-2 w-full border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
             onClick={() => setShowDatePicker(!showDatePicker)}
-            value={moment(currentDate).format('MM/DD/YYYY')}
+            value={currentDate.format('MM/DD/YYYY')}
             readOnly
+            className="bg-neutral-800 text-white border border-neutral-700 rounded-md px-4 py-2 w-full sm:w-48 cursor-pointer"
           />
           {showDatePicker && (
             <div className="absolute z-50 mt-2">
-              <DatePicker
-                selected={currentDate}
-                onChange={handleDateChange}
-                inline
-                dateFormat="MM/dd/yyyy"
-              />
+              <DatePicker selected={currentDate.toDate()} onChange={handleDateChange} inline />
             </div>
           )}
         </div>
       </div>
 
-      {/* Fullscreen Calendar */}
-      <div className="flex-grow rounded-lg shadow-lg overflow-hidden bg-white">
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: '100%', background: '#f9fafb' }}
-          date={currentDate}
-          onNavigate={setCurrentDate}
-          view={view}
-          onView={setView}
-          eventPropGetter={eventStyleGetter}
-          onSelectEvent={handleEventClick}
-          popup
-        />
+      <div className="grid grid-cols-7 gap-2 max-w-4xl mx-auto text-center mb-2">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
+          <div key={idx} className="text-yellow-400 font-semibold text-sm sm:text-base">
+            {day}
+          </div>
+        ))}
       </div>
 
-      {/* Modal */}
-      {showModal && selectedEvent && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-2xl border-4 border-yellow-400 relative">
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 text-3xl font-bold"
-            >
-              &times;
-            </button>
+      <div className="grid grid-cols-7 gap-2 max-w-4xl mx-auto" ref={calendarRef}>
+        {calendar.map((week, i) =>
+          week.map((date, idx) => {
+            const isToday = date.isSame(moment(), 'day');
+            const isCurrentMonth = date.isSame(currentDate, 'month');
+            const dateKey = date.format('YYYY-MM-DD');
+            const dayEvents = eventsByDay[dateKey] || [];
 
-            <h2 className="text-3xl font-bold text-center text-gray-800 border-b-2 border-dashed border-gray-300 pb-4 mb-6">
-              Lease Ticket
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700 text-lg">
-              <p><strong>Title:</strong> {selectedEvent.title}</p>
-              <p><strong>Stall #:</strong> {selectedEvent.resource?.room_id?.stallNumber || 'N/A'}</p>
-              <p><strong>Start:</strong> {selectedEvent.start.toLocaleString()}</p>
-              <p><strong>End:</strong> {selectedEvent.end.toLocaleString()}</p>
-              <p><strong>Payment Status:</strong> {selectedEvent.resource?.status || 'Unknown'}</p>
-            </div>
-
-            <div className="mt-6 text-center">
-              <button
-                onClick={handleCloseModal}
-                className="bg-blue-400 hover:bg-yellow-400 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
+            return (
+              <div
+                key={`${i}-${idx}`}
+                data-day={dateKey}
+                onClick={() => handleDateClick(date)}
+                className={`cursor-pointer border rounded-md p-2 text-sm sm:text-base h-32 sm:h-36 flex flex-col justify-between overflow-hidden transition ${
+                  isCurrentMonth ? 'bg-neutral-800' : 'bg-neutral-700 text-gray-500'
+                } ${isToday ? 'border-yellow-500' : 'border-neutral-700'} hover:ring-2 hover:ring-yellow-500`}
               >
-                Close
-              </button>
-            </div>
-          </div>
+                <div className="font-semibold">{date.date()}</div>
+                <div className="flex-grow mt-2 overflow-auto">
+                  {dayEvents.length > 0 ? (
+                    <ul className="text-xs space-y-1">
+                      {dayEvents.slice(0, 2).map((event) => (
+                        <li key={event.$id} className="text-yellow-400 truncate">
+                          • {event.room_id?.name || 'Stall'} #{event.room_id?.stallNumber}
+                        </li>
+                      ))}
+                      {dayEvents.length > 2 && (
+                        <li className="text-gray-400 italic">+{dayEvents.length - 2} more</li>
+                      )}
+                    </ul>
+                  ) : (
+                    <span className="text-neutral-500 italic text-xs">No events</span>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {showModal && (
+  <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
+    <div className="relative w-full max-w-2xl bg-neutral-900 text-white rounded-2xl p-6 sm:p-10 shadow-xl border border-yellow-600">
+      {/* Close Button */}
+      <button
+        onClick={() => setShowModal(false)}
+        className="absolute top-4 right-4 text-white hover:text-yellow-500 text-2xl sm:text-3xl"
+      >
+        &times;
+      </button>
+
+      {/* Title */}
+      <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 text-yellow-400 tracking-wide">
+        Lease for {selectedDate?.format('MMMM D, YYYY')}
+      </h2>
+
+      {/* Lease Entries */}
+      {selectedDateEvents.length > 0 ? (
+        <div className="space-y-5 max-h-[28rem] overflow-y-auto pr-1">
+          {selectedDateEvents.map((event) => {
+            const start = moment(event.check_in);
+            const end = moment(event.check_out);
+            const durationDays = end.diff(start, 'days');
+            const durationMonths = end.diff(start, 'months');
+            const widthPercent = Math.min((durationDays / 365) * 100, 100);
+
+            // Determine badge color
+            const status = event.status?.toUpperCase() || 'UNKNOWN';
+            const statusStyles = {
+              PENDING: 'text-yellow-400 border-yellow-400 bg-yellow-900/30',
+              APPROVED: 'text-green-400 border-green-400 bg-green-900/30',
+              DECLINED: 'text-red-400 border-red-400 bg-red-900/30',
+              UNKNOWN: 'text-gray-400 border-gray-400 bg-gray-900/30',
+            };
+
+            const badgeClass = statusStyles[status] || statusStyles.UNKNOWN;
+
+            return (
+              <div
+                key={event.$id}
+                className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 shadow-md flex flex-col gap-4"
+              >
+                {/* Stall + Status */}
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <p className="text-lg font-semibold text-yellow-300">
+                    {event.room_id?.name} #{event.room_id?.stallNumber}
+                  </p>
+                  <span
+                    className={`text-xs font-bold uppercase px-3 py-1 rounded-full border ${badgeClass} tracking-wide`}
+                  >
+                    {status}
+                  </span>
+                </div>
+
+                {/* Duration */}
+                <div className="text-sm text-gray-300">
+                  <strong>Duration:</strong>{' '}
+                  {durationMonths >= 1
+                    ? `${durationMonths} month${durationMonths > 1 ? 's' : ''}`
+                    : `${durationDays} day${durationDays > 1 ? 's' : ''}`}
+                </div>
+
+                {/* Timeline */}
+                <div className="relative h-6 bg-neutral-700 rounded-full overflow-hidden">
+                  <div
+                    className="absolute top-0 left-0 h-full bg-yellow-500 transition-all duration-300"
+                    style={{ width: `${widthPercent}%` }}
+                  />
+                  <div className="absolute inset-0 flex justify-between text-xs text-white px-2 mt-1">
+                    <span>{start.format('MMM D, YYYY')}</span>
+                    <span>{end.format('MMM D, YYYY')}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
+      ) : (
+        <p className="text-center text-gray-400 italic text-lg mt-8">
+          No Lessee on this date.
+        </p>
       )}
+
+      {/* Close Button */}
+      <div className="mt-10 text-center">
+        <button
+          onClick={() => setShowModal(false)}
+          className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-8 rounded-xl transition-all duration-200 shadow-md"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 };
