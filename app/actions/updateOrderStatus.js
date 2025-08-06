@@ -12,18 +12,10 @@ if (!databaseId || !collectionId) {
   });
   throw new Error("Missing required Appwrite environment variables.");
 }
-
-/**
- * Update the status of a specific item in the order.
- * @param {string} orderId - ID of the order document
- * @param {number} itemIndex - Index of the item in the `items` array
- * @param {string} newStatus - New status to set (e.g., 'preparing', 'ready')
- */
 const updateOrderStatus = async (orderId, itemIndex, newStatus) => {
   try {
     const { databases } = await createAdminClient();
 
-    // Fetch the current order document
     const order = await databases.getDocument(databaseId, collectionId, orderId);
     const items = [...order.items];
 
@@ -35,7 +27,7 @@ const updateOrderStatus = async (orderId, itemIndex, newStatus) => {
         }
         return JSON.stringify(item);
       } catch (err) {
-        return itemStr; // Leave unparsed if error
+        return itemStr;
       }
     });
 
