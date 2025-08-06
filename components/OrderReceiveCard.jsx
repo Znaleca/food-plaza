@@ -58,25 +58,25 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   };
 
   const renderStatusBadge = (status) => {
-    const normalized = String(status || "").toLowerCase();
-    const styleMap = {
-      pending: "bg-blue-500/20 text-blue-300 border border-blue-400/50",
-      preparing: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
-      ready: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/50",
-      completed: "bg-green-500/20 text-green-300 border border-green-400/50",
-      cancelled: "bg-red-500/20 text-red-300 border border-red-400/50",
-    };
-  
-    return (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm
-          ${styleMap[normalized] || styleMap.pending}`}
-      >
-        {normalized.charAt(0).toUpperCase() + normalized.slice(1)}
-      </span>
-    );
+  const normalized = String(status || "").toLowerCase();
+  const styleMap = {
+    pending: "bg-blue-500/20 text-blue-300 border border-blue-400/50",
+    preparing: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
+    ready: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/50",
+    completed: "bg-green-500/20 text-green-300 border border-green-400/50",
+    cancelled: "bg-red-500/20 text-red-300 border border-red-400/50",
   };
-  
+
+  return (
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm
+        ${styleMap[normalized] || styleMap.pending}`}
+    >
+      {normalized.charAt(0).toUpperCase() + normalized.slice(1)}
+    </span>
+  );
+};
+
 
   const parsedItems = order.items
     .map((itemStr, idx) => {
