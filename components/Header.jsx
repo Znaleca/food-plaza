@@ -19,31 +19,32 @@ const Header = () => {
     currentUser,
     setCurrentUser,
     labels,
-    setLabels
+    setLabels,
+    cartCount,
+    setCartCount
   } = useAuth();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
 
   const isAdmin = labels.includes("admin");
   const isCustomer = labels.includes("customer");
   const isFoodstall = labels.includes("foodstall");
 
-  // Load and update cart count
   useEffect(() => {
     const updateCartCount = () => {
       const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
-      setCartCount(savedCart.reduce((sum, item) => sum + (item.quantity || 1), 0));
+      const count = savedCart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      setCartCount(count);
     };
 
     updateCartCount();
-    window.addEventListener('storage', updateCartCount); // listen to cart changes from other tabs
+    window.addEventListener('storage', updateCartCount);
 
     return () => {
       window.removeEventListener('storage', updateCartCount);
     };
-  }, []);
+  }, [setCartCount]);
 
   const handleLogout = async () => {
     const { success, error } = await destroySession();
@@ -51,14 +52,15 @@ const Header = () => {
       setIsAuthenticated(false);
       setCurrentUser(null);
       setLabels([]);
+      setCartCount(0);
       router.push('/login');
     } else {
       toast.error(error || "Logout failed.");
     }
   };
 
-  const toggleDropdown = () => setIsDropdownOpen((prev) => !prev);
-  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+  const toggleDropdown = () => setIsDropdownOpen(prev => !prev);
+  const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
 
   return (
     <header className="bg-neutral-800 shadow-md">
@@ -122,10 +124,7 @@ const Header = () => {
 
           {/* Mobile Menu Toggle */}
           <div className="md:hidden">
-            <button
-              onClick={toggleMobileMenu}
-              className="text-white focus:outline-none"
-            >
+            <button onClick={toggleMobileMenu} className="text-white focus:outline-none">
               {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
             </button>
           </div>
@@ -142,25 +141,15 @@ const Header = () => {
                     <FaBars size={20} />
                   </button>
                   {isDropdownOpen && (
-  <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-neutral-900 border border-pink-600 z-10">
-    {/* Login */}
-    <Link
-      href="/login"
-      className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-    >
-      <FaSignInAlt className="mr-2 text-pink-500" /> Login
-    </Link>
-
-    {/* Register */}
-    <Link
-      href="/register"
-      className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-    >
-      <FaUserPlus className="mr-2 text-pink-500" /> Register
-    </Link>
-  </div>
-)}
-
+                    <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-neutral-900 border border-pink-600 z-10">
+                      <Link href="/login" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
+                        <FaSignInAlt className="mr-2 text-pink-500" /> Login
+                      </Link>
+                      <Link href="/register" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
+                        <FaUserPlus className="mr-2 text-pink-500" /> Register
+                      </Link>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
@@ -181,32 +170,23 @@ const Header = () => {
                     >
                       <FaBars />
                       <FaCircleUser />
-                      </button>
-{isDropdownOpen && (
-  <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-neutral-900 border border-pink-600 z-10">
-    {/* Header */}
-    <div className="px-4 py-3 font-semibold border-b border-neutral-700 text-white">
-      Welcome, <span className="text-pink-500">{currentUser?.name || "User"}</span>
-    </div>
-
-    {/* Account Settings */}
-    <Link
-      href="/account"
-      className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 transition-colors"
-    >
-      <FaGear className="mr-2 text-pink-500" /> Account Settings
-    </Link>
-
-    {/* Sign Out */}
-    <button
-      onClick={handleLogout}
-      className="w-full flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-    >
-      <FaSignOutAlt className="mr-2 text-pink-500" /> Sign Out
-    </button>
-  </div>
-)}
-
+                    </button>
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-neutral-900 border border-pink-600 z-10">
+                        <div className="px-4 py-3 font-semibold border-b border-neutral-700 text-white">
+                          Welcome, <span className="text-pink-500">{currentUser?.name || "User"}</span>
+                        </div>
+                        <Link href="/account" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 transition-colors">
+                          <FaGear className="mr-2 text-pink-500" /> Account Settings
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                        >
+                          <FaSignOutAlt className="mr-2 text-pink-500" /> Sign Out
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -233,60 +213,39 @@ const Header = () => {
                 </Link>
               </>
             )}
-
             {isCustomer && (
               <Link href="/customer/promos" className="flex items-center gap-2 hover:text-pink-600">
                 <FaGift /> Promotions
               </Link>
             )}
-
             {isAdmin && (
               <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400">
                 <FaCaretRight /> Admin Panel
               </Link>
             )}
-
             {isFoodstall && (
               <Link href="/foodstall" className="flex items-center gap-2 hover:text-pink-600">
                 <FaCaretRight /> Stall Panel
               </Link>
             )}
-
             <hr className="border-gray-600 my-2" />
-
             {!isAuthenticated ? (
               <>
-                <Link
-  href="/login"
-  className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors"
->
-  <FaSignInAlt className="text-pink-500" /> Login
-</Link>
-
-<Link
-  href="/register"
-  className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors"
->
-  <FaUserPlus className="text-pink-500" /> Register
-</Link>
-
+                <Link href="/login" className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors">
+                  <FaSignInAlt className="text-pink-500" /> Login
+                </Link>
+                <Link href="/register" className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors">
+                  <FaUserPlus className="text-pink-500" /> Register
+                </Link>
               </>
             ) : (
               <>
-                <Link
-  href="/account"
-  className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors"
->
-  <FaGear className="text-pink-500" /> Account Settings
-</Link>
-
-<button
-  onClick={handleLogout}
-  className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors"
->
-  <FaSignOutAlt className="text-red-500" /> Sign Out
-</button>
-
+                <Link href="/account" className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors">
+                  <FaGear className="text-pink-500" /> Account Settings
+                </Link>
+                <button onClick={handleLogout} className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors">
+                  <FaSignOutAlt className="text-red-500" /> Sign Out
+                </button>
               </>
             )}
           </div>

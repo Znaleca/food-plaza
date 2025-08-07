@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { FaPlus, FaMinus } from 'react-icons/fa6';
+import { useAuth } from '@/context/authContext';
 
 export default function MenuPopUp({
   item,
@@ -11,11 +12,13 @@ export default function MenuPopUp({
   largeFee = 0,
   menuImage,
   roomName,
-  roomId, // ✅ added
+  roomId,
   description = '',
   onClose,
   onAddToCart,
 }) {
+  const { setCartCount } = useAuth(); // ✅ access cart count updater
+
   const sizeDefs = useMemo(
     () => [
       { key: 'S', fee: Number(smallFee) || 0 },
@@ -40,42 +43,41 @@ export default function MenuPopUp({
   const handleAdd = () => {
     const newItem = {
       name: item,
-      menuName: item, // ensure both name and menuName are set
+      menuName: item,
       size: isOneSize ? 'One-size' : size,
       quantity: qty,
       basePrice: Number(price),
       extraFee: fee,
-      menuPrice: Number(price) + fee, // used for subtotal
+      menuPrice: unitPrice,
       image: menuImage,
-      menuImage: menuImage,
+      menuImage,
       room_id: roomId,
       room_name: roomName,
     };
-  
-    // Get existing cart from localStorage
+
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
-  
+
     const existingIndex = cart.findIndex(
       (i) =>
         i.menuName === newItem.menuName &&
         i.size === newItem.size &&
         i.room_id === newItem.room_id
     );
-  
+
     if (existingIndex !== -1) {
-      // Merge quantity
       cart[existingIndex].quantity += newItem.quantity;
     } else {
-      // Add new item
       cart.push(newItem);
     }
-  
-    // Save updated cart
+
     localStorage.setItem('cart', JSON.stringify(cart));
-  
-    onClose(); // close the popup
+
+    // ✅ Update cart count globally
+    const newCount = cart.reduce((sum, i) => sum + (i.quantity || 1), 0);
+    setCartCount(newCount);
+
+    onClose();
   };
-  
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
