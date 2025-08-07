@@ -53,47 +53,47 @@ const NewsNotifPage = () => {
   const isAdmin = labels?.includes('admin');
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 w-full sm:w-[480px] max-w-sm sm:max-w-none mx-4 sm:mx-0 bg-white border border-gray-300 shadow-2xl rounded-2xl animate-fade-in overflow-hidden">
+    <div className="fixed bottom-4 right-0 left-0 sm:bottom-8 sm:right-8 sm:left-auto z-50 w-full max-w-[480px] mx-4 sm:mx-0 bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl animate-fade-in overflow-hidden">
       {/* Header */}
-      <div className="flex justify-between items-center px-4 sm:px-6 py-4 sm:py-5 bg-gradient-to-r from-black to-zinc-800 text-white">
+      <div className="flex justify-between items-center px-4 py-4 sm:px-6 sm:py-5 bg-gradient-to-r from-black to-zinc-800 text-white">
         <div>
           <h2 className="text-lg sm:text-xl font-bold">Announcement</h2>
-          <p className="text-xs sm:text-sm opacity-90">Stay informed with real-time updates</p>
+          <p className="text-sm text-gray-300">Stay informed with real-time updates</p>
         </div>
-        <button onClick={() => setVisible(false)} className="hover:text-black transition">
-          <FaTimes size={18} />
+        <button onClick={() => setVisible(false)} className="hover:text-pink-500 transition">
+          <FaTimes size={20} />
         </button>
       </div>
 
       {/* Body */}
-      <div className="px-4 sm:px-6 py-4 bg-white">
+      <div className="px-4 py-4 sm:px-6 sm:py-5 text-gray-100">
         {editMode ? (
           <textarea
             value={news}
             onChange={(e) => setNews(e.target.value)}
             disabled={loading}
             rows={6}
-            className="w-full p-3 text-sm sm:text-base border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-pink-500 outline-none"
+            className="w-full p-3 sm:p-4 text-base border border-zinc-700 bg-zinc-800 text-white rounded-md resize-none focus:ring-2 focus:ring-pink-500 outline-none"
           />
         ) : (
-          <p className="text-sm sm:text-base text-gray-800 whitespace-pre-line">{news}</p>
+          <p className="text-base whitespace-pre-line">{news}</p>
         )}
 
         {isAdmin && (
-          <div className="mt-4 sm:mt-6 flex justify-end flex-wrap gap-2 sm:gap-4">
+          <div className="mt-6 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
             {editMode ? (
               <>
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="flex items-center gap-1 sm:gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 sm:px-5 py-2 text-sm font-medium rounded-lg transition disabled:opacity-60"
+                  className="flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-5 py-2.5 text-sm font-medium rounded-lg transition disabled:opacity-60 w-full sm:w-auto"
                 >
                   {loading ? 'Saving...' : (<><FaSave /> Save</>)}
                 </button>
                 <button
                   onClick={() => setEditMode(false)}
                   disabled={loading}
-                  className="flex items-center gap-1 sm:gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 sm:px-5 py-2 text-sm font-medium rounded-lg transition"
+                  className="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-5 py-2.5 text-sm font-medium rounded-lg transition w-full sm:w-auto"
                 >
                   <FaTimes /> Cancel
                 </button>
@@ -101,7 +101,7 @@ const NewsNotifPage = () => {
             ) : (
               <button
                 onClick={() => setEditMode(true)}
-                className="flex items-center gap-1 sm:gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 sm:px-5 py-2 text-sm font-medium rounded-lg transition"
+                className="flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2.5 text-sm font-medium rounded-lg transition w-full sm:w-auto"
               >
                 <FaEdit /> Edit
               </button>

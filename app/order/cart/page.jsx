@@ -18,13 +18,14 @@ const OrderCartPage = () => {
   const [roomNames, setRoomNames] = useState({});
   const [openVoucherRoom, setOpenVoucherRoom] = useState(null);
   const [usedVoucherStates, setUsedVoucherStates] = useState({});
-
+  const [cartCount, setCartCount] = useState(0); // NEW — cart item count
 
   useEffect(() => {
     const loadCartAndGroup = async () => {
       const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
-      const roomIds = [...new Set(savedCart.map(item => item.room_id))];
+      setCartCount(savedCart.reduce((sum, item) => sum + (item.quantity || 1), 0)); // update count
 
+      const roomIds = [...new Set(savedCart.map(item => item.room_id))];
       const names = {};
       for (const roomId of roomIds) {
         const room = await getSingleSpace(roomId);
@@ -56,6 +57,13 @@ const OrderCartPage = () => {
     setGroupedCart(grouped);
   };
 
+  const updateCartStorage = (updatedCart) => {
+    setCart(updatedCart);
+    setCartCount(updatedCart.reduce((sum, item) => sum + (item.quantity || 1), 0)); // update count
+    groupItemsByRoom(updatedCart);
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+  };
+
   const updateQuantity = (roomId, menuName, size, delta) => {
     const updatedCart = cart.map((item) => {
       if (item.room_id === roomId && item.menuName === menuName && item.size === size) {
@@ -63,18 +71,14 @@ const OrderCartPage = () => {
       }
       return item;
     });
-    setCart(updatedCart);
-    groupItemsByRoom(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
+    updateCartStorage(updatedCart);
   };
 
   const removeItem = (roomId, menuName, size) => {
     const updatedCart = cart.filter(
       (item) => !(item.room_id === roomId && item.menuName === menuName && item.size === size)
     );
-    setCart(updatedCart);
-    groupItemsByRoom(updatedCart);
-    localStorage.setItem('cart', JSON.stringify(updatedCart));
+    updateCartStorage(updatedCart);
   };
 
   const handleVoucherUsed = (voucher) => {
@@ -155,12 +159,11 @@ const OrderCartPage = () => {
     name: voucher?.title,
     discount: voucher?.discount,
   }));
-  
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-64 bg-neutral-900 text-white">
       <div className="text-center mb-40 -mt-52 px-4">
-        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">YOUR CART</h2>
+        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">YOUR CART ({cartCount})</h2>
         <p className="mt-4 text-xl sm:text-5xl font-bold text-white tracking-widest">
           Get ready to indulge in every bite.
         </p>
@@ -317,6 +320,7 @@ const OrderCartPage = () => {
                 setSelectedItems({});
                 setSelectAll(false);
                 setSelectAllPerRoom({});
+                setCartCount(0); // reset counter
               }}
             />
           </div>
@@ -327,12 +331,12 @@ const OrderCartPage = () => {
         <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel className="w-full max-w-3xl bg-neutral-900 rounded-lg p-6 shadow-xl">
-          <VoucherWallet
-  roomIdFilter={openVoucherRoom}
-  onVoucherUsed={handleVoucherUsed}
-  usedVoucherStates={usedVoucherStates}
-  setUsedVoucherStates={setUsedVoucherStates}
-/>
+            <VoucherWallet
+              roomIdFilter={openVoucherRoom}
+              onVoucherUsed={handleVoucherUsed}
+              usedVoucherStates={usedVoucherStates}
+              setUsedVoucherStates={setUsedVoucherStates}
+            />
 
             <div className="text-center mt-4">
               <button
