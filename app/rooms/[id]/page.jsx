@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  FaTrophy,   // 1st
   FaMedal,    // 2nd
-  FaAward     // 3rd
 } from 'react-icons/fa6';
 import { FaChevronLeft } from 'react-icons/fa';
 import getSingleSpace from '@/app/actions/getSingleSpace';

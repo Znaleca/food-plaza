@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [labels, setLabels] = useState([]);
-  const [cartCount, setCartCount] = useState(0); // ✅ added cart count
+  const [cartCount, setCartCount] = useState(0); 
 
   const checkAuthentication = async () => {
     const { isAuthenticated, user, labels } = await checkAuth();
@@ -19,7 +19,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAuthentication();
 
-    // Load initial cart count
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const count = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     setCartCount(count);
@@ -29,7 +28,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     setCurrentUser(null);
     setLabels([]);
-    setCartCount(0); // ✅ clear cart count on logout
+    setCartCount(0);
   };
 
   const roles = {
@@ -46,8 +45,8 @@ export const AuthProvider = ({ children }) => {
         currentUser,
         labels,
         roles,
-        cartCount, // ✅ provide cart count
-        setCartCount, // ✅ provide cart updater
+        cartCount, 
+        setCartCount,
         setIsAuthenticated,
         setCurrentUser,
         setLabels,

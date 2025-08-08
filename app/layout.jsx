@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import "@/assets/styles/globals.css";
 import Footer from "@/components/Footer";
-import Header from "@/components/Header";
+import HeaderWrapper from "@/components/HeaderWrapper";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AuthWrapper from "@/components/AuthWrapper";
@@ -19,9 +19,8 @@ export default function RootLayout({ children }) {
     <AuthWrapper>
       <html lang="en">
         <body className={`${inter.className} min-h-screen bg-neutral-900 text-white`}>
-          <div className="fixed top-0 left-0 w-full z-[9999] bg-white shadow-md">
-            <Header />
-          </div>
+          {/* Header hidden on /login and /register */}
+          <HeaderWrapper />
 
           <div className="pt-16">
             <section className="w-full py-8">

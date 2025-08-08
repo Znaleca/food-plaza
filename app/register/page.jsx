@@ -192,7 +192,7 @@ const RegisterPage = () => {
                 Log in
               </Link>
             </p>
-            <Link href="/forgot-password" className="text-pink-500 hover:underline">
+            <Link href="/forgot-pass" className="text-pink-500 hover:underline">
               Forgot Password?
             </Link>
           </div>

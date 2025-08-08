@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { sendResetCodeEmail } from '@/app/actions/sendResetCodeEmail';
 import { toast } from 'react-toastify';
-import { FaEnvelope } from 'react-icons/fa';
+import { FaEnvelope, FaArrowLeft } from 'react-icons/fa';
+import Link from 'next/link';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ const ForgotPasswordPage = () => {
     e.preventDefault();
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const name = email.split('@')[0]; // optional guess for name
+    const name = email.split('@')[0];
     const result = await sendResetCodeEmail(email, name, code);
 
     if (result.error) {
@@ -26,7 +27,7 @@ const ForgotPasswordPage = () => {
     localStorage.setItem('resetCode', code);
 
     toast.success('Reset code sent to your email!');
-    router.push('/reset-pass'); // change to your reset form route
+    router.push('/reset-pass');
   };
 
   return (
@@ -64,6 +65,17 @@ const ForgotPasswordPage = () => {
             Send Reset Code
           </button>
         </form>
+
+        {/* Back to Login Link with Icon */}
+        <div className="mt-6 text-center">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 text-sm text-pink-500 hover:text-pink-400 transition"
+          >
+            <FaArrowLeft />
+            Back to Login
+          </Link>
+        </div>
       </div>
     </div>
   );

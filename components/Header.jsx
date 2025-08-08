@@ -62,6 +62,21 @@ const Header = () => {
   const toggleDropdown = () => setIsDropdownOpen(prev => !prev);
   const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isDropdownOpen && !event.target.closest('.relative')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+
   return (
     <header className="bg-neutral-800 shadow-md">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -141,11 +156,11 @@ const Header = () => {
                     <FaBars size={20} />
                   </button>
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-neutral-900 border border-pink-600 z-10">
-                      <Link href="/login" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
+                    <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-neutral-900 border border-neutral-700 z-10 transition-all duration-300 ease-in-out transform origin-top scale-y-100 opacity-100">
+                      <Link href="/login" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors">
                         <FaSignInAlt className="mr-2 text-pink-500" /> Login
                       </Link>
-                      <Link href="/register" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors">
+                      <Link href="/register" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors">
                         <FaUserPlus className="mr-2 text-pink-500" /> Register
                       </Link>
                     </div>
@@ -172,7 +187,7 @@ const Header = () => {
                       <FaCircleUser />
                     </button>
                     {isDropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-neutral-900 border border-pink-600 z-10">
+                      <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-neutral-900 border border-neutral-700 z-10 transition-all duration-300 ease-in-out transform origin-top scale-y-100 opacity-100">
                         <div className="px-4 py-3 font-semibold border-b border-neutral-700 text-white">
                           Welcome, <span className="text-pink-500">{currentUser?.name || "User"}</span>
                         </div>
@@ -181,7 +196,7 @@ const Header = () => {
                         </Link>
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                          className="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors"
                         >
                           <FaSignOutAlt className="mr-2 text-pink-500" /> Sign Out
                         </button>
