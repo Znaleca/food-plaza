@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import getAllSpaces from "@/app/actions/getAllSpaces";
 import Link from "next/link";
+import { FaStore } from 'react-icons/fa'; // Added for a modern touch
 
 const ImagePreview = () => {
   const [rooms, setRooms] = useState([]);
@@ -16,7 +17,6 @@ const ImagePreview = () => {
         const formattedRooms = fetchedRooms.map((room) => ({
           id: room.$id,
           name: room.name,
-          type: room.type?.join(" • ") || 'N/A',
           stallNumber: room.stallNumber || 'N/A',
         }));
 
@@ -32,41 +32,44 @@ const ImagePreview = () => {
   }, []);
 
   if (loading) {
-    return <p className="text-center text-lg font-semibold text-gray-400">Loading...</p>;
+    return <p className="text-center text-lg font-semibold text-gray-400 py-12 bg-stone-800 min-h-screen">Loading...</p>;
   }
 
   if (rooms.length === 0) {
-    return <p className="text-center text-lg font-semibold text-gray-400">No food stalls available.</p>;
+    return <p className="text-center text-lg font-semibold text-gray-400 py-12 bg-stone-800 min-h-screen">No food stalls available.</p>;
   }
 
   return (
-    <div className="w-full py-12 bg-stone-800">
-      <div className="text-center mb-12 px-4">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">OUR STALLS</h2>
-        <p className="mt-4 text-xl sm:text-5xl font-bold text-white">Explore the variety of food stalls.</p>
+    <div className="w-full py-20 bg-stone-800">
+      <div className="text-center mb-16 px-4">
+        <h2 className="text-base sm:text-lg text-pink-600 font-medium tracking-widest uppercase">Our Stalls</h2>
+        <p className="mt-4 text-3xl sm:text-5xl font-extrabold text-white">Explore the variety of food stalls.</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-4 sm:px-8 max-w-7xl mx-auto">
         {rooms.map((room) => (
           <Link href={`/rooms/${room.id}`} key={room.id}>
-            <div className="aspect-square bg-neutral-900 border border-pink-600 rounded-xl p-6 flex flex-col justify-center items-center text-center hover:bg-neutral-950 transition-all duration-300">
+            <div className="group relative aspect-square bg-neutral-900 border border-neutral-700 rounded-2xl p-8 flex flex-col justify-between items-center text-center transition-all duration-300 transform hover:scale-105 hover:bg-neutral-950 hover:border-pink-600 shadow-lg">
               
-              {/* Decorative Line Above Title */}
-              <div className="w-16 h-0.5 bg-pink-600 mb-6" /> {/* Shorter line with more spacing */}
+              {/* Decorative Header */}
+              <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center">
+                <div className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+                  <FaStore />
+                </div>
+                <div className="w-16 h-0.5 bg-pink-600 group-hover:w-20 transition-all duration-500" />
+              </div>
 
-              <h3 className="text-base font-bold text-white tracking-widest uppercase mb-4">
-                {room.name}
-              </h3>
+              {/* Content */}
+              <div className="flex-1 flex flex-col justify-center items-center">
+                <h3 className="text-lg sm:text-xl font-bold text-white tracking-wide uppercase transition-all duration-300 group-hover:text-pink-600">
+                  {room.name}
+                </h3>
+              </div>
 
-              {/* Decorative Line Below Title */}
-              <div className="w-16 h-0.5 bg-gray-600 mb-6" /> {/* Full width line with spacing */}
-
-              <p className="text-gray-400 text-sm mb-2">
-                <span className="font-semibold text-white">Type:</span> {room.type}
-              </p>
-              <p className="text-gray-400 text-sm">
-                <span className="font-semibold text-white">Stall:</span> {room.stallNumber}
-              </p>
+              {/* Stall Number in a bigger circle */}
+              <div className="w-16 h-16 rounded-full bg-pink-600 group-hover:bg-pink-700 text-white flex items-center justify-center text-2xl font-extrabold shadow-xl transition-colors duration-300">
+                {room.stallNumber}
+              </div>
             </div>
           </Link>
         ))}

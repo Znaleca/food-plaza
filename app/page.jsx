@@ -10,7 +10,6 @@ const MenuBrowse = dynamic(() => import('@/components/MenuBrowse'), { ssr: false
 
 export default function BrowsePage() {
   const [rooms, setRooms] = useState([]);
-  const [reviews, setReviews] = useState([]);
   const [showMenu, setShowMenu] = useState(false);
   const [loading, setLoading] = useState(true);
 
