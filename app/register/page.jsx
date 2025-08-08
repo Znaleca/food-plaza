@@ -83,7 +83,7 @@ const RegisterPage = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row text-white">
+    <div className="min-h-screen flex flex-col  -mt-28 lg:flex-row text-white">
       {/* Left Branding Section */}
       <div className="hidden lg:flex flex-col justify-center items-center w-1/2">
       <h1 className="text-4xl sm:text-6xl font-black leading-tight tracking-[0.2em] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 text-transparent bg-clip-text">
