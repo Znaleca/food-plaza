@@ -5,7 +5,7 @@ import HeaderWrapper from "@/components/HeaderWrapper";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AuthWrapper from "@/components/AuthWrapper";
-import NewsNotifPage from "@/components/NewsNotif";
+import NewsNotif from "@/components/NewsNotif";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
 
           <div className="pt-16">
             <section className="w-full py-8">
-              <NewsNotifPage />
+              <NewsNotif />
             </section>
 
             <main className="w-full">{children}</main>

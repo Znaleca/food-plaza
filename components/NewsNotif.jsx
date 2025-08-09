@@ -6,7 +6,7 @@ import updateNews from '@/app/actions/newsUpdate';
 import { createSessionClient } from '@/config/appwrite';
 import { FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 
-const NewsNotifPage = () => {
+const NewsNotif = () => {
   const [news, setNews] = useState('');
   const [editMode, setEditMode] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -113,4 +113,4 @@ const NewsNotifPage = () => {
   );
 };
 
-export default NewsNotifPage;
+export default NewsNotif;
