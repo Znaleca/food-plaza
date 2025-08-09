@@ -87,16 +87,14 @@ const Header = () => {
               <div className="flex items-center cursor-default">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">THE</span>
-                  <span className="text-white"> CORNER</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">THE CORNER</span>
                 </span>
               </div>
             ) : (
               <Link href="/home" className="flex items-center">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">THE</span>
-                  <span className="text-white"> CORNER</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">THE CORNER</span>
                 </span>
               </Link>
             )}

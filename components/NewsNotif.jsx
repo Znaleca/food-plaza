@@ -26,7 +26,7 @@ const NewsNotifPage = () => {
         }
 
         const response = await databases.getDocument(databaseId, collectionId, 'news');
-        setNews(response.news || 'No news available.');
+        setNews(response.news?.trim() ? response.news : 'No news available.');
       } catch (error) {
         console.error('Failed to fetch news:', error);
       }
@@ -66,7 +66,7 @@ const NewsNotifPage = () => {
       </div>
 
       {/* Body */}
-      <div className="px-4 py-4 sm:px-6 sm:py-5 text-gray-100">
+      <div className="px-4 py-4 sm:px-6 sm:py-5 text-gray-100 max-h-[60vh] overflow-y-auto">
         {editMode ? (
           <textarea
             value={news}
