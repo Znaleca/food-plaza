@@ -97,8 +97,8 @@ export default function BrowsePage() {
       <div className="flex justify-center -mb-20">
         <button
           onClick={toggleView}
-          className="px-8 py-4 tracking-widest uppercase font-bold text-2xl bg-pink-600 text-white rounded-xl hover:bg-pink-700 transition shadow-lg mb-28"
-        >
+          className="px-8 py-4 tracking-widest uppercase font-bold text-2xl text-white rounded-full bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-700 hover:to-fuchsia-700 shadow-lg hover:scale-105 transition-all flex items-center gap-3 animate-fade-in delay-500 mb-28"
+          >
           {showMenu ? 'Food Stalls' : 'Menu'}
         </button>
       </div>

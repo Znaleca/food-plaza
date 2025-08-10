@@ -86,14 +86,14 @@ const RegisterPage = () => {
     <div className="min-h-screen flex flex-col  -mt-28 lg:flex-row text-white">
       {/* Left Branding Section */}
       <div className="hidden lg:flex flex-col justify-center items-center w-1/2">
-      <h1 className="text-4xl sm:text-6xl font-black leading-tight tracking-[0.2em] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 text-transparent bg-clip-text">
-        THE CORNER
+      <h1 className="text-4xl sm:text-4xl font-black leading-tight tracking-[0.2em] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 text-transparent bg-clip-text">
+        CREATE YOUR ACCOUNT
       </h1>
-      <p className="text-sm sm:text-lg font-medium text-gray-300 tracking-widest mt-2 uppercase">
-        Food Plaza
-      </p>
+      <p className="text-sm sm:text-lg font-medium text-gray-300 tracking-widest mt-2">
+      Join The Corner Food Plaza now!
+            </p>
         <p className="text-neutral-300 mt-4 text-xs max-w-md text-center">
-          Sign up to explore delicious food, discover new stalls, and enjoy seamless orders at The Corner Food Plaza.
+          Register to explore delicious food, discover new stalls, and enjoy seamless orders at The Corner Food Plaza.
         </p>
       </div>
 

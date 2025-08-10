@@ -46,7 +46,7 @@ const FeaturedPage = () => {
     <div className="max-w-7xl mx-auto px-6 py-12 bg-neutral-900 transition-all duration-700">
       <div className="text-center mb-12 px-4">
         <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">
-          OUR MENU
+          OUR MENUS
         </h2>
         <p className="mt-4 text-xl sm:text-5xl font-bold text-white tracking-widest">
         Enjoy a taste of comfort and flavor.

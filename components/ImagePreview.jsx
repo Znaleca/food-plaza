@@ -42,7 +42,7 @@ const ImagePreview = () => {
   return (
     <div className="w-full py-20 bg-stone-800">
       <div className="text-center mb-16 px-4">
-        <h2 className="text-base sm:text-lg text-pink-600 font-medium tracking-widest uppercase">Our Stalls</h2>
+        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">OUR STALLS</h2>
         <p className="mt-4 text-3xl sm:text-5xl font-extrabold text-white">Explore the variety of food stalls.</p>
       </div>
 
@@ -53,7 +53,7 @@ const ImagePreview = () => {
               
               {/* Decorative Header */}
               <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center">
-                <div className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="w-10 h-10 bg-gradient-to-r from-pink-600 to-fuchsia-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
                   <FaStore />
                 </div>
                 <div className="w-16 h-0.5 bg-pink-600 group-hover:w-20 transition-all duration-500" />
@@ -67,7 +67,7 @@ const ImagePreview = () => {
               </div>
 
               {/* Stall Number in a bigger circle */}
-              <div className="w-16 h-16 rounded-full bg-pink-600 group-hover:bg-pink-700 text-white flex items-center justify-center text-2xl font-extrabold shadow-xl transition-colors duration-300">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-600 to-fuchsia-600 group-hover:from-pink-700 group-hover:to-fuchsia-700 text-white flex items-center justify-center text-2xl font-extrabold shadow-xl transition-colors duration-300">
                 {room.stallNumber}
               </div>
             </div>
