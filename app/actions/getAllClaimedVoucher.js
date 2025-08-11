@@ -17,10 +17,15 @@ const getAllClaimedVouchers = async () => {
       [Query.contains('claimed_users', [user.id])]
     );
 
-    return response.documents; // Always return array or empty array
+    // Filter out vouchers already redeemed by this user
+    const availableVouchers = response.documents.filter(
+      (voucher) => !Array.isArray(voucher.redeemed) || !voucher.redeemed.includes(user.id)
+    );
+
+    return availableVouchers; // Only return unredeemed vouchers
   } catch (error) {
     console.error('Error fetching claimed vouchers:', error);
-    return []; // Return empty array on failure for consistency
+    return [];
   }
 };
 

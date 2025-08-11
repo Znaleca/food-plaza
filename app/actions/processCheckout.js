@@ -2,7 +2,7 @@
 
 import { createAdminClient } from '@/config/appwrite';
 import checkAuth from './checkAuth';
-import { ID } from 'node-appwrite';
+import { ID, Query } from 'node-appwrite';
 import calculateTotals from './calculateTotal';
 
 const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
@@ -33,6 +33,35 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       const roomName = voucher?.roomName || `Room ${roomId}`;
       return `${roomName} - ${voucher?.title} (${voucher?.discount}% off)`;
     });
+
+    // --- Update redeemed[] in promotions collection ---
+    for (const [, voucher] of Object.entries(voucherMap)) {
+      if (!voucher?.title) continue; // skip if voucher data is incomplete
+
+      // Look for promo by title (ideally use promo ID if available)
+      const promoDocs = await databases.listDocuments(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+        process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS, // your promotions collection
+        [Query.equal('title', voucher.title)]
+      );
+
+      if (promoDocs.total > 0) {
+        const promo = promoDocs.documents[0];
+        const redeemedList = Array.isArray(promo.redeemed) ? [...promo.redeemed] : [];
+
+        // Add user.id if not already redeemed
+        if (!redeemedList.includes(user.id)) {
+          redeemedList.push(user.id);
+          await databases.updateDocument(
+            process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+            process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS,
+            promo.$id,
+            { redeemed: redeemedList }
+          );
+        }
+      }
+    }
+    // ---------------------------------------------------
 
     const orderPayload = {
       user_id: user.id,
