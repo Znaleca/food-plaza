@@ -19,9 +19,9 @@ export default function FoodStallLayout({ children }) {
 
   useEffect(() => {
     startTransition(async () => {
-      const { default: getSpaceCheck } = await import('@/app/actions/getSpaceCheck');
-      const result = await getSpaceCheck();
-      setHasSpace(result);
+      const { default: getMySpaces } = await import('@/app/actions/getMySpaces');
+      const rooms = await getMySpaces();
+      setHasSpace(rooms.length > 0); // true if user has at least one stall
     });
   }, []);
 
