@@ -12,7 +12,7 @@ import SpacesImage from '@/components/SpacesImage';
 import MenuPopUp from '@/components/MenuPopUp';
 import CustomerRatingCard from '@/components/CustomerRatingCard';
 
-const categories = ['Drinks', 'Add-ons', 'Meals', 'Snacks', 'Dessert'];
+const categories = ['Drinks', 'Add-Ons', 'Meals', 'Snacks', 'Dessert'];
 
 function RoomSpace({ params }) {
   const { id } = params;

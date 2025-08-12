@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa6';
 import { toast } from 'react-toastify';
 
-const categories = ['Drinks', 'Add-ons', 'Meals', 'Snacks', 'Dessert'];
+const categories = ['Drinks', 'Add-Ons', 'Meals', 'Snacks', 'Dessert'];
 
 const PreviewStallPage = ({ params }) => {
   const { id } = params;
