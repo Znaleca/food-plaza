@@ -1,7 +1,7 @@
 'use server';
 
 import { createAdminClient } from '@/config/appwrite';
-
+import { ID } from 'node-appwrite'; // ✅ Add this import
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
 const COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS;
@@ -39,7 +39,7 @@ async function updateSpace(_, formData) {
     for (let i = 0; i < menuNames.length; i++) {
       const newImageFile = menuImageFiles[i];
       if (newImageFile instanceof File && newImageFile.size > 0) {
-        const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), newImageFile);
+        const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), newImageFile); // ✅ now works
         menuImages.push(uploaded.$id);
       } else {
         menuImages.push(existingMenuImages[i] || null);
@@ -49,7 +49,7 @@ async function updateSpace(_, formData) {
     const stallImageIDs = [];
     for (const image of newStallImages) {
       if (image && image.size > 0) {
-        const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), image);
+        const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), image); // ✅ now works
         stallImageIDs.push(uploaded.$id);
       }
     }
