@@ -21,7 +21,7 @@ export default async function getSpaceCheck() {
       [Query.equal('user_id', user.$id), Query.limit(1)]
     );
 
-    return result.total > 0; // true if user has at least one space
+    return result.total > 0;
   } catch (error) {
     console.error('Error checking user space:', error);
     return false;
