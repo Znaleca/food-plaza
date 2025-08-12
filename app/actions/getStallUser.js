@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Query } from 'appwrite';
 
-async function getFoodStallUser() {
+async function getStallUser() {
   const sessionCookie = cookies().get('appwrite-session');
 
   if (!sessionCookie) {
@@ -35,4 +35,4 @@ async function getFoodStallUser() {
   }
 }
 
-export default getFoodStallUser;
+export default getStallUser;

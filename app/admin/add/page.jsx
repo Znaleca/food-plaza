@@ -5,7 +5,7 @@ import { useFormState } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import createStall from '@/app/actions/createStall';
-import getFoodStallUser from '@/app/actions/getFoodStallUser';
+import getStallUser from '@/app/actions/getStallUser';
 import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa6';
 
@@ -18,7 +18,7 @@ function AddStallPage() {
   useEffect(() => {
     async function fetchFoodstallUsers() {
       try {
-        const users = await getFoodStallUser();
+        const users = await getStallUser();
         setFoodstallUsers(users);
       } catch (err) {
         console.error('Failed to fetch foodstall users:', err);
