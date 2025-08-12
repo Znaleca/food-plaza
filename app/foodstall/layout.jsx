@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState, startTransition } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   FaHouse,
-  FaSquarePlus,
   FaBullhorn,
   FaTags,
   FaBagShopping,
@@ -16,19 +15,9 @@ import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 
 export default function FoodStallLayout({ children }) {
   const [isHovered, setIsHovered] = useState(false);
-  const [hasSpace, setHasSpace] = useState(null); // null = loading
-
-  useEffect(() => {
-    startTransition(async () => {
-      const { default: getMySpaces } = await import('@/app/actions/getMySpaces');
-      const rooms = await getMySpaces();
-      setHasSpace(rooms.length > 0); // true if user has at least one stall
-    });
-  }, []);
 
   const baseLinks = [
     { href: '/foodstall', icon: <FaHouse />, label: 'Dashboard' },
-    hasSpace === false && { href: '/rooms/add', icon: <FaSquarePlus />, label: 'Add Food Stall' },
     { href: '/foodstall/add-promos', icon: <FaBullhorn />, label: 'Create Promos' },
     { href: '/foodstall/promos', icon: <FaTags />, label: 'Promotions' },
     { href: '/foodstall/order-status', icon: <FaBagShopping />, label: 'Orders' },

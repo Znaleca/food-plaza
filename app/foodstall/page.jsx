@@ -21,7 +21,7 @@ const FoodStallPage = () => {
           setRoomName(selectedRoom.name);
           setRoomId(selectedRoom.$id);
 
-          await getAllOrders(1, 100); // preload orders if needed
+          await getAllOrders(1, 100);
         }
       } catch (err) {
         console.error('Error loading data:', err);

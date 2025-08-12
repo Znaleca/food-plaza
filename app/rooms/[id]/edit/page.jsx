@@ -26,6 +26,9 @@ export default function EditSpacePage({ params }) {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
   const [newImages, setNewImages] = useState([]);
+  const [otherCategory, setOtherCategory] = useState("");
+  const [customCategories, setCustomCategories] = useState([]);
+
 
   // Load stall data
   useEffect(() => {
@@ -59,10 +62,11 @@ export default function EditSpacePage({ params }) {
     fetchStall();
   }, [id]);
 
-  // Handlers
   const handleTypeChange = (e) => {
-    const { value, checked } = e.target;
-    setSelectedTypes(prev => checked ? [...prev, value] : prev.filter(type => type !== value));
+    const value = e.target.value;
+    setSelectedTypes(prev =>
+      prev.includes(value) ? prev.filter(t => t !== value) : [...prev, value]
+    );
   };
 
   const handleMenuChange = (index, field, value) => {
@@ -174,24 +178,48 @@ export default function EditSpacePage({ params }) {
           />
         </div>
 
-        {/* Types */}
+    
         <div>
-          <label className="block font-semibold mb-2">Type</label>
-          <div className="grid grid-cols-4 gap-4">
-            {foodTypes.map(type => (
-              <label key={type} className="flex items-center space-x-2 text-sm">
-                <input
-                  type="checkbox"
-                  value={type}
-                  checked={selectedTypes.includes(type)}
-                  onChange={handleTypeChange}
-                  className="accent-pink-500"
-                />
-                <span>{type}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+  <label className="block font-semibold mb-2">Select Category</label>
+  <div className="grid grid-cols-4 gap-4">
+    {foodTypes.concat(customCategories).map(type => (
+      <label key={type} className="flex items-center space-x-2 text-sm">
+        <input
+          type="checkbox"
+          value={type}
+          checked={selectedTypes.includes(type)}
+          onChange={handleTypeChange}
+          className="accent-pink-500"
+        />
+        <span>{type}</span>
+      </label>
+    ))}
+
+    {/* Add custom category input */}
+    <div className="flex items-center space-x-2 text-sm col-span-4">
+      <span>Other:</span>
+      <input
+        type="text"
+        placeholder="Enter custom category"
+        value={otherCategory}
+        onChange={(e) => setOtherCategory(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && otherCategory.trim() !== "") {
+            const newCategory = otherCategory.trim();
+            if (!customCategories.includes(newCategory) && !foodTypes.includes(newCategory)) {
+              setCustomCategories(prev => [...prev, newCategory]);
+              setSelectedTypes(prev => [...prev, newCategory]);
+            }
+            setOtherCategory("");
+            e.preventDefault();
+          }
+        }}
+        className="border text-black rounded px-2 py-1 text-sm w-44"
+      />
+    </div>
+  </div>
+</div>
+
 
         {/* Stall Description */}
         <div>
@@ -236,7 +264,7 @@ export default function EditSpacePage({ params }) {
                 onChange={e => handleMenuChange(index, 'menuType', e.target.value)}
                 className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 w-full md:w-40"
               >
-                <option value="">Select Category</option>
+                <option value="">Select Type</option>
                 {menuTypeOptions.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
@@ -331,20 +359,23 @@ export default function EditSpacePage({ params }) {
           </button>
         </div>
 
-        {/* Stall Number */}
-        <div>
-          <label className="block font-semibold mb-2">Stall #</label>
-          <input
-            type="number"
-            name="stallNumber"
-            defaultValue={stall.stallNumber}
-            className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6"
-          />
-        </div>
+       {/* Stall Number */}
+<div>
+  <label className="block font-semibold mb-2">Stall #</label>
+  <input
+    type="number"
+    name="stallNumber"
+    defaultValue={stall.stallNumber}
+    readOnly
+    className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6 cursor-not-allowed opacity-75"
+  />
+</div>
+
+
 
         {/* Upload Images */}
         <div>
-          <label className="block font-semibold mb-2">Upload New Food Stall Images (Optional)</label>
+          <label className="block font-semibold mb-2">Upload Food Stall Image/Logo</label>
           <input
             type="file"
             multiple
