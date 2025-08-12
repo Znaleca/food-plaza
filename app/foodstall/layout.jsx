@@ -12,6 +12,7 @@ import {
   FaTableColumns,
   FaHandHoldingDollar,
 } from 'react-icons/fa6';
+import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 
 export default function FoodStallLayout({ children }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -40,21 +41,12 @@ export default function FoodStallLayout({ children }) {
 
   return (
     <div className="flex min-h-screen bg-neutral-900 text-neutral-100 relative">
-      {/* Hover trigger for mobile */}
-      <div
-        className="fixed top-0 left-0 h-full w-4 z-40 md:hidden"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      />
-
       {/* Sidebar */}
       <aside
-        className={`bg-neutral-800 shadow-xl px-6 py-8 w-64 z-50 transition-transform duration-300 
+        className={`bg-neutral-800 shadow-xl px-6 py-8 w-64 z-40 transition-transform duration-300 
         fixed top-0 left-0 h-full overflow-y-auto scrollbar-thin
         md:relative md:translate-x-0 md:flex md:flex-col
         ${isHovered ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <div className="mb-8">
           <h2 className="text-3xl font-extrabold tracking-widest text-white">Stall Panel</h2>
@@ -80,6 +72,17 @@ export default function FoodStallLayout({ children }) {
           <p>&copy; {new Date().getFullYear()} The Corner | Manage with ease.</p>
         </div>
       </aside>
+
+      {/* Floating Arrow Toggle (Mobile only) */}
+      <button
+        className="fixed top-1/2 -translate-y-1/2 bg-neutral-700 text-white rounded-full p-2 shadow-lg md:hidden z-50 transition-all duration-300"
+        style={{
+          left: isHovered ? '16rem' : '0.5rem', // Move to sidebar edge when open
+        }}
+        onClick={() => setIsHovered(!isHovered)}
+      >
+        {isHovered ? <FaChevronLeft /> : <FaChevronRight />}
+      </button>
 
       {/* Main Content */}
       <main className="flex-1 px-6 py-8 overflow-y-auto">{children}</main>
