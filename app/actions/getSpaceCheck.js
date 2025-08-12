@@ -13,19 +13,15 @@ export default async function getSpaceCheck() {
 
   try {
     const { account, databases } = await createSessionClient(sessionCookie.value);
-
-    // Get logged-in user ID
     const user = await account.get();
-    const userId = user.$id;
 
-    // Check if at least one room exists for this user
     const result = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS,
-      [Query.equal('user_id', userId), Query.limit(1)]
+      [Query.equal('user_id', user.$id), Query.limit(1)]
     );
 
-    return result.total > 0;
+    return result.total > 0; // true if user has at least one space
   } catch (error) {
     console.error('Error checking user space:', error);
     return false;

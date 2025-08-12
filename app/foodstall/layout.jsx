@@ -25,7 +25,7 @@ export default function FoodStallLayout({ children }) {
     });
   }, []);
 
-  const baseLinks = [
+  const links = [
     { href: '/foodstall', icon: <FaHouse />, label: 'Dashboard' },
     hasSpace === false && { href: '/rooms/add', icon: <FaSquarePlus />, label: 'Add Food Stall' },
     { href: '/foodstall/add-promos', icon: <FaBullhorn />, label: 'Create Promos' },
@@ -34,9 +34,7 @@ export default function FoodStallLayout({ children }) {
     { href: '/foodstall/approval', icon: <FaHandHoldingDollar />, label: 'Stall Lease' },
     { href: '/rooms/my', icon: <FaStore />, label: 'My Food Stall' },
     { href: '/foodstall/tables', icon: <FaTableColumns />, label: 'Tables' },
-  ];
-
-  const links = baseLinks.filter(Boolean);
+  ].filter(Boolean);
 
   return (
     <div className="flex min-h-screen bg-neutral-900 text-neutral-100 relative">
