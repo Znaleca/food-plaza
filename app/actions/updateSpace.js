@@ -1,7 +1,7 @@
 'use server';
 
 import { createAdminClient } from '@/config/appwrite';
-import { ID } from 'node-appwrite'; // ✅ Add this import
+import { ID } from 'node-appwrite';
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
 const COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS;
@@ -14,17 +14,15 @@ async function updateSpace(_, formData) {
     const id = formData.get('id');
     const name = formData.get('name');
     const description = formData.get('description');
-    const type = JSON.parse(formData.get('selectedTypes')) || [];
+    const type = JSON.parse(formData.get('selectedTypes') || '[]');
     const stallNumber = parseInt(formData.get('stallNumber'), 10);
     if (isNaN(stallNumber)) {
       throw new Error('Invalid stall number. It must be an integer.');
     }
 
-    const menuNames = formData.getAll('menuNames').filter(item => item.trim() !== '');
-    const menuPrices = formData.getAll('menuPrices')
-      .map(value => parseFloat(value))
-      .filter(value => !isNaN(value));
-    const menuDescriptions = formData.getAll('menuDescriptions').filter(item => item.trim() !== '');
+    const menuNames = formData.getAll('menuNames[]').map(v => v.trim());
+    const menuPrices = formData.getAll('menuPrices[]').map(v => parseFloat(v) || 0);
+    const menuDescriptions = formData.getAll('menuDescriptions[]').map(v => v.trim());
     const menuTypes = formData.getAll('menuType[]');
 
     const menuSmall = formData.getAll('menuSmall[]').map(v => parseFloat(v) || 0);
@@ -39,7 +37,7 @@ async function updateSpace(_, formData) {
     for (let i = 0; i < menuNames.length; i++) {
       const newImageFile = menuImageFiles[i];
       if (newImageFile instanceof File && newImageFile.size > 0) {
-        const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), newImageFile); // ✅ now works
+        const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), newImageFile);
         menuImages.push(uploaded.$id);
       } else {
         menuImages.push(existingMenuImages[i] || null);
@@ -48,15 +46,11 @@ async function updateSpace(_, formData) {
 
     const stallImageIDs = [];
     for (const image of newStallImages) {
-      if (image && image.size > 0) {
-        const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), image); // ✅ now works
+      if (image instanceof File && image.size > 0) {
+        const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), image);
         stallImageIDs.push(uploaded.$id);
       }
     }
-
-    const finalMenuDescriptions = menuDescriptions.length > 0
-      ? menuDescriptions
-      : new Array(menuNames.length).fill(null);
 
     const updated = await databases.updateDocument(DB_ID, COLLECTION_ID, id, {
       name,
@@ -65,7 +59,7 @@ async function updateSpace(_, formData) {
       stallNumber,
       menuName: menuNames,
       menuPrice: menuPrices,
-      menuDescription: finalMenuDescriptions,
+      menuDescription: menuDescriptions,
       menuType: menuTypes,
       menuSmall,
       menuMedium,
