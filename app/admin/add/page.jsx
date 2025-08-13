@@ -109,7 +109,7 @@ function AddStallPage() {
   <label className="block font-semibold mb-2">Description</label>
   <textarea
     name="description"
-    defaultValue="Welcome to The Corner Food Plaza! We’re excited to have you join our growing community of food entrepreneurs. Please take this opportunity to design and personalize your very own food stall, showcasing your brand, style, and culinary vision. This will help create a unique space that truly represents your business and attracts customers."
+    defaultValue="Welcome to The Corner Food Plaza! We’re excited to have you join our growing community of food entrepreneurs. Please take this opportunity to design and personalize your very own food stall, showcasing your brand, style, and culinary vision. This will help create a unique space that truly represents your business and attracts customers. (DELETE THIS AFTER READING)"
     required
     className="bg-neutral-700 border border-neutral-600 rounded-lg w-full h-32 py-3 px-6 text-gray-300"
   />
