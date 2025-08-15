@@ -33,7 +33,7 @@ export default function VerifyPage() {
     form.append('email', formData.email);
     form.append('password', formData.password);
     form.append('confirmPassword', formData.confirmPassword);
-    form.append('label', formData.label);
+    form.append('phone', formData.phone); // already contains +63
 
     const result = await createUser(null, form);
     if (result.error) {

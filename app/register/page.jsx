@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { sendVerificationEmail } from '@/app/actions/sendVerificationEmail';
 import {
-  FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaCheckCircle, FaTimesCircle
+  FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaCheckCircle, FaTimesCircle, FaPhone
 } from 'react-icons/fa';
 
 const RegisterPage = () => {
@@ -17,6 +17,7 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -31,6 +32,14 @@ const RegisterPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'phone') {
+      // ✅ Only digits, max 10 numbers after +63
+      const cleaned = value.replace(/\D/g, '').slice(0, 10);
+      setFormData((prev) => ({ ...prev, phone: cleaned }));
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (name === 'confirmPassword') {
@@ -54,17 +63,22 @@ const RegisterPage = () => {
     const name = form.get('name');
     const email = form.get('email');
 
+    // ✅ Always store with +63 in localStorage
+    const fullPhone = `+63${formData.phone}`;
+
     const emailResponse = await sendVerificationEmail(email, name, code);
     if (emailResponse.error) {
       toast.error(emailResponse.error);
       return;
     }
 
+    // ✅ Store with +63 so Verify page sends correct format to Appwrite
     localStorage.setItem(
       'registrationData',
       JSON.stringify({
         name,
         email,
+        phone: fullPhone,
         password: form.get('password'),
         confirmPassword: form.get('confirmPassword'),
         code,
@@ -83,15 +97,15 @@ const RegisterPage = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col  -mt-28 lg:flex-row text-white">
+    <div className="min-h-screen flex flex-col -mt-28 lg:flex-row text-white">
       {/* Left Branding Section */}
       <div className="hidden lg:flex flex-col justify-center items-center w-1/2">
-      <h1 className="text-4xl sm:text-4xl font-black leading-tight tracking-[0.2em] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 text-transparent bg-clip-text">
-        CREATE YOUR ACCOUNT
-      </h1>
-      <p className="text-sm sm:text-lg font-medium text-gray-300 tracking-widest mt-2">
-      Join The Corner Food Plaza now!
-            </p>
+        <h1 className="text-4xl sm:text-4xl font-black leading-tight tracking-[0.2em] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 text-transparent bg-clip-text">
+          CREATE YOUR ACCOUNT
+        </h1>
+        <p className="text-sm sm:text-lg font-medium text-gray-300 tracking-widest mt-2">
+          Join The Corner Food Plaza now!
+        </p>
         <p className="text-neutral-300 mt-4 text-xs max-w-md text-center">
           Register to explore delicious food, discover new stalls, and enjoy seamless orders at The Corner Food Plaza.
         </p>
@@ -141,6 +155,27 @@ const RegisterPage = () => {
                   className="w-full px-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-pink-600"
                 />
                 <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" />
+              </div>
+            </div>
+
+            {/* Phone Number */}
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium mb-2">Phone Number</label>
+              <div className="relative flex items-center">
+                <span className="px-3 py-3 bg-neutral-800 border border-neutral-700 rounded-l-lg text-neutral-400 flex items-center gap-2">
+                  <FaPhone />
+                  +63
+                </span>
+                <input
+                  type="text"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="9123456789"
+                  required
+                  className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-pink-600"
+                />
               </div>
             </div>
 
@@ -203,7 +238,7 @@ const RegisterPage = () => {
             {/* Submit */}
             <button
               type="submit"
-              disabled={!allRulesPassed || !!matchError}
+              disabled={!allRulesPassed || !!matchError || formData.phone.length !== 10}
               className="w-full py-3 rounded-lg text-lg font-bold bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 hover:brightness-110 text-white transition duration-300"
             >
               Register

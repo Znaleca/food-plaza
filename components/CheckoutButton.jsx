@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Dialog } from '@headlessui/react';
+import { FaPhone } from 'react-icons/fa';
 
 const CheckoutButton = ({
   cart,
@@ -15,27 +16,14 @@ const CheckoutButton = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phoneDigits, setPhoneDigits] = useState(''); // store only the 10 digits after +63
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  const isValidPhone = (phone) => /^09\d{9}$/.test(phone);
-
-  const getRoomSubtotal = (roomId) => {
-    const items = groupedCart[roomId]?.items || [];
-    return items
-      .filter((item) => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`])
-      .reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
-  };
-
-  const getDiscountedSubtotal = (roomId, subtotal) => {
-    const voucher = activeVouchersPerRoom[roomId];
-    const discount = voucher?.discount || 0;
-    return subtotal - (discount / 100) * subtotal;
-  };
+  const isValidPhone = (digits) => /^\d{10}$/.test(digits);
 
   const handleCheckout = () => {
-    if (!isValidPhone(phone)) {
-      setMessage('Invalid phone number format. Use 09XXXXXXXXX.');
+    if (!isValidPhone(phoneDigits)) {
+      setMessage('Invalid phone number. Must be 10 digits after +63.');
       return;
     }
     setMessage('');
@@ -46,8 +34,6 @@ const CheckoutButton = ({
     setLoading(true);
     try {
       const user = JSON.parse(localStorage.getItem('user')) || {};
-
-      // Prepare voucher map for backend
       const voucherMap = Object.fromEntries(
         Object.entries(activeVouchersPerRoom).map(([roomId, voucher]) => [
           roomId,
@@ -73,12 +59,11 @@ const CheckoutButton = ({
       const result = await response.json();
 
       if (result.success) {
-        const formattedPhone = phone.replace(/^0/, '+63');
         await fetch('/api/twilio', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone: formattedPhone,
+            phone: `+63${phoneDigits}`,
             name: user.name || 'Customer',
           }),
         });
@@ -102,27 +87,52 @@ const CheckoutButton = ({
     }
   };
 
+  const getRoomSubtotal = (roomId) => {
+    const items = groupedCart[roomId]?.items || [];
+    return items
+      .filter((item) => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`])
+      .reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
+  };
+
+  const getDiscountedSubtotal = (roomId, subtotal) => {
+    const voucher = activeVouchersPerRoom[roomId];
+    const discount = voucher?.discount || 0;
+    return subtotal - (discount / 100) * subtotal;
+  };
+
   return (
     <div className="bg-neutral-900 text-white px-6 py-12 rounded-xl shadow-md max-w-2xl mx-auto mt-12 w-full">
       <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 shadow-inner space-y-6">
+        {/* PHONE INPUT */}
         <div>
           <label className="block text-sm font-semibold mb-2">Phone Number</label>
-          <input
-            type="tel"
-            placeholder="09XXXXXXXXX"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="bg-neutral-900 border border-neutral-700 text-white rounded-lg w-full py-3 px-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
-          />
+          <div className="flex items-center border border-neutral-600 rounded-lg overflow-hidden bg-neutral-900">
+            <span className="flex items-center gap-2 px-3 text-gray-400 border-r border-neutral-700">
+              <FaPhone className="text-pink-500" />
+              +63
+            </span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              pattern="\d*"
+              placeholder="9123456789"
+              value={phoneDigits}
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setPhoneDigits(cleaned);
+              }}
+              className="flex-1 bg-neutral-900 text-white py-3 px-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
         </div>
 
         {message && <p className="text-sm text-red-400">{message}</p>}
 
         <button
           onClick={handleCheckout}
-          disabled={loading || !isValidPhone(phone)}
+          disabled={loading || !isValidPhone(phoneDigits)}
           className={`w-full py-3 rounded-xl font-bold tracking-widest text-lg transition-all ${
-            loading || !isValidPhone(phone)
+            loading || !isValidPhone(phoneDigits)
               ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
               : 'bg-pink-600 text-white hover:bg-pink-700'
           }`}
@@ -131,7 +141,7 @@ const CheckoutButton = ({
         </button>
       </div>
 
-      {/* Popup Order Summary */}
+      {/* POPUP */}
       <Dialog open={isPopupOpen} onClose={() => setIsPopupOpen(false)} className="relative z-50">
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">

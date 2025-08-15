@@ -44,7 +44,7 @@ function AddStallPage() {
   return (
     <div className="bg-neutral-900 min-h-screen text-white p-6">
       <Link
-        href="/foodstall"
+        href="/admin"
         className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6"
       >
         <FaChevronLeft className="mr-2" />
