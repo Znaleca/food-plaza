@@ -1,10 +1,22 @@
+
 import MySpaceCard from '@/components/MySpaceCard';
 import getMySpaces from '@/app/actions/getMySpaces';
+import getStallStatus from '@/app/actions/getStallStatus';
 import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa6';
 
 const MySpacePage = async () => {
   const rooms = await getMySpaces();
+
+  // Filter rooms that have been approved based on booking status
+  const approvedRooms = await Promise.all(
+    rooms.map(async (room) => {
+      const status = await getStallStatus(room.$id);
+      return status && status.status === 'approved' ? room : null;
+    })
+  );
+
+  const filteredRooms = approvedRooms.filter((room) => room !== null); // Remove null values
 
   return (
     <div className="bg-neutral-900 min-h-screen text-white p-6">
@@ -25,10 +37,10 @@ const MySpacePage = async () => {
         </p>
       </div>
 
-      {rooms.length > 0 ? (
-        rooms.map((room) => <MySpaceCard key={room.$id} room={room} />)
+      {filteredRooms.length > 0 ? (
+        filteredRooms.map((room) => <MySpaceCard key={room.$id} room={room} />)
       ) : (
-        <p>You have no Spaces listings</p>
+        <p>You have no approved Food Stall listings</p>
       )}
     </div>
   );
