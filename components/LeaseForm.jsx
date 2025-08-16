@@ -20,9 +20,7 @@ const BookingForm = ({ room }) => {
   };
 
   return (
-    <div className="mt-10 bg-neutral-900 text-white p-8 rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold text-yellow-400 mb-6">Approve Lease</h2>
-
+    <div className="mt-2 bg-neutral-900 text-white p-8 rounded-xl shadow-lg">
       <form onSubmit={handleSubmit} className="space-y-6">
         <input type="hidden" name="room_id" value={room.$id} />
         <input type="hidden" name="status" value="pending" />

@@ -77,7 +77,7 @@ const LeaseSpace = ({ params }) => {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white px-4 md:px-8 py-12 font-sans">
+    <div className="min-h-screen  text-white px-4 md:px-8 py-12 font-sans">
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
         <Link
@@ -90,7 +90,7 @@ const LeaseSpace = ({ params }) => {
 
         {/* Header Section */}
         <div className="text-center mb-12">
-          <p className="text-yellow-400 uppercase text-sm tracking-widest font-bold">Lease Details</p>
+          <p className="text-white uppercase text-sm tracking-widest font-light">Lease Details</p>
           <h1 className="text-5xl md:text-6xl font-extrabold mt-2 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500">
             Stall #{room.stallNumber}
           </h1>
@@ -112,10 +112,9 @@ const LeaseSpace = ({ params }) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Update Stall Number Form */}
           <div className="bg-neutral-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-neutral-800">
-            <h2 className="text-2xl font-bold mb-6 text-yellow-400">Update Stall Number</h2>
+            <h2 className="text-2xl font-bold mb-6 text-white"> Stall Number</h2>
             <form onSubmit={handleStallNumberChange} className="space-y-6">
               <div>
-                <label htmlFor="stallNumber" className="block text-yellow-400 font-medium mb-2">Stall Number</label>
                 <input
                   id="stallNumber"
                   type="text"
@@ -136,7 +135,7 @@ const LeaseSpace = ({ params }) => {
 
           {/* Lease Form */}
           <div className="bg-neutral-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-neutral-800">
-            <h2 className="text-2xl font-bold mb-6 text-yellow-400">Manage Lease</h2>
+            <h2 className="text-2xl font-bold mb-6 text-white">Manage Lease</h2>
             <LeaseForm room={room} />
           </div>
         </div>
