@@ -61,7 +61,14 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
     ? vouchers.filter((v) => stallData[v.$id]?.id === roomIdFilter)
     : vouchers;
 
-  if (filteredVouchers.length === 0) return null;
+  if (filteredVouchers.length === 0) {
+    return (
+      <div className="w-full max-w-3xl mx-auto mt-6 p-4 bg-neutral-900 shadow-sm rounded-lg">
+        <h2 className="text-2xl font-medium text-pink-600 text-center mb-6">Voucher Wallet</h2>
+        <p className="text-center text-gray-400">No vouchers claimed yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-3xl mx-auto mt-6 p-4 bg-neutral-900 shadow-sm rounded-lg">
