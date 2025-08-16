@@ -97,7 +97,7 @@ const BookingForm = ({ room }) => {
         <div>
           <button
             type="submit"
-            className="w-full py-3 px-4 bg-yellow-500 text-white font-semibold text-sm rounded-md shadow-md hover:bg-yellow-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
+            className="w-full py-3 px-4 bg-gradient-to-r from-yellow-400 to-pink-500 text-white font-semibold text-sm rounded-md shadow-md hover:from-yellow-300 hover:to-pink-400 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
           >
             Send Approval
           </button>

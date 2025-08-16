@@ -29,7 +29,7 @@ export default function Home() {
     <div className="min-h-screen bg-neutral-900 text-white p-6">
       {/* Back Button */}
       <Link
-        href="/admin"
+        href="/lease/management"
         className="flex items-center text-yellow-400 hover:text-pink-400 transition duration-300 py-6"
       >
         <FaChevronLeft className="mr-2" />

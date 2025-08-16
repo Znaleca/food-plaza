@@ -66,13 +66,13 @@ const ApprovalPage = () => {
   return (
     <div className="min-h-screen bg-neutral-900 text-white p-6">
       <div className="text-center mb-12 px-4">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">ALL STALL</h2>
+        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">MY STALL</h2>
         <p className="mt-4 text-xl sm:text-5xl font-bold">Lease</p>
       </div>
 
       <div className="space-y-6">
         {bookings.length === 0 ? (
-          <p className="text-gray-400 text-center">No Lease for your food stalls</p>
+          <p className="text-gray-400 text-center">No Lease for your food stall</p>
         ) : (
           bookings.map((booking) => (
             <div

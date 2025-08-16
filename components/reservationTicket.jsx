@@ -56,7 +56,6 @@ const ReservationTicket = ({ booking, showActions = true }) => {
       {/* Details */}
       <div className="text-sm space-y-2 font-light max-w-xl mx-auto mb-6 text-left">
         <p><span className="font-semibold">Lease ID:</span> {booking?.$id || 'N/A'}</p>
-        <p><span className="font-semibold">Agenda:</span> {booking?.agenda || 'N/A'}</p>
         <p><span className="font-semibold">Lease Start:</span> {formatDate(booking.check_in)}</p>
         <p><span className="font-semibold">Lease End:</span> {formatDate(booking.check_out)}</p>
         <p><span className="font-semibold">Status:</span> <span className={statusColor}>{statusText}</span></p>
