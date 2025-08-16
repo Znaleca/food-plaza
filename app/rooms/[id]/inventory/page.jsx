@@ -14,6 +14,8 @@ import {
   FaCubes,
   FaRedo,
 } from 'react-icons/fa';
+import InventoryPreview from '@/components/InventoryPreview';
+import InventoryUpdate from '@/components/InventoryUpdate'; // <-- imported here
 
 const unitOptions = ['kg', 'g', 'L', 'mL', 'pcs'];
 
@@ -33,7 +35,15 @@ const MyInventoryPage = ({ params }) => {
       const parsedStocks = (doc.stocks || []).map((str) => {
         const [group, ingredient, quantity, batchDate, expiryDate] = str.split('|');
         const [amount, unit] = quantity?.split(' ') ?? ['', ''];
-        return { group, ingredient, amount, unit, batchDate, expiryDate };
+        return {
+          group,
+          ingredient,
+          amount: parseFloat(amount || 0),
+          unit,
+          batchDate,
+          expiryDate,
+          hasExpiry: expiryDate !== 'no expiration'
+        };
       });
 
       const grouped = parsedStocks.reduce((acc, curr) => {
@@ -44,6 +54,7 @@ const MyInventoryPage = ({ params }) => {
           unit: curr.unit,
           batchDate: curr.batchDate,
           expiryDate: curr.expiryDate,
+          hasExpiry: curr.hasExpiry
         };
         if (existing) {
           existing.items.push(item);
@@ -73,10 +84,11 @@ const MyInventoryPage = ({ params }) => {
     const updated = [...inventory];
     updated[pkgIndex].items.push({
       ingredient: '',
-      amount: '',
+      amount: 0,
       unit: 'kg',
       batchDate: '',
       expiryDate: '',
+      hasExpiry: true
     });
     setInventory(updated);
   };
@@ -106,7 +118,7 @@ const MyInventoryPage = ({ params }) => {
       group.packageName.trim() &&
       group.items.every((item) =>
         item.ingredient.trim() &&
-        item.amount &&
+        item.amount !== '' &&
         item.unit
       )
     );
@@ -123,7 +135,9 @@ const MyInventoryPage = ({ params }) => {
     inventory.forEach((group) => {
       group.items.forEach((item) => {
         const quantity = `${item.amount || ''} ${item.unit || 'kg'}`;
-        const encoded = `${group.packageName}|${item.ingredient}|${quantity}|${item.batchDate}|${item.expiryDate}`;
+        const batchDateValue = item.hasExpiry ? (item.batchDate || '') : 'no expiration';
+        const expiryDateValue = item.hasExpiry ? (item.expiryDate || '') : 'no expiration';
+        const encoded = `${group.packageName}|${item.ingredient}|${quantity}|${batchDateValue}|${expiryDateValue}`;
         formData.append('stocks[]', encoded);
       });
     });
@@ -138,6 +152,18 @@ const MyInventoryPage = ({ params }) => {
       toast.error(result.error || 'Failed to update inventory.');
     }
   };
+
+  // Prepare stocks array for InventoryPreview & InventoryUpdate
+  const encodedStocksForPreview = inventory.flatMap(group =>
+    group.items.map(item => {
+      const quantity = `${item.amount || ''} ${item.unit || 'kg'}`;
+      const batchDateValue = item.hasExpiry ? (item.batchDate || '') : 'no expiration';
+      const expiryDateValue = item.hasExpiry ? (item.expiryDate || '') : 'no expiration';
+      return `${group.packageName}|${item.ingredient}|${quantity}|${batchDateValue}|${expiryDateValue}`;
+    })
+  );
+
+  const isExpired = (item) => item.hasExpiry && item.expiryDate && new Date(item.expiryDate) < new Date();
 
   if (!stall)
     return (
@@ -166,7 +192,23 @@ const MyInventoryPage = ({ params }) => {
         </p>
       </div>
 
-      <div className="space-y-8 mb-10">
+      {/* Inventory Update Component */}
+      <InventoryUpdate
+        stocks={encodedStocksForPreview}
+        onUpdate={(updatedStocks) => {
+          const updatedInventory = [...inventory];
+          updatedInventory.forEach((group) => {
+            group.items.forEach((item) => {
+              const updatedItem = updatedStocks.find((s) => s.ingredient === item.ingredient);
+              if (updatedItem) item.amount = updatedItem.amount;
+            });
+          });
+          setInventory(updatedInventory);
+        }}
+      />
+
+      {/* Inventory Packages */}
+      <div className="space-y-8 my-10">
         {inventory.map((pkg, pkgIndex) => (
           <div key={pkgIndex} className="bg-neutral-800 p-6 rounded-xl shadow-lg">
             <div className="flex justify-between items-center mb-4">
@@ -191,14 +233,12 @@ const MyInventoryPage = ({ params }) => {
 
             <div className="space-y-4">
               {pkg.items.map((item, itemIndex) => {
-                const isExpired = item.expiryDate && new Date(item.expiryDate) < new Date();
-
+                const isItemExpired = isExpired(item);
                 return (
                   <div
                     key={itemIndex}
-                    className="grid grid-cols-1 sm:grid-cols-5 gap-4 bg-neutral-900 p-4 rounded-lg border border-neutral-700"
+                    className="grid grid-cols-1 sm:grid-cols-6 gap-4 bg-neutral-900 p-4 rounded-lg border border-neutral-700"
                   >
-                    {/* Name */}
                     <div className="flex flex-col">
                       <label className="text-xs text-neutral-400 mb-1">Name</label>
                       <input
@@ -208,11 +248,11 @@ const MyInventoryPage = ({ params }) => {
                         onChange={(e) =>
                           updateIngredient(pkgIndex, itemIndex, 'ingredient', e.target.value)
                         }
-                        className={`bg-neutral-700 text-white px-4 py-2 rounded ${isExpired ? 'line-through text-red-400' : ''}`}
+                        className={`bg-neutral-700 text-white px-4 py-2 rounded ${isItemExpired ? 'text-gray-500' : ''}`}
+                        disabled={isItemExpired} // Disable input for expired items
                       />
                     </div>
 
-                    {/* Quantity */}
                     <div className="flex flex-col">
                       <label className="text-xs text-neutral-400 mb-1">Quantity</label>
                       <input
@@ -222,11 +262,11 @@ const MyInventoryPage = ({ params }) => {
                         onChange={(e) =>
                           updateIngredient(pkgIndex, itemIndex, 'amount', e.target.value)
                         }
-                        className={`bg-neutral-700 text-white px-4 py-2 rounded ${isExpired ? 'line-through text-red-400' : ''}`}
+                        className={`bg-neutral-700 text-white px-4 py-2 rounded ${isItemExpired ? 'text-gray-500' : ''}`}
+                        disabled={isItemExpired} // Disable input for expired items
                       />
                     </div>
 
-                    {/* Type */}
                     <div className="flex flex-col">
                       <label className="text-xs text-neutral-400 mb-1">Type</label>
                       <select
@@ -234,7 +274,8 @@ const MyInventoryPage = ({ params }) => {
                         onChange={(e) =>
                           updateIngredient(pkgIndex, itemIndex, 'unit', e.target.value)
                         }
-                        className={`bg-neutral-700 text-white px-4 py-2 rounded ${isExpired ? 'line-through text-red-400' : ''}`}
+                        className={`bg-neutral-700 text-white px-4 py-2 rounded ${isItemExpired ? 'text-gray-500' : ''}`}
+                        disabled={isItemExpired} // Disable input for expired items
                       >
                         {unitOptions.map((u) => (
                           <option key={u} value={u}>
@@ -244,52 +285,71 @@ const MyInventoryPage = ({ params }) => {
                       </select>
                     </div>
 
-                    {/* Manufacturing Date */}
                     <div className="flex flex-col">
-                      <label className="text-xs text-neutral-400 mb-1">Manufacturing Date</label>
-                      <input
-                        type="date"
-                        value={item.batchDate}
+                      <label className="text-xs text-neutral-400 mb-1">Expiration Option</label>
+                      <select
+                        value={item.hasExpiry ? 'yes' : 'no'}
                         onChange={(e) =>
-                          updateIngredient(pkgIndex, itemIndex, 'batchDate', e.target.value)
+                          updateIngredient(pkgIndex, itemIndex, 'hasExpiry', e.target.value === 'yes')
                         }
-                        className={`bg-neutral-700 text-white px-4 py-2 rounded ${isExpired ? 'line-through text-red-400' : ''}`}
-                      />
+                        className="bg-neutral-700 text-white px-4 py-2 rounded"
+                        disabled={isItemExpired} // Disable input for expired items
+                      >
+                        <option value="yes">Has Expiration</option>
+                        <option value="no">No Expiration</option>
+                      </select>
                     </div>
 
-                    {/* Expiration Date + Renew */}
-                    <div className="flex flex-col">
-                      <label className="text-xs text-neutral-400 mb-1">Expiration Date</label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="date"
-                          value={item.expiryDate}
-                          onChange={(e) =>
-                            updateIngredient(pkgIndex, itemIndex, 'expiryDate', e.target.value)
-                          }
-                          className={`bg-neutral-700 text-white px-4 py-2 rounded w-full ${isExpired ? 'line-through text-red-400' : ''}`}
-                        />
-                        {isExpired && (
-                          <button
-                            onClick={() => {
-                              const today = new Date().toISOString().slice(0, 10);
-                              updateIngredient(pkgIndex, itemIndex, 'batchDate', today);
-                              updateIngredient(pkgIndex, itemIndex, 'expiryDate', '');
-                              toast.info('Ingredient renewed!');
-                            }}
-                            className="text-yellow-400 hover:text-yellow-500 text-xs"
-                            title="Renew"
-                          >
-                            <FaRedo />
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    {item.hasExpiry && (
+                      <>
+                        <div className="flex flex-col">
+                          <label className="text-xs text-neutral-400 mb-1">Manufacturing Date</label>
+                          <input
+                            type="date"
+                            value={item.batchDate}
+                            onChange={(e) =>
+                              updateIngredient(pkgIndex, itemIndex, 'batchDate', e.target.value)
+                            }
+                            className={`bg-neutral-700 text-white px-4 py-2 rounded ${isItemExpired ? 'text-gray-500' : ''}`}
+                            disabled={isItemExpired} // Disable input for expired items
+                          />
+                        </div>
 
-                    {/* Remove Button */}
+                        <div className="flex flex-col">
+                          <label className="text-xs text-neutral-400 mb-1">Expiration Date</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="date"
+                              value={item.expiryDate}
+                              onChange={(e) =>
+                                updateIngredient(pkgIndex, itemIndex, 'expiryDate', e.target.value)
+                              }
+                              className={`bg-neutral-700 text-white px-4 py-2 rounded w-full ${isItemExpired ? 'text-gray-500' : ''}`}
+                              disabled={isItemExpired} // Disable input for expired items
+                            />
+                            {isItemExpired && (
+                              <button
+                                onClick={() => {
+                                  const today = new Date().toISOString().slice(0, 10);
+                                  updateIngredient(pkgIndex, itemIndex, 'batchDate', today);
+                                  updateIngredient(pkgIndex, itemIndex, 'expiryDate', '');
+                                  toast.info('Ingredient renewed!');
+                                }}
+                                className="text-yellow-400 hover:text-yellow-500 text-xs"
+                                title="Renew"
+                              >
+                                <FaRedo />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
                     <button
                       onClick={() => removeIngredient(pkgIndex, itemIndex)}
-                      className="text-red-400 hover:text-red-600 sm:col-span-5 text-left mt-2"
+                      className="text-red-400 hover:text-red-600 sm:col-span-6 text-left mt-2"
+                      disabled={isItemExpired} // Disable button for expired items
                     >
                       Remove
                     </button>
@@ -301,6 +361,7 @@ const MyInventoryPage = ({ params }) => {
             <button
               onClick={() => addIngredient(pkgIndex)}
               className="mt-4 bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-lg flex items-center"
+              disabled={pkg.items.some(item => isExpired(item))} // Disable button if any item is expired
             >
               <FaPlus className="mr-2" />
               Add Ingredient
@@ -317,10 +378,13 @@ const MyInventoryPage = ({ params }) => {
         Add Package
       </button>
 
+      {/* Inventory Preview Chart */}
+      <InventoryPreview stocks={encodedStocksForPreview} />
+
       <button
         onClick={handleSave}
         disabled={saving}
-        className="w-full bg-yellow-500 hover:bg-yellow-600 py-3 rounded-lg text-white font-bold text-lg flex justify-center items-center disabled:opacity-50"
+        className="w-full bg-yellow-500 hover:bg-yellow-600 py-3 rounded-lg text-white font-bold text-lg flex justify-center items-center disabled:opacity-50 mt-6"
       >
         {saving ? 'Saving...' : 'Save Inventory'}
       </button>
