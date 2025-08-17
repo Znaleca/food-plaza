@@ -1,4 +1,5 @@
 'use server';
+
 import { createAdminClient } from '@/config/appwrite';
 import { ID } from 'node-appwrite';
 
@@ -7,7 +8,7 @@ async function createUser(previousState, formData) {
   const email = formData.get('email');
   const password = formData.get('password');
   const confirmPassword = formData.get('confirmPassword');
-  const phone = formData.get('phone'); // now includes +63 prefix
+  const phone = formData.get('phone'); // now includes +63
 
   if (!email || !name || !password || !confirmPassword || !phone) {
     return { error: 'Please fill in all fields' };
@@ -16,14 +17,6 @@ async function createUser(previousState, formData) {
   // Validate phone format: +63XXXXXXXXXX
   if (!/^\+63\d{10}$/.test(phone)) {
     return { error: 'Phone number must be in format +639123456789' };
-  }
-
-  if (password.length < 8) {
-    return { error: 'Password must be at least 8 characters long' };
-  }
-
-  if (password !== confirmPassword) {
-    return { error: 'Passwords do not match' };
   }
 
   const { account, users } = await createAdminClient();

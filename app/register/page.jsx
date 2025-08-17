@@ -1,13 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { sendVerificationEmail } from '@/app/actions/sendVerificationEmail';
-import {
-  FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaCheckCircle, FaTimesCircle, FaPhone
-} from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaPhone } from 'react-icons/fa';
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -73,18 +70,15 @@ const RegisterPage = () => {
     }
 
     // ✅ Store with +63 so Verify page sends correct format to Appwrite
-    localStorage.setItem(
-      'registrationData',
-      JSON.stringify({
-        name,
-        email,
-        phone: fullPhone,
-        password: form.get('password'),
-        confirmPassword: form.get('confirmPassword'),
-        code,
-        label: 'customer',
-      })
-    );
+    localStorage.setItem('registrationData', JSON.stringify({
+      name,
+      email,
+      phone: fullPhone,  // Save phone with +63
+      password: form.get('password'),
+      confirmPassword: form.get('confirmPassword'),
+      code,
+      label: 'customer',
+    }));
 
     toast.success('Verification code sent to your email.');
     router.push('/verify');
@@ -98,20 +92,14 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col -mt-28 lg:flex-row text-white">
-      {/* Left Branding Section */}
       <div className="hidden lg:flex flex-col justify-center items-center w-1/2">
         <h1 className="text-4xl sm:text-4xl font-black leading-tight tracking-[0.2em] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 text-transparent bg-clip-text">
           CREATE YOUR ACCOUNT
         </h1>
-        <p className="text-sm sm:text-lg font-medium text-gray-300 tracking-widest mt-2">
-          Join The Corner Food Plaza now!
-        </p>
-        <p className="text-neutral-300 mt-4 text-xs max-w-md text-center">
-          Register to explore delicious food, discover new stalls, and enjoy seamless orders at The Corner Food Plaza.
-        </p>
+        <p className="text-sm sm:text-lg font-medium text-gray-300 tracking-widest mt-2">Join The Corner Food Plaza now!</p>
+        <p className="text-neutral-300 mt-4 text-xs max-w-md text-center">Register to explore delicious food, discover new stalls, and enjoy seamless orders at The Corner Food Plaza.</p>
       </div>
 
-      {/* Right Form Section */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-lg bg-neutral-900 p-10 rounded-3xl border border-pink-600 shadow-2xl">
           <div className="text-center mb-10 lg:hidden">
@@ -202,11 +190,6 @@ const RegisterPage = () => {
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
-              <ul className="mt-2 space-y-1">
-                {renderRule('At least 8 characters', passwordRules.length)}
-                {renderRule('At least 1 capital letter', passwordRules.capital)}
-                {renderRule('At least 1 number', passwordRules.number)}
-              </ul>
             </div>
 
             {/* Confirm Password */}
@@ -243,19 +226,6 @@ const RegisterPage = () => {
             >
               Register
             </button>
-
-            {/* Links */}
-            <div className="flex flex-col sm:flex-row justify-between text-sm text-neutral-400 mt-4">
-              <p>
-                Already have an account?{' '}
-                <Link href="/login" className="text-pink-500 hover:underline">
-                  Log in
-                </Link>
-              </p>
-              <Link href="/forgot-pass" className="text-pink-500 hover:underline mt-2 sm:mt-0">
-                Forgot Password?
-              </Link>
-            </div>
           </form>
         </div>
       </div>
