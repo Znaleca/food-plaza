@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { sendVerificationEmail } from '@/app/actions/sendVerificationEmail';
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaPhone } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaPhone, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -190,6 +190,13 @@ const RegisterPage = () => {
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
+
+              {/* Password Strength Rules */}
+              <ul className="mt-2 space-y-1">
+                {renderRule('At least 8 characters', passwordRules.length)}
+                {renderRule('At least 1 capital letter', passwordRules.capital)}
+                {renderRule('At least 1 number', passwordRules.number)}
+              </ul>
             </div>
 
             {/* Confirm Password */}
