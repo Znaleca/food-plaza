@@ -1,13 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import getAllReservations from '@/app/actions/getAllReservations';
 import getAllOrders from '@/app/actions/getAllOrders';
 import getMySpaces from '@/app/actions/getMySpaces';
-import SalesCard from '@/components/SalesCard'; 
+import SalesCard from '@/components/SalesCard';
+import FoodStallLeaseCard from '@/components/FoodStallLeaseCard';
 
 const FoodStallPage = () => {
   const [roomName, setRoomName] = useState('');
   const [roomId, setRoomId] = useState('');
+  const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,6 +23,13 @@ const FoodStallPage = () => {
           const selectedRoom = spaces[0];
           setRoomName(selectedRoom.name);
           setRoomId(selectedRoom.$id);
+
+          // Fetch all reservations
+          const fetchedReservations = await getAllReservations();
+
+          // Filter reservations by the selected room name
+          const filteredReservations = fetchedReservations.filter(reservation => reservation.room_id?.name === selectedRoom.name);
+          setReservations(filteredReservations);
 
           await getAllOrders(1, 100);
         }
@@ -56,6 +66,13 @@ const FoodStallPage = () => {
 
       {/* Insert SalesCard here, passing the roomName */}
       {roomName && <SalesCard roomName={roomName} />}
+
+      {/* FoodStallLeaseCard with filtered reservations */}
+      {reservations.length > 0 ? (
+        <FoodStallLeaseCard reservations={reservations} />
+      ) : (
+        <div className="text-white text-center">No reservations for this stall</div>
+      )}
     </div>
   );
 };

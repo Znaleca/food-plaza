@@ -5,8 +5,6 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line,
 } from 'recharts';
-import { motion } from 'framer-motion';
-import { FaUtensils } from 'react-icons/fa6';
 import getSales from '@/app/actions/getSales';
 
 // Utility to get day name from Date object
@@ -155,7 +153,7 @@ const SalesCard = ({ roomName }) => {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white p-6">
+    <div className="min-h-screen -mb-96 bg-neutral-900 text-white p-6">
       <div role="tablist" aria-label="Select time range" className="flex justify-center gap-4 mb-8">
         {['day','week','month'].map(range => (
           <button
@@ -208,11 +206,6 @@ const SalesCard = ({ roomName }) => {
             </LineChart>
           )}
         </ResponsiveContainer>
-      </div>
-
-      <div className="mt-12 flex flex-col items-center justify-center text-gray-400 italic">
-        <FaUtensils size={64} />
-        <p className="mt-4">More insights coming soon...</p>
       </div>
     </div>
   );

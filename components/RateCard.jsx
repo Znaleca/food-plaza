@@ -95,7 +95,7 @@ const RateCard = () => {
   };
 
   return (
-    <div className="bg-neutral-900 text-white rounded-2xl border border-pink-600 shadow-lg p-8">
+    <div className="w-full min-h-screen bg-neutral-900 text-white overflow-x-hidden px-4 sm:px-6 py-16">
       {loading ? (
         <p className="text-neutral-400">Loading...</p>
       ) : error ? (
@@ -115,24 +115,23 @@ const RateCard = () => {
             return (
               <div
                 key={roomName}
-                className="bg-neutral-950 border border-neutral-700 rounded-xl shadow p-6 hover:border-pink-600 transition-all"
+                className="bg-neutral-950 border border-neutral-700 rounded-xl shadow-lg p-6 hover:border-pink-600 transition-all"
               >
                 <div className="w-16 h-0.5 bg-pink-600 mb-4 mx-auto" />
 
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-semibold text-white uppercase tracking-wider">
+                  <h2 className="text-xl sm:text-2xl font-semibold text-white uppercase tracking-wider">
                     {roomName}
                   </h2>
                   <div className="flex items-center gap-2 text-sm">
-  {renderStarRating(averageRating)}
-  <span className="text-neutral-400">
-    {percentage}% ({reviews.length})
-  </span>
-</div>
-
+                    {renderStarRating(averageRating)}
+                    <span className="text-neutral-400">
+                      {percentage}% ({reviews.length})
+                    </span>
+                  </div>
                 </div>
 
-                <div className="h-32">
+                <div className="h-32 mb-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData}>
                       <defs>
