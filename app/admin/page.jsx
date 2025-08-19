@@ -39,14 +39,14 @@ const AdminPage = () => {
       try {
         const [reservationData, userData] = await Promise.all([
           getAllReservations(),
-          getAllUsers(),
+          getAllUsers(10000, 0), // Fetch a large number of users to get all
         ]);
 
         if (!reservationData || reservationData.error) {
           throw new Error(reservationData?.error || 'Failed to fetch reservations');
         }
 
-        if (!userData || userData.error) {
+        if (!userData || !Array.isArray(userData.users)) {
           throw new Error(userData?.error || 'Failed to fetch users');
         }
 
@@ -55,7 +55,7 @@ const AdminPage = () => {
         );
 
         setReservations(sortedReservations);
-        setUsers(userData);
+        setUsers(userData.users); // Extract the users array from the returned object
       } catch (err) {
         setError(err.message);
       } finally {
@@ -201,32 +201,37 @@ const AdminPage = () => {
             return (
               <div
                 key={res.$id}
-                className="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow hover:shadow-yellow-500/20 transition-shadow"
+                className="bg-neutral-800 border border-neutral-700 rounded-2xl p-6 shadow-lg hover:shadow-yellow-500/20 transition-all duration-300 transform hover:scale-[1.02] relative overflow-hidden"
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">
-                      {res.room_id?.name || 'Unnamed Stall'}
-                    </h3>
-                    <p className="text-sm text-neutral-400">
-                      Stall #{res.room_id?.stallNumber || 'N/A'}
+                {/* Visual marker for the card */}
+                <div className={`absolute top-0 left-0 h-full w-2 ${status.color}`}></div>
+
+                <div className="pl-2"> {/* Added padding for the marker */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-white">
+                        {res.room_id?.name || 'Unnamed Stall'}
+                      </h3>
+                      <p className="text-sm text-neutral-400 mt-1">
+                        Stall #{res.room_id?.stallNumber || 'N/A'}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xs px-3 py-1 rounded-full font-semibold ${status.color} text-white`}
+                    >
+                      {status.label}
+                    </span>
+                  </div>
+                  <div className="text-sm text-neutral-300 space-y-2 mt-4 border-t border-neutral-700 pt-4">
+                    <p>
+                      <span className="font-medium text-neutral-400">Start:</span>{' '}
+                      {moment(res.check_in).format('MMM D, YYYY • h:mm A')}
+                    </p>
+                    <p>
+                      <span className="font-medium text-neutral-400">End:</span>{' '}
+                      {moment(res.check_out).format('MMM D, YYYY • h:mm A')}
                     </p>
                   </div>
-                  <span
-                    className={`text-xs px-3 py-1 rounded-full font-semibold ${status.color} text-white`}
-                  >
-                    {status.label}
-                  </span>
-                </div>
-                <div className="text-sm text-neutral-300 space-y-1 mt-2">
-                  <p>
-                    <span className="font-medium text-neutral-400">Check-in:</span>{' '}
-                    {moment(res.check_in).format('MMM D, YYYY • h:mm A')}
-                  </p>
-                  <p>
-                    <span className="font-medium text-neutral-400">Check-out:</span>{' '}
-                    {moment(res.check_out).format('MMM D, YYYY • h:mm A')}
-                  </p>
                 </div>
               </div>
             );

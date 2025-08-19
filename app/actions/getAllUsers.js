@@ -3,8 +3,9 @@
 import { createAdminClient } from '@/config/appwrite';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { Query } from 'appwrite';
 
-async function getAllUsers() {
+async function getAllUsers(limit = 25, offset = 0) {
   const sessionCookie = cookies().get('appwrite-session');
 
   if (!sessionCookie) {
@@ -14,8 +15,11 @@ async function getAllUsers() {
   try {
     const { users } = await createAdminClient();
 
-    // Fetch all users
-    const userList = await users.list();
+    // Fetch users with pagination
+    const userList = await users.list([
+      Query.limit(limit),
+      Query.offset(offset),
+    ]);
 
     const formattedUsers = userList.users.map((user) => ({
       $id: user.$id,
@@ -25,7 +29,11 @@ async function getAllUsers() {
       labels: user.labels || [],
     }));
 
-    return formattedUsers;
+    // Return both the formatted users and the total count
+    return {
+      users: formattedUsers,
+      total: userList.total,
+    };
   } catch (error) {
     console.error('Failed to get all users:', error);
     redirect('/error');

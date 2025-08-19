@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import createStall from '@/app/actions/createStall';
 import getStallUser from '@/app/actions/getStallUser';
+import getAllStalls from '@/app/actions/getAllStalls'; // Import the new action
 import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa6';
 
@@ -18,10 +19,20 @@ function AddStallPage() {
   useEffect(() => {
     async function fetchFoodstallUsers() {
       try {
-        const users = await getStallUser();
-        setFoodstallUsers(users);
+        const [users, stalls] = await Promise.all([
+          getStallUser(),
+          getAllStalls(),
+        ]);
+
+        // Get a list of user IDs who already own a stall
+        const usersWithStalls = new Set(stalls.map(stall => stall.user_id));
+        
+        // Filter the users list to only show those who don't have a stall
+        const filteredUsers = users.filter(user => !usersWithStalls.has(user.$id));
+        
+        setFoodstallUsers(filteredUsers);
       } catch (err) {
-        console.error('Failed to fetch foodstall users:', err);
+        console.error('Failed to fetch data:', err);
       }
     }
     fetchFoodstallUsers();
@@ -105,17 +116,15 @@ function AddStallPage() {
         </div>
 
         {/* description (auto-filled but editable) */}
-<div>
-  <label className="block font-semibold mb-2">Description</label>
-  <textarea
-    name="description"
-    defaultValue="Welcome to The Corner Food Plaza! We’re excited to have you join our growing community of food entrepreneurs. Please take this opportunity to design and personalize your very own food stall, showcasing your brand, style, and culinary vision. This will help create a unique space that truly represents your business and attracts customers. (DELETE THIS AFTER READING)"
-    required
-    className="bg-neutral-700 border border-neutral-600 rounded-lg w-full h-32 py-3 px-6 text-gray-300"
-  />
-</div>
-
-
+        <div>
+          <label className="block font-semibold mb-2">Description</label>
+          <textarea
+            name="description"
+            defaultValue="Welcome to The Corner Food Plaza! We’re excited to have you join our growing community of food entrepreneurs. Please take this opportunity to design and personalize your very own food stall, showcasing your brand, style, and culinary vision. This will help create a unique space that truly represents your business and attracts customers. (DELETE THIS AFTER READING)"
+            required
+            className="bg-neutral-700 border border-neutral-600 rounded-lg w-full h-32 py-3 px-6 text-gray-300"
+          />
+        </div>
 
         {/* submit */}
         <div className="flex justify-center">
