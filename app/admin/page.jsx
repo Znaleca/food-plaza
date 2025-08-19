@@ -82,12 +82,51 @@ const AdminPage = () => {
     );
   }
 
+  // ----- STATUS MAPPING -----
+  const statusLabels = {
+    pending: 'Pending',
+    approved: 'Approved',
+    declined: 'Declined',
+    expired: 'Expired',
+  };
+
+  const statusColors = {
+    pending: '#facc15',  // yellow
+    approved: '#10b981', // green
+    declined: '#ef4444', // red
+    expired: '#6b7280',  // gray
+  };
+
+  const statusColorsTailwind = {
+    pending: 'bg-yellow-500',
+    approved: 'bg-green-500',
+    declined: 'bg-red-500',
+    expired: 'bg-gray-500',
+  };
+
+  const statusOrder = Object.keys(statusLabels);
+
+  // Count reservations by status
   const statusCounts = reservations.reduce((acc, res) => {
-    const status = res.status || 'Pending';
+    const status = (res.status || 'pending').toLowerCase();
     acc[status] = (acc[status] || 0) + 1;
     return acc;
   }, {});
 
+  // Doughnut chart data
+  const statusChartData = {
+    labels: statusOrder.map((key) => statusLabels[key]),
+    datasets: [
+      {
+        label: 'Reservation Status',
+        data: statusOrder.map((key) => statusCounts[key] || 0),
+        backgroundColor: statusOrder.map((key) => statusColors[key]),
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // ----- USER GROWTH -----
   const userGrowth = users.reduce((acc, user) => {
     const date = moment(user.createdAt).format('YYYY-MM-DD');
     acc[date] = (acc[date] || 0) + 1;
@@ -100,25 +139,6 @@ const AdminPage = () => {
     total += userGrowth[date];
     cumulativeUsers.push({ date, count: total });
   });
-
-  const groupedByDate = reservations.reduce((acc, res) => {
-    const dateKey = moment(res.check_in).format('YYYY-MM-DD');
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(res);
-    return acc;
-  }, {});
-
-  const statusChartData = {
-    labels: Object.keys(statusCounts),
-    datasets: [
-      {
-        label: 'Reservation Status',
-        data: Object.values(statusCounts),
-        backgroundColor: ['#facc15', '#10b981', '#f87171', '#6366f1'],
-        borderWidth: 1,
-      },
-    ],
-  };
 
   const userLineChartData = {
     labels: cumulativeUsers.map((item) => item.date),
@@ -168,57 +188,51 @@ const AdminPage = () => {
         </div>
       </div>
 
-     {/* RESERVATION SCHEDULE */}
-<div className="mt-20">
-  
+      {/* RESERVATION SCHEDULE */}
+      <div className="mt-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {reservations.map((res) => {
+            const key = (res.status || 'pending').toLowerCase();
+            const status = {
+              label: statusLabels[key] || 'Pending',
+              color: statusColorsTailwind[key] || 'bg-yellow-500',
+            };
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    {reservations.map((res) => {
-      const status =
-      res.status === 'approved'
-        ? { label: 'Approved', color: 'bg-green-500' }
-        : res.status === 'declined'
-        ? { label: 'Declined', color: 'bg-red-500' }
-        : { label: res.status ? res.status.charAt(0).toUpperCase() + res.status.slice(1) : 'Pending', color: 'bg-yellow-500' };
-    
-
-      return (
-        <div
-          key={res.$id}
-          className="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow hover:shadow-yellow-500/20 transition-shadow"
-        >
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <h3 className="text-lg font-bold text-white">
-                {res.room_id?.name || 'Unnamed Stall'}
-              </h3>
-              <p className="text-sm text-neutral-400">
-                Stall #{res.room_id?.stallNumber || 'N/A'}
-              </p>
-            </div>
-            <span
-              className={`text-xs px-3 py-1 rounded-full font-semibold ${status.color} text-white`}
-            >
-              {status.label}
-            </span>
-          </div>
-          <div className="text-sm text-neutral-300 space-y-1 mt-2">
-            <p>
-              <span className="font-medium text-neutral-400">Check-in:</span>{' '}
-              {moment(res.check_in).format('MMM D, YYYY • h:mm A')}
-            </p>
-            <p>
-              <span className="font-medium text-neutral-400">Check-out:</span>{' '}
-              {moment(res.check_out).format('MMM D, YYYY • h:mm A')}
-            </p>
-          </div>
+            return (
+              <div
+                key={res.$id}
+                className="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow hover:shadow-yellow-500/20 transition-shadow"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">
+                      {res.room_id?.name || 'Unnamed Stall'}
+                    </h3>
+                    <p className="text-sm text-neutral-400">
+                      Stall #{res.room_id?.stallNumber || 'N/A'}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-xs px-3 py-1 rounded-full font-semibold ${status.color} text-white`}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+                <div className="text-sm text-neutral-300 space-y-1 mt-2">
+                  <p>
+                    <span className="font-medium text-neutral-400">Check-in:</span>{' '}
+                    {moment(res.check_in).format('MMM D, YYYY • h:mm A')}
+                  </p>
+                  <p>
+                    <span className="font-medium text-neutral-400">Check-out:</span>{' '}
+                    {moment(res.check_out).format('MMM D, YYYY • h:mm A')}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      );
-    })}
-  </div>
-</div>
-
-
+      </div>
     </div>
   );
 };
