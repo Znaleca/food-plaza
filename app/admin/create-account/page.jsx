@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useFormState } from 'react-dom';
 import { toast } from 'react-toastify';
-import { useEffect, useState } from 'react';
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser } from 'react-icons/fa';
+import { useEffect, useState, useRef } from 'react';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaPhone } from 'react-icons/fa';
 import createAccount from '@/app/actions/createAccount';
+import checkUserExists from '@/app/actions/checkUserExists'; // Import the server action
 
 const CreateAccountPage = () => {
   const [state, formAction] = useFormState(createAccount, {});
@@ -16,8 +17,16 @@ const CreateAccountPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+
   const [passwordError, setPasswordError] = useState('');
   const [matchError, setMatchError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [emailTakenError, setEmailTakenError] = useState('');
+  const [phoneTakenError, setPhoneTakenError] = useState('');
+
+  const debounceTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (state.error) toast.error(state.error);
@@ -26,6 +35,37 @@ const CreateAccountPage = () => {
       router.push("/admin/accounts");
     }
   }, [state, router]);
+
+  // Debounce effect for existence check
+  useEffect(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    debounceTimeoutRef.current = setTimeout(async () => {
+      let isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      let isPhoneValid = /^\d{10}$/.test(phone);
+      
+      if (isEmailValid || isPhoneValid) {
+        const result = await checkUserExists(email, `+63${phone}`);
+        if (result.error) {
+          toast.error(result.error);
+        } else {
+          setEmailTakenError(result.isEmailTaken ? 'Email is already taken.' : '');
+          setPhoneTakenError(result.isPhoneTaken ? 'Phone number is already taken.' : '');
+        }
+      } else {
+        setEmailTakenError('');
+        setPhoneTakenError('');
+      }
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [email, phone]);
 
   const handlePasswordChange = (e) => {
     const value = e.target.value;
@@ -38,6 +78,19 @@ const CreateAccountPage = () => {
     setConfirmPassword(value);
     setMatchError(value !== password ? "Passwords do not match." : "");
   };
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+  };
+
+  const handlePhoneChange = (e) => {
+    const value = e.target.value;
+    setPhone(value);
+    setPhoneError(!/^\d{10}$/.test(value) ? "Phone number must be 10 digits." : "");
+  };
+  
+  const isFormInvalid = !!passwordError || !!matchError || !!phoneError || !!emailTakenError || !!phoneTakenError;
 
   return (
     <div className="w-full min-h-screen -mt-20 bg-neutral-900 text-white flex flex-col items-center justify-center px-4 py-16">
@@ -76,12 +129,38 @@ const CreateAccountPage = () => {
                 type="email"
                 id="email"
                 name="email"
+                value={email}
+                onChange={handleEmailChange}
                 placeholder="you@example.com"
                 required
-                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
+                className={`w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 ${emailTakenError ? 'ring-red-500' : 'focus:ring-pink-600'} placeholder-neutral-500`}
               />
               <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
             </div>
+            {emailTakenError && <p className="text-red-500 text-sm mt-1">{emailTakenError}</p>}
+          </div>
+
+          {/* Phone Number */}
+          <div className="relative">
+            <label htmlFor="phone" className="block text-sm font-medium mb-2">Phone Number</label>
+            <div className="relative flex items-center">
+              <span className="px-3 py-3 bg-neutral-900 border border-neutral-700 rounded-l-lg text-neutral-400 flex items-center gap-2">
+                <FaPhone />
+                +63
+              </span>
+              <input
+                type="text"
+                id="phone"
+                name="phone"
+                value={phone}
+                onChange={handlePhoneChange}
+                placeholder="9123456789"
+                required
+                className={`w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 ${phoneError || phoneTakenError ? 'ring-red-500' : 'focus:ring-pink-600'}`}
+              />
+            </div>
+            {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
+            {phoneTakenError && <p className="text-red-500 text-sm mt-1">{phoneTakenError}</p>}
           </div>
 
           {/* Password */}
@@ -96,7 +175,7 @@ const CreateAccountPage = () => {
                 onChange={handlePasswordChange}
                 placeholder="••••••••"
                 required
-                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
+                className={`w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 ${passwordError ? 'ring-red-500' : 'focus:ring-pink-600'} placeholder-neutral-500`}
               />
               <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
               <button
@@ -122,7 +201,7 @@ const CreateAccountPage = () => {
                 onChange={handleConfirmPasswordChange}
                 placeholder="Re-enter password"
                 required
-                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
+                className={`w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 ${matchError ? 'ring-red-500' : 'focus:ring-pink-600'} placeholder-neutral-500`}
               />
               <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
               <button
@@ -156,7 +235,7 @@ const CreateAccountPage = () => {
           <button
             type="submit"
             className="w-full py-3 bg-pink-600 hover:bg-pink-700 rounded-lg text-lg font-semibold transition duration-300"
-            disabled={!!passwordError || !!matchError}
+            disabled={isFormInvalid}
           >
             Register
           </button>

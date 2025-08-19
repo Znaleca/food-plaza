@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FaRegEdit } from 'react-icons/fa';
+import { FaRegEdit, FaPhone } from 'react-icons/fa';
 import getCurrentUser from '../actions/getCurrentUser';
 import updateUser from '../actions/updateUser';
+import checkUserExists from '../actions/checkUserExists'; // Import the new server action
 
 const formatDate = (isoString) => {
   const date = new Date(isoString);
@@ -34,12 +35,14 @@ const AccountSettings = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
   const [editMode, setEditMode] = useState({
     name: false,
     email: false,
+    phone: false,
     password: false,
   });
   const [status, setStatus] = useState('');
@@ -48,7 +51,13 @@ const AccountSettings = () => {
     async function fetchUser() {
       const data = await getCurrentUser();
       setUser(data);
-      setFormData({ name: data.name, email: data.email, password: '', confirmPassword: '' });
+      setFormData({
+        name: data.name,
+        email: data.email,
+        phone: data.phone?.replace('+63', '') || '', // Handle cases where phone is null and remove +63 prefix
+        password: '',
+        confirmPassword: '',
+      });
     }
     fetchUser();
   }, []);
@@ -70,8 +79,8 @@ const AccountSettings = () => {
       const newMode = { ...prev, [field]: !prev[field] };
       if (field === 'password') {
         setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }));
-        setStatus('');
       }
+      setStatus('');
       return newMode;
     });
   };
@@ -80,13 +89,14 @@ const AccountSettings = () => {
     minLength: /.{8,}/,
     capital: /[A-Z]/,
     number: /[0-9]/,
-
   };
 
   const hasChanges = () => {
     if (!user) return false;
+    const currentPhoneWithoutPrefix = user.phone?.replace('+63', '') || '';
     if (formData.name !== user.name) return true;
     if (formData.email !== user.email) return true;
+    if (formData.phone !== currentPhoneWithoutPrefix) return true;
     if (editMode.password && formData.password.length > 0) return true;
     return false;
   };
@@ -110,14 +120,48 @@ const AccountSettings = () => {
       }
     }
 
+    if (editMode.phone && formData.phone.length > 0) {
+      if (formData.phone.length !== 10) {
+        setStatus('Phone number must be 10 digits.');
+        return;
+      }
+    }
+
+    // Check for existing email or phone number
+    if (editMode.email || editMode.phone) {
+      const { isEmailTaken, isPhoneTaken, error } = await checkUserExists(formData.email, `+63${formData.phone}`);
+      if (error) {
+        setStatus(`Error: ${error}`);
+        return;
+      }
+      if (isEmailTaken && formData.email !== user.email) {
+        setStatus('Error: This email is already in use by another account.');
+        return;
+      }
+      if (isPhoneTaken && `+63${formData.phone}` !== user.phone) {
+        setStatus('Error: This phone number is already in use by another account.');
+        return;
+      }
+    }
+
     setStatus('Saving...');
 
     try {
       const form = new FormData();
       form.append('userId', user.$id);
-      form.append('name', formData.name);
-      form.append('email', formData.email);
-      if (formData.password) form.append('password', formData.password);
+      if (formData.name !== user.name) {
+        form.append('name', formData.name);
+      }
+      if (formData.email !== user.email) {
+        form.append('email', formData.email);
+      }
+      const currentPhoneWithoutPrefix = user.phone?.replace('+63', '') || '';
+      if (formData.phone !== currentPhoneWithoutPrefix) {
+        form.append('phone', `+63${formData.phone}`);
+      }
+      if (formData.password) {
+        form.append('password', formData.password);
+      }
 
       const result = await updateUser(null, form);
 
@@ -128,10 +172,11 @@ const AccountSettings = () => {
         setFormData({
           name: refreshedUser.name,
           email: refreshedUser.email,
+          phone: refreshedUser.phone?.replace('+63', '') || '',
           password: '',
           confirmPassword: '',
         });
-        setEditMode({ name: false, email: false, password: false });
+        setEditMode({ name: false, email: false, password: false, phone: false });
       } else {
         setStatus(`Error: ${result.error || 'Failed to update profile'}`);
       }
@@ -144,8 +189,7 @@ const AccountSettings = () => {
     const rules = [
       { label: 'At least 8 characters', valid: validateRules.minLength.test(formData.password) },
       { label: 'At least 1 capital letter', valid: validateRules.capital.test(formData.password) },
-      { label: 'At least 1 number', valid: validateRules.number.test(formData.password) }, 
-
+      { label: 'At least 1 number', valid: validateRules.number.test(formData.password) },
     ];
 
     return (
@@ -180,7 +224,7 @@ const AccountSettings = () => {
 
       <div className="max-w-3xl mx-auto bg-stone-800 rounded-2xl shadow-xl p-8 sm:p-12 space-y-10">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-base sm:text-lg">
-          <EditableField label="Name" isEditing={editMode.name} onToggle={() => toggleEdit('name')}>
+          <EditableField label="Nickname" isEditing={editMode.name} onToggle={() => toggleEdit('name')}>
             {editMode.name ? (
               <input
                 type="text"
@@ -212,6 +256,28 @@ const AccountSettings = () => {
             )}
           </EditableField>
 
+          <EditableField label="Phone Number" isEditing={editMode.phone} onToggle={() => toggleEdit('phone')}>
+            {editMode.phone ? (
+              <div className="relative flex items-center">
+                <span className="px-3 py-3 bg-neutral-700 border border-neutral-700 rounded-l-md text-neutral-400 flex items-center gap-2">
+                  <FaPhone />
+                  +63
+                </span>
+                <input
+                  type="text"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone.replace('+63', '')}
+                  onChange={handleChange}
+                  placeholder="9123456789"
+                  className={`w-full px-4 py-3 bg-neutral-700 border border-neutral-700 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-pink-500`}
+                />
+              </div>
+            ) : (
+              <p className="font-semibold text-white select-text">{user.phone || '—'}</p>
+            )}
+          </EditableField>
+
           <div className="bg-neutral-800 p-5 rounded-xl border border-neutral-700 shadow-sm">
             <p className="text-neutral-400 mb-1 font-medium">Labels</p>
             <p className="font-semibold text-white select-text">
@@ -237,7 +303,7 @@ const AccountSettings = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Confirm new password"
-                  className="w-full bg-neutral-700 text-white p-3 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full bg-neutral-700 text-white p-3 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-500"
                   required
                 />
                 {passwordValidationFeedback()}
