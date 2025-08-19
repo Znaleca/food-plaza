@@ -14,7 +14,7 @@ const BookingForm = ({ room }) => {
     const res = await bookSpace(null, formData);
     if (res.error) toast.error(res.error);
     if (res.success) {
-      toast.success('Space has been booked!');
+      toast.success('Stall has been leased! Awaiting approval.');
       router.push('/bookings');
     }
   };

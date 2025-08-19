@@ -20,7 +20,7 @@ async function getMyBookings() {
 
     if (!user) {
       return {
-        error: 'You must be logged in to view bookings',
+        error: 'You must be logged in to view leases',
       };
     }
 
@@ -33,9 +33,9 @@ async function getMyBookings() {
 
     return bookings;
   } catch (error) {
-    console.log('Failed to get user bookings', error);
+    console.log('Failed to get user lease', error);
     return {
-      error: 'Failed to get bookings',
+      error: 'Failed to get leases. Please try again later.',
     };
   }
 }

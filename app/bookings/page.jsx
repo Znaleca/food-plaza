@@ -14,7 +14,7 @@ const BookingsPage = async () => {
 
       {/* Display No Bookings Message or Card Grid */}
       {bookings.length === 0 ? (
-        <p className="text-gray-400 mt-4 text-center">You have no bookings</p>
+        <p className="text-gray-400 mt-4 text-center">You have no lease</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {bookings.map((booking) => (

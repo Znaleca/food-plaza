@@ -15,7 +15,7 @@ async function bookSpace(previousState, formData) {
 
   try {
     const { user } = await checkAuth();
-    if (!user) return { error: 'You must be logged in to book a room.' };
+    if (!user) return { error: 'You must be logged in to lease a stall.' };
 
     const checkInDate = formData.get('check_in_date');
     const checkInTime = formData.get('check_in_time');
@@ -28,7 +28,7 @@ async function bookSpace(previousState, formData) {
     const checkOutDateTime = `${checkOutDate}T${checkOutTime}`;
 
     const isAvailable = await checkSpaceAvailability(roomId, checkInDateTime, checkOutDateTime);
-    if (!isAvailable) return { error: 'This room is already booked for the selected time.' };
+    if (!isAvailable) return { error: 'This stall is already leased for the selected time.' };
 
     let pdfFileId = null;
     if (pdf && pdf.size > 0 && pdf.type === 'application/pdf') {
@@ -57,8 +57,8 @@ async function bookSpace(previousState, formData) {
     revalidatePath('/bookings', 'layout');
     return { success: true };
   } catch (err) {
-    console.error('Booking Error:', err);
-    return { error: err.response?.message || 'An unexpected error occurred during booking.' };
+    console.error('Leasing Error:', err);
+    return { error: err.response?.message || 'An unexpected error occurred during leasing.' };
   }
 }
 

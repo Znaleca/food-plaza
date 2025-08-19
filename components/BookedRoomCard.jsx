@@ -50,9 +50,9 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
     try {
       await deleteBooking(booking.$id);
       if (onDeleteSuccess) onDeleteSuccess(booking.$id);
-      alert('Booking successfully deleted.');
+      alert('The lease was successfully deleted.');
     } catch (error) {
-      alert('Unable to delete booking. Please try again.');
+      alert('Unable to delete lease. Please try again.');
     }
   };
 
@@ -114,7 +114,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
               className="flex items-center space-x-2 border border-red-600 text-red-600 px-4 py-2 rounded hover:bg-red-600 hover:text-white transition-all"
             >
               <FaTrashAlt />
-              <span>Delete Booking</span>
+              <span>Delete Lease</span>
             </button>
           )}
 
