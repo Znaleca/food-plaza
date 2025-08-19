@@ -50,7 +50,17 @@ const AdminPage = () => {
           throw new Error(userData?.error || 'Failed to fetch users');
         }
 
-        const sortedReservations = reservationData.sort(
+        const now = moment();
+        const reservationsWithUpdatedStatus = reservationData.map(res => {
+          const checkOutMoment = moment(res.check_out);
+          // Check if the reservation status is not declined and the check-out date is in the past
+          if (res.status !== 'declined' && checkOutMoment.isBefore(now)) {
+            return { ...res, status: 'expired' };
+          }
+          return res;
+        });
+
+        const sortedReservations = reservationsWithUpdatedStatus.sort(
           (a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime()
         );
 
@@ -91,10 +101,10 @@ const AdminPage = () => {
   };
 
   const statusColors = {
-    pending: '#facc15',  // yellow
+    pending: '#facc15', // yellow
     approved: '#10b981', // green
     declined: '#ef4444', // red
-    expired: '#6b7280',  // gray
+    expired: '#6b7280', // gray
   };
 
   const statusColorsTailwind = {
@@ -135,7 +145,7 @@ const AdminPage = () => {
 
   const cumulativeUsers = [];
   let total = 0;
-  Object.keys(userGrowth).sort().forEach(date => {
+  Object.keys(userGrowth).sort().forEach((date) => {
     total += userGrowth[date];
     cumulativeUsers.push({ date, count: total });
   });
@@ -206,7 +216,9 @@ const AdminPage = () => {
                 {/* Visual marker for the card */}
                 <div className={`absolute top-0 left-0 h-full w-2 ${status.color}`}></div>
 
-                <div className="pl-2"> {/* Added padding for the marker */}
+                <div className="pl-2">
+                  {' '}
+                  {/* Added padding for the marker */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-white">
