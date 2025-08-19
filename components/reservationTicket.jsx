@@ -18,7 +18,15 @@ const ReservationTicket = ({ booking, showActions = true }) => {
     return `${date.toLocaleDateString(undefined, options)} at ${date.toLocaleTimeString(undefined, timeOptions)}`;
   };
 
-  const getStatus = (status) => {
+  const getStatus = (status, checkOut) => {
+    const now = new Date();
+    const checkoutDate = checkOut ? new Date(checkOut) : null;
+
+    // If checkout date has passed, mark as expired
+    if (checkoutDate && now > checkoutDate) {
+      return { text: 'Expired', color: 'text-gray-400' };
+    }
+
     switch (status) {
       case 'pending':
         return { text: 'Pending', color: 'text-yellow-400' };
@@ -32,7 +40,7 @@ const ReservationTicket = ({ booking, showActions = true }) => {
   };
 
   const status = booking?.status || 'unknown';
-  const { text: statusText, color: statusColor } = getStatus(status);
+  const { text: statusText, color: statusColor } = getStatus(status, booking?.check_out);
 
   if (!room || !booking.check_in || !booking.check_out) {
     return <div className="text-red-500">Error: Lease or stall data is incomplete.</div>;

@@ -1,13 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/authContext';
 import CancelBookingButton from './CancelBookingButton';
 import deleteBooking from '@/app/actions/deleteBooking';
-import { FaTrashAlt } from 'react-icons/fa';
+import { FaTrashAlt, FaRedoAlt } from 'react-icons/fa';
+import LeaseEditForm from './LeaseEditForm';
 
 const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
   const { currentUser } = useAuth();
+  const [showRenewForm, setShowRenewForm] = useState(false);
 
   const room = booking?.room_id || { name: 'Unknown Stall', stallNumber: 'N/A', $id: '' };
   const stallName = room?.name || 'Unnamed Stall';
@@ -20,7 +22,14 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
     return `${date.toLocaleDateString(undefined, options)} at ${date.toLocaleTimeString(undefined, timeOptions)}`;
   };
 
-  const getStatus = (status) => {
+  const getStatus = (status, checkOutDate) => {
+    const now = new Date();
+    const checkOut = new Date(checkOutDate);
+
+    if (checkOutDate && checkOut < now) {
+      return { text: 'Expired', color: 'text-gray-400' };
+    }
+
     switch (status) {
       case 'pending':
         return { text: 'Pending', color: 'text-yellow-400' };
@@ -34,7 +43,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
   };
 
   const status = booking?.status || 'unknown';
-  const { text: statusText, color: statusColor } = getStatus(status);
+  const { text: statusText, color: statusColor } = getStatus(status, booking?.check_out);
   const isDeclined = status === 'declined';
 
   const handleDelete = async () => {
@@ -51,7 +60,6 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
     return <div className="text-red-500">Error: Lease or stall data is incomplete.</div>;
   }
 
-  // ✅ Use /view endpoint to avoid transformation limits
   const pdfLink = booking.pdf_attachment
     ? `https://cloud.appwrite.io/v1/storage/buckets/${process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS}/files/${booking.pdf_attachment}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`
     : null;
@@ -96,9 +104,10 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
       {/* Actions */}
       {showActions && (
         <div className="flex justify-center mt-6 space-x-4">
-          {!isDeclined && (
+          {!isDeclined && statusText !== 'Expired' && (
             <CancelBookingButton bookingId={booking.$id} />
           )}
+
           {isDeclined && (
             <button
               onClick={handleDelete}
@@ -108,8 +117,34 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
               <span>Delete Booking</span>
             </button>
           )}
+
+          {statusText === 'Expired' && (
+            <button
+              onClick={() => setShowRenewForm(true)}
+              className="flex items-center space-x-2 border border-yellow-400 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-600 hover:text-white transition-all"
+            >
+              <FaRedoAlt />
+              <span>Renew Lease</span>
+            </button>
+          )}
         </div>
       )}
+
+{showRenewForm && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 p-4">
+    <div className="relative w-full max-w-lg rounded-xl shadow-xl">
+      <button
+        onClick={() => setShowRenewForm(false)}
+        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-2xl z-10"
+        aria-label="Close renewal form"
+      >
+        &times;
+      </button>
+      <LeaseEditForm booking={booking} onClose={() => setShowRenewForm(false)} />
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

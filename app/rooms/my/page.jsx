@@ -1,4 +1,3 @@
-
 import MySpaceCard from '@/components/MySpaceCard';
 import getMySpaces from '@/app/actions/getMySpaces';
 import getStallStatus from '@/app/actions/getStallStatus';
@@ -8,11 +7,24 @@ import { FaChevronLeft } from 'react-icons/fa6';
 const MySpacePage = async () => {
   const rooms = await getMySpaces();
 
-  // Filter rooms that have been approved based on booking status
+  // Filter rooms that are approved and not expired
   const approvedRooms = await Promise.all(
     rooms.map(async (room) => {
       const status = await getStallStatus(room.$id);
-      return status && status.status === 'approved' ? room : null;
+
+      if (status && status.status === 'approved') {
+        const now = new Date();
+        const checkOut = status.check_out ? new Date(status.check_out) : null;
+
+        // Exclude expired stalls
+        if (checkOut && now > checkOut) {
+          return null;
+        }
+
+        return room;
+      }
+
+      return null;
     })
   );
 

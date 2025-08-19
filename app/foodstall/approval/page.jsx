@@ -63,6 +63,12 @@ const ApprovalPage = () => {
     }
   };
 
+  // Utility: check if booking is expired
+  const isExpired = (checkOut) => {
+    if (!checkOut) return false;
+    return new Date() > new Date(checkOut);
+  };
+
   return (
     <div className="min-h-screen bg-neutral-900 text-white p-6">
       <div className="text-center mb-12 px-4">
@@ -74,35 +80,38 @@ const ApprovalPage = () => {
         {bookings.length === 0 ? (
           <p className="text-gray-400 text-center">No Lease for your food stall</p>
         ) : (
-          bookings.map((booking) => (
-            <div
-              key={booking.$id}
-              className="bg-neutral-900   p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between "
-            >
-              <div className="flex-1">
-                <ReservationTicket booking={booking} showActions={false} />
-              </div>
-              <div className="flex flex-col sm:flex-row sm:space-x-4 mt-4 sm:mt-0">
-  {booking.status === 'pending' && (
-    <>
-      <button
-        onClick={() => handleApprove(booking.$id)}
-        className="bg-pink-600 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500 hover:text-white"
-      >
-        Approve
-      </button>
-      <button
-        onClick={() => handleDecline(booking.$id)}
-        className="bg-neutral-800 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500 hover:text-white mt-2 sm:mt-0"
-      >
-        Decline
-      </button>
-    </>
-  )}
-</div>
+          bookings.map((booking) => {
+            const expired = isExpired(booking.check_out);
 
-            </div>
-          ))
+            return (
+              <div
+                key={booking.$id}
+                className="bg-neutral-900 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between"
+              >
+                <div className="flex-1">
+                  <ReservationTicket booking={booking} showActions={false} />
+                </div>
+                <div className="flex flex-col sm:flex-row sm:space-x-4 mt-4 sm:mt-0">
+                  {booking.status === 'pending' && !expired && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(booking.$id)}
+                        className="bg-pink-600 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500 hover:text-white"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleDecline(booking.$id)}
+                        className="bg-neutral-800 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500 hover:text-white mt-2 sm:mt-0"
+                      >
+                        Decline
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
     </div>
