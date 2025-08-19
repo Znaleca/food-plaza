@@ -17,7 +17,8 @@ export default function MenuPopUp({
   onClose,
   onAddToCart,
 }) {
-  const { setCartCount } = useAuth(); // ✅ access cart count updater
+  const { setCartCount, labels } = useAuth(); // ✅ access labels also
+  const isGuest = labels.includes("guest");
 
   const sizeDefs = useMemo(
     () => [
@@ -41,6 +42,8 @@ export default function MenuPopUp({
   const adjustQty = (d) => setQty((q) => Math.max(1, q + d));
 
   const handleAdd = () => {
+    if (isGuest) return; // 🚫 prevent guests from adding to cart
+
     const newItem = {
       name: item,
       menuName: item,
@@ -145,10 +148,16 @@ export default function MenuPopUp({
 
         <button
           onClick={handleAdd}
-          className="w-full bg-pink-600 hover:bg-pink-700 py-3 rounded-lg font-semibold shadow-md"
+          disabled={isGuest} // 🚫 disabled for guests
+          className={`w-full py-3 rounded-lg font-semibold shadow-md ${
+            isGuest
+              ? 'bg-gray-600 cursor-not-allowed'
+              : 'bg-pink-600 hover:bg-pink-700'
+          }`}
         >
-          Add to Cart
+          {isGuest ? 'Sign in to Order' : 'Add to Cart'}
         </button>
+
         <button
           onClick={onClose}
           className="w-full mt-3 bg-neutral-800 hover:bg-neutral-700 py-3 rounded-lg"

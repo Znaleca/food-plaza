@@ -30,6 +30,7 @@ const Header = () => {
   const isAdmin = labels.includes("admin");
   const isCustomer = labels.includes("customer");
   const isFoodstall = labels.includes("foodstall");
+  const isGuest = labels.includes("guest");
 
   useEffect(() => {
     const updateCartCount = () => {
@@ -76,14 +77,13 @@ const Header = () => {
     };
   }, [isDropdownOpen]);
 
-
   return (
     <header className="bg-neutral-800 shadow-md">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            {(isAdmin || isFoodstall || !isAuthenticated) ? (
+            {(isAdmin || isFoodstall || isGuest) ? (
               <div className="flex items-center cursor-default">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
@@ -105,11 +105,18 @@ const Header = () => {
           {/* Desktop Menu */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center gap-6 text-sm font-medium text-white">
-              {isAuthenticated && !isAdmin && !isFoodstall && (
+              {!isGuest && !isAdmin && !isFoodstall && (
                 <>
                   <Link href="/home" className="hover:text-pink-600 transition">Home</Link>
                   <Link href="/" className="hover:text-pink-600 transition">Browse</Link>
                   <Link href="/customer/order-status" className="hover:text-pink-600 transition">My Orders</Link>
+                </>
+              )}
+
+{ isGuest && (
+                <>
+                  <Link href="/home" className="hover:text-pink-600 transition">Home</Link>
+                  <Link href="/" className="hover:text-pink-600 transition">Browse</Link>
                 </>
               )}
 
@@ -147,7 +154,7 @@ const Header = () => {
           {/* Account Controls */}
           <div className="hidden md:block ml-auto">
             <div className="flex items-center">
-              {!isAuthenticated ? (
+              {isGuest ? (
                 <div className="relative">
                   <button
                     onClick={toggleDropdown}
@@ -212,7 +219,7 @@ const Header = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 space-y-2 text-white bg-neutral-800 rounded-md p-4">
-            {isAuthenticated && !isAdmin && !isFoodstall && (
+            {!isGuest && !isAdmin && !isFoodstall && (
               <>
                 <Link href="/home" className="flex items-center gap-2 hover:text-pink-600">
                   <FaHome /> Home
@@ -244,7 +251,7 @@ const Header = () => {
               </Link>
             )}
             <hr className="border-gray-600 my-2" />
-            {!isAuthenticated ? (
+            {isGuest ? (
               <>
                 <Link href="/login" className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors">
                   <FaSignInAlt className="text-pink-500" /> Login

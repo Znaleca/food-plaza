@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
     isAdmin: labels.includes('admin'),
     isCustomer: labels.includes('customer'),
     isFoodstall: labels.includes('foodstall'),
-    isSuperAdmin: labels.includes('superAdmin'),
+    isGuest: labels.includes('guest'),
   };
 
   return (

@@ -21,7 +21,19 @@ const ReservationsCalendarPage = () => {
       try {
         const data = await getAllReservations();
         if (!data || data.error) throw new Error(data?.error || 'Failed to fetch reservations');
-        setReservations(data);
+        
+        // Add logic to mark reservations as 'expired'
+        const now = moment();
+        const processedData = data.map(res => {
+          const checkOutMoment = moment(res.check_out);
+          // Only update status if it's not already declined and the date is in the past
+          if (res.status !== 'declined' && checkOutMoment.isBefore(now)) {
+            return { ...res, status: 'expired' };
+          }
+          return res;
+        });
+
+        setReservations(processedData);
       } catch (err) {
         console.error(err.message);
       }
@@ -67,7 +79,7 @@ const ReservationsCalendarPage = () => {
   return (
     <div className="w-full min-h-screen bg-neutral-900 text-white px-4 py-12 sm:px-10">
       <div className="text-center mb-8">
-        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-widest">LEASE MAP</h1>
+        <h1 className="text-5xl sm:text-7xl font-extrabold tracking-widest">LEASE CALENDAR</h1>
         <p className="mt-4 text-lg sm:text-xl mb-20 font-light text-gray-400">
           View Food Stall Lease like a traditional calendar layout.
         </p>
@@ -149,102 +161,101 @@ const ReservationsCalendarPage = () => {
       </div>
 
       {showModal && (
-  <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
-    <div className="relative w-full max-w-2xl bg-neutral-900 text-white rounded-2xl p-6 sm:p-10 shadow-xl border border-yellow-600">
-      {/* Close Button */}
-      <button
-        onClick={() => setShowModal(false)}
-        className="absolute top-4 right-4 text-white hover:text-yellow-500 text-2xl sm:text-3xl"
-      >
-        &times;
-      </button>
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center px-4">
+          <div className="relative w-full max-w-2xl bg-neutral-900 text-white rounded-2xl p-6 sm:p-10 shadow-xl border border-yellow-600">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-white hover:text-yellow-500 text-2xl sm:text-3xl"
+            >
+              &times;
+            </button>
 
-      {/* Title */}
-      <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 text-yellow-400 tracking-wide">
-        Lease for {selectedDate?.format('MMMM D, YYYY')}
-      </h2>
+            {/* Title */}
+            <h2 className="text-3xl sm:text-4xl font-bold text-center mb-8 text-yellow-400 tracking-wide">
+              Lease for {selectedDate?.format('MMMM D, YYYY')}
+            </h2>
 
-      {/* Lease Entries */}
-      {selectedDateEvents.length > 0 ? (
-        <div className="space-y-5 max-h-[28rem] overflow-y-auto pr-1">
-          {selectedDateEvents.map((event) => {
-            const start = moment(event.check_in);
-            const end = moment(event.check_out);
-            const durationDays = end.diff(start, 'days');
-            const durationMonths = end.diff(start, 'months');
-            const widthPercent = Math.min((durationDays / 365) * 100, 100);
+            {/* Lease Entries */}
+            {selectedDateEvents.length > 0 ? (
+              <div className="space-y-5 max-h-[28rem] overflow-y-auto pr-1">
+                {selectedDateEvents.map((event) => {
+                  const start = moment(event.check_in);
+                  const end = moment(event.check_out);
+                  const durationDays = end.diff(start, 'days');
+                  const durationMonths = end.diff(start, 'months');
+                  const widthPercent = Math.min((durationDays / 365) * 100, 100);
 
-            // Determine badge color
-            const status = event.status?.toUpperCase() || 'UNKNOWN';
-            const statusStyles = {
-              PENDING: 'text-yellow-400 border-yellow-400 bg-yellow-900/30',
-              APPROVED: 'text-green-400 border-green-400 bg-green-900/30',
-              DECLINED: 'text-red-400 border-red-400 bg-red-900/30',
-              UNKNOWN: 'text-gray-400 border-gray-400 bg-gray-900/30',
-            };
+                  // Determine badge color
+                  const status = event.status?.toUpperCase() || 'UNKNOWN';
+                  const statusStyles = {
+                    PENDING: 'text-yellow-400 border-yellow-400 bg-yellow-900/30',
+                    APPROVED: 'text-green-400 border-green-400 bg-green-900/30',
+                    DECLINED: 'text-red-400 border-red-400 bg-red-900/30',
+                    EXPIRED: 'text-gray-400 border-gray-400 bg-gray-900/30', // Added Expired status
+                    UNKNOWN: 'text-gray-400 border-gray-400 bg-gray-900/30',
+                  };
 
-            const badgeClass = statusStyles[status] || statusStyles.UNKNOWN;
+                  const badgeClass = statusStyles[status] || statusStyles.UNKNOWN;
 
-            return (
-              <div
-                key={event.$id}
-                className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 shadow-md flex flex-col gap-4"
-              >
-                {/* Stall + Status */}
-                <div className="flex justify-between items-center flex-wrap gap-2">
-                  <p className="text-lg font-semibold text-yellow-300">
-                    {event.room_id?.name} #{event.room_id?.stallNumber}
-                  </p>
-                  <span
-                    className={`text-xs font-bold uppercase px-3 py-1 rounded-full border ${badgeClass} tracking-wide`}
-                  >
-                    {status}
-                  </span>
-                </div>
+                  return (
+                    <div
+                      key={event.$id}
+                      className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 shadow-md flex flex-col gap-4"
+                    >
+                      {/* Stall + Status */}
+                      <div className="flex justify-between items-center flex-wrap gap-2">
+                        <p className="text-lg font-semibold text-yellow-300">
+                          {event.room_id?.name} #{event.room_id?.stallNumber}
+                        </p>
+                        <span
+                          className={`text-xs font-bold uppercase px-3 py-1 rounded-full border ${badgeClass} tracking-wide`}
+                        >
+                          {status}
+                        </span>
+                      </div>
 
-                {/* Duration */}
-                <div className="text-sm text-gray-300">
-                  <strong>Duration:</strong>{' '}
-                  {durationMonths >= 1
-                    ? `${durationMonths} month${durationMonths > 1 ? 's' : ''}`
-                    : `${durationDays} day${durationDays > 1 ? 's' : ''}`}
-                </div>
+                      {/* Duration */}
+                      <div className="text-sm text-gray-300">
+                        <strong>Duration:</strong>{' '}
+                        {durationMonths >= 1
+                          ? `${durationMonths} month${durationMonths > 1 ? 's' : ''}`
+                          : `${durationDays} day${durationDays > 1 ? 's' : ''}`}
+                      </div>
 
-                {/* Timeline */}
-                <div className="relative h-6 bg-neutral-700 rounded-full overflow-hidden">
-                  <div
-                    className="absolute top-0 left-0 h-full bg-yellow-500 transition-all duration-300"
-                    style={{ width: `${widthPercent}%` }}
-                  />
-                  <div className="absolute inset-0 flex justify-between text-xs text-white px-2 mt-1">
-                    <span>{start.format('MMM D, YYYY')}</span>
-                    <span>{end.format('MMM D, YYYY')}</span>
-                  </div>
-                </div>
+                      {/* Timeline */}
+                      <div className="relative h-6 bg-neutral-700 rounded-full overflow-hidden">
+                        <div
+                          className="absolute top-0 left-0 h-full bg-yellow-500 transition-all duration-300"
+                          style={{ width: `${widthPercent}%` }}
+                        />
+                        <div className="absolute inset-0 flex justify-between text-xs text-white px-2 mt-1">
+                          <span>{start.format('MMM D, YYYY')}</span>
+                          <span>{end.format('MMM D, YYYY')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            ) : (
+              <p className="text-center text-gray-400 italic text-lg mt-8">
+                No Lessee on this date.
+              </p>
+            )}
+
+            {/* Close Button */}
+            <div className="mt-10 text-center">
+              <button
+                onClick={() => setShowModal(false)}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-8 rounded-xl transition-all duration-200 shadow-md"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
-      ) : (
-        <p className="text-center text-gray-400 italic text-lg mt-8">
-          No Lessee on this date.
-        </p>
       )}
-
-      {/* Close Button */}
-      <div className="mt-10 text-center">
-        <button
-          onClick={() => setShowModal(false)}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-8 rounded-xl transition-all duration-200 shadow-md"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
     </div>
   );
 };
