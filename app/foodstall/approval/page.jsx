@@ -40,7 +40,7 @@ const ApprovalPage = () => {
   const handleApprove = async (bookingId) => {
     const response = await approveBooking(bookingId);
     if (response.success) {
-      toast.success('Booking approved!');
+      toast.success('Lease approved!');
       const updated = bookings.map((b) =>
         b.$id === bookingId ? { ...b, status: 'approved' } : b
       );
@@ -53,7 +53,7 @@ const ApprovalPage = () => {
   const handleDecline = async (bookingId) => {
     const response = await declineBooking(bookingId);
     if (response.success) {
-      toast.success('Booking declined!');
+      toast.success('Lease declined!');
       const updated = bookings.map((b) =>
         b.$id === bookingId ? { ...b, status: 'declined' } : b
       );
