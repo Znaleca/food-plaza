@@ -59,7 +59,8 @@ const CheckoutButton = ({
       const result = await response.json();
 
       if (result.success) {
-        await fetch('/api/twilio', {
+        // ✅ Changed from Twilio → Semaphore
+        await fetch('/api/semaphore', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

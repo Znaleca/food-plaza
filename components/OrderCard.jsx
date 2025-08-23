@@ -6,7 +6,7 @@ import { faStar as solidStar } from '@fortawesome/free-solid-svg-icons';
 import updateRating from '@/app/actions/updateRating';
 
 const MENU_STATUS = {
-  PENDING: 'pending',
+  PENDING: 'order placed',
   PREPARING: 'preparing',
   READY: 'ready',
   COMPLETED: 'completed',

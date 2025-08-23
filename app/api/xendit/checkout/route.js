@@ -1,15 +1,43 @@
 import { NextResponse } from 'next/server';
-import processCheckout from '@/app/actions/processCheckout';
-import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
 import { groupBy } from 'lodash';
+import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
+import processCheckout from '@/app/actions/processCheckout';
 import { Client, Databases, Query } from 'node-appwrite';
 
+// --- Appwrite client for balance updates ---
 const client = new Client()
   .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
   .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT)
   .setKey(process.env.NEXT_APPWRITE_KEY);
 
 const databases = new Databases(client);
+
+// --- Helper to call Xendit API ---
+async function xenditFetch(endpoint, method, body, extraHeaders = {}) {
+  const authHeader = `Basic ${Buffer.from(`${process.env.XENDIT_API_KEY}:`).toString('base64')}`;
+
+  const res = await fetch(`https://api.xendit.co${endpoint}`, {
+    method,
+    headers: {
+      Authorization: authHeader,
+      'Content-Type': 'application/json',
+      ...extraHeaders,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    console.error('❌ Xendit API Error:', data);
+    throw new Error(data.message || 'Xendit API request failed');
+  }
+  return data;
+}
+
+// 🧼 Utility: sanitize strings for Xendit (only letters, numbers, spaces)
+function sanitizeForXendit(str) {
+  return str.replace(/[^a-zA-Z0-9 ]/g, '') || 'DefaultName';
+}
 
 export async function POST(req) {
   try {
@@ -21,95 +49,89 @@ export async function POST(req) {
     if (!orderResult.success) {
       return NextResponse.json({ success: false, message: orderResult.message });
     }
-
     const orderId = orderResult.orderId;
 
-    // 2. Group items by room_id and prepare split transfers
+    // 2. Group items by stall and calculate totals
     const groupedItems = groupBy(items, 'room_id');
-    const splitTransfers = [];
+    const splitRoutes = [];
 
     for (const roomId in groupedItems) {
       const stallItems = groupedItems[roomId];
       const roomName = stallItems[0]?.room_name || `Stall ${roomId}`;
 
-     // 🧮 Calculate discounted stall total if voucher exists
-let stallTotal = stallItems.reduce(
-  (acc, item) => acc + (Number(item.menuPrice) * Number(item.quantity || 1)),
-  0
-);
+      // 🧮 Calculate stall total
+      let stallTotal = stallItems.reduce(
+        (acc, item) => acc + (Number(item.menuPrice) * Number(item.quantity || 1)),
+        0
+      );
 
-const voucher = voucherMap?.[roomId];
-if (voucher?.discount) {
-  const discountRate = Number(voucher.discount) / 100;
-  stallTotal = stallTotal - stallTotal * discountRate;
-}
+      // Apply voucher if exists
+      const voucher = voucherMap?.[roomId];
+      if (voucher?.discount) {
+        const discountRate = Number(voucher.discount) / 100;
+        stallTotal = stallTotal - stallTotal * discountRate;
+      }
 
-const roundedTotal = Math.round(stallTotal);
-
+      const roundedTotal = Math.round(stallTotal);
 
       // Get or create sub-account
       const subAccountId = await getOrCreateSubAccount(roomId, roomName);
 
-      // Add to splitTransfers
-      splitTransfers.push({
-        account: subAccountId,
-        amount: roundedTotal,
+      // Add route for split rule
+      splitRoutes.push({
+        flat_amount: roundedTotal,
+        currency: 'PHP',
+        destination_account_id: subAccountId,
+        reference_id: sanitizeForXendit(roomId),
       });
 
-if (process.env.XENDIT_API_KEY.startsWith('xnd_development_')) {
-  const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
-  const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
+      // --- Update Appwrite balance (internal ledger) ---
+      const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
+      const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
 
-  const result = await databases.listDocuments(databaseId, collectionId, [
-    Query.equal('room_id', roomId),
-  ]);
+      const result = await databases.listDocuments(databaseId, collectionId, [
+        Query.equal('room_id', roomId),
+      ]);
 
-  if (result.documents.length > 0) {
-    const doc = result.documents[0];
-    const currentBalance = doc.balance || 0;
-    const newBalance = currentBalance + roundedTotal;
+      if (result.documents.length > 0) {
+        const doc = result.documents[0];
+        const currentBalance = doc.balance || 0;
+        const newBalance = currentBalance + roundedTotal;
 
-    await databases.updateDocument(databaseId, collectionId, doc.$id, {
-      balance: newBalance,
-      balance_updated_at: new Date().toISOString(), // ✅ store as string
-    });
-  }
-}
-
+        await databases.updateDocument(databaseId, collectionId, doc.$id, {
+          balance: newBalance,
+          balance_updated_at: new Date().toISOString(),
+        });
+      }
     }
 
-    // 3. Create Xendit invoice
-    const invoicePayload = {
-      external_id: orderId,
-      amount: totalAmount,
-      payer_email: user?.email || 'guest@example.com',
-      description: 'Food Order Payment',
-      currency: 'PHP',
-      success_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-status?orderId=${orderId}`,
-      failure_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-failed`,
-      ...(splitTransfers.length > 0 && {
-        split_payment: {
-          type: 'FLAT',
-          splits: splitTransfers,
-        },
-      }),
-    };
-
-    const invoiceRes = await fetch('https://api.xendit.co/v2/invoices', {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${process.env.XENDIT_API_KEY}:`).toString('base64')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(invoicePayload),
+    // 3. Create Split Rule in Xendit
+    const splitRule = await xenditFetch('/split_rules', 'POST', {
+      name: sanitizeForXendit(`Order ${orderId} Split`),
+      description: sanitizeForXendit(`Order ${orderId} Split`),
+      routes: splitRoutes,
     });
 
-    const invoice = await invoiceRes.json();
-    if (!invoiceRes.ok) throw new Error(invoice.message || 'Failed to create invoice');
+    // 4. Create Invoice linked to split rule
+    const invoice = await xenditFetch(
+      '/v2/invoices',
+      'POST',
+      {
+        external_id: orderId,
+        amount: totalAmount,
+        payer_email: user?.email || 'guest@example.com',
+        description: 'Food Order Payment',
+        currency: 'PHP',
+        success_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-status?orderId=${orderId}`,
+        failure_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-failed`,
+      },
+      { 'with-split-rule': splitRule.id }
+    );
 
     return NextResponse.json({ success: true, redirect_url: invoice.invoice_url });
+
   } catch (error) {
-    console.error('Xendit Invoice Error:', error);
+    console.error('❌ Checkout + Split Error:', error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

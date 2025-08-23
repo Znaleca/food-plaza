@@ -58,25 +58,32 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   };
 
   const renderStatusBadge = (status) => {
-  const normalized = String(status || "").toLowerCase();
-  const styleMap = {
-    pending: "bg-blue-500/20 text-blue-300 border border-blue-400/50",
-    preparing: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
-    ready: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/50",
-    completed: "bg-green-500/20 text-green-300 border border-green-400/50",
-    cancelled: "bg-red-500/20 text-red-300 border border-red-400/50",
+    const normalized = String(status || "").toLowerCase();
+    const styleMap = {
+      pending: "bg-blue-500/20 text-blue-300 border border-blue-400/50",
+      preparing: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
+      ready: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/50",
+      completed: "bg-green-500/20 text-green-300 border border-green-400/50",
+      cancelled: "bg-red-500/20 text-red-300 border border-red-400/50",
+    };
+
+    const statusTextMap = {
+      pending: "Order Placed",
+      preparing: "Preparing",
+      ready: "Ready",
+      completed: "Completed",
+      cancelled: "Cancelled",
+    };
+
+    return (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm whitespace-nowrap
+          ${styleMap[normalized] || styleMap.pending}`}
+      >
+        {statusTextMap[normalized] || "Order Placed"}
+      </span>
+    );
   };
-
-  return (
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm
-        ${styleMap[normalized] || styleMap.pending}`}
-    >
-      {normalized.charAt(0).toUpperCase() + normalized.slice(1)}
-    </span>
-  );
-};
-
 
   const parsedItems = order.items
     .map((itemStr, idx) => {
@@ -151,6 +158,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
               <div className="flex flex-wrap gap-2 pt-2">
                 {Object.values(ORDER_STATUS).map((status) => {
                   const isActive = (statusUpdates[idx] || itemStatus) === status;
+                  const buttonText = status === "pending" ? "Order Placed" : status.charAt(0).toUpperCase() + status.slice(1);
                   return (
                     <button
                       key={status}
@@ -160,7 +168,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
                           ? "bg-pink-500 text-white border-pink-500"
                           : "bg-neutral-900 text-neutral-300 border-neutral-600 hover:bg-pink-600 hover:text-white"}`}
                     >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      {buttonText}
                     </button>
                   );
                 })}
