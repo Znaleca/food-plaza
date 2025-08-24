@@ -33,14 +33,14 @@ export async function POST(req) {
     const body = await req.json();
     const { items, user, totalAmount, voucherMap } = body;
 
-    // ✅ Save order first in Appwrite
+    // Save order in Appwrite first
     const orderResult = await processCheckout(items, null, voucherMap);
     if (!orderResult.success) {
       return NextResponse.json({ success: false, message: orderResult.message });
     }
     const orderId = orderResult.orderId;
 
-    // ✅ Build split rules
+    // Build split rules
     const groupedItems = groupBy(items, 'room_id');
     const splitRoutes = [];
 
@@ -53,7 +53,6 @@ export async function POST(req) {
         0
       );
 
-      // Apply voucher
       const voucher = voucherMap?.[roomId];
       if (voucher?.discount) {
         const discountRate = Number(voucher.discount) / 100;
@@ -71,14 +70,14 @@ export async function POST(req) {
       });
     }
 
-    // ✅ Create split rule
+    // Create split rule
     const splitRule = await xenditFetch('/split_rules', 'POST', {
       name: sanitizeForXendit(`Order ${orderId} Split`),
       description: sanitizeForXendit(`Order ${orderId} Split`),
       routes: splitRoutes,
     });
 
-    // ✅ Create invoice
+    // Create invoice
     const invoice = await xenditFetch(
       '/v2/invoices',
       'POST',
@@ -95,7 +94,6 @@ export async function POST(req) {
     );
 
     return NextResponse.json({ success: true, redirect_url: invoice.invoice_url });
-
   } catch (error) {
     console.error('❌ Checkout + Split Error:', error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
