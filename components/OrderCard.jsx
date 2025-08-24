@@ -6,11 +6,19 @@ import { faStar as solidStar } from '@fortawesome/free-solid-svg-icons';
 import updateRating from '@/app/actions/updateRating';
 
 const MENU_STATUS = {
-  PENDING: 'order placed',
+  ORDER_PLACED: 'order-placed',
   PREPARING: 'preparing',
   READY: 'ready',
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
+  FAILED: 'failed',
+};
+
+const PAYMENT_STATUS = {
+  PENDING: "pending",
+  PAID: "paid",
+  EXPIRED: "expired",
+  FAILED: "failed",
 };
 
 const OrderCard = ({ order, setOrders }) => {
@@ -64,19 +72,53 @@ const OrderCard = ({ order, setOrders }) => {
   const renderStatusBadge = (status) => {
     const base = 'px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase';
     const badgeColors = {
-      [MENU_STATUS.PENDING]: 'bg-blue-600',
+      [MENU_STATUS.ORDER_PLACED]: 'bg-blue-600',
       [MENU_STATUS.PREPARING]: 'bg-yellow-600',
       [MENU_STATUS.READY]: 'bg-purple-600',
       [MENU_STATUS.COMPLETED]: 'bg-green-600',
       [MENU_STATUS.CANCELLED]: 'bg-red-600',
+      [MENU_STATUS.FAILED]: 'bg-gray-600',
+    };
+
+    const statusTextMap = {
+      [MENU_STATUS.ORDER_PLACED]: 'Order Placed',
+      [MENU_STATUS.PREPARING]: 'Preparing',
+      [MENU_STATUS.READY]: 'Ready',
+      [MENU_STATUS.COMPLETED]: 'Completed',
+      [MENU_STATUS.CANCELLED]: 'Cancelled',
+      [MENU_STATUS.FAILED]: 'Failed',
     };
 
     return (
       <span className={`${base} ${badgeColors[status] || 'bg-gray-600'} text-white`}>
-        {status}
+        {statusTextMap[status] || 'Order Placed'}
       </span>
     );
   };
+
+  const renderPaymentBadge = (status) => {
+    const base = "px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
+    const badgeColors = {
+      pending: "bg-yellow-600",
+      paid: "bg-green-600",
+      expired: "bg-gray-600",
+      failed: "bg-red-600",
+    };
+  
+    const statusTextMap = {
+      pending: "Pending",
+      paid: "Paid",
+      expired: "Expired",
+      failed: "Failed",
+    };
+  
+    return (
+      <span className={`${base} ${badgeColors[status.toLowerCase()] || "bg-gray-600"} text-white`}>
+        {statusTextMap[status.toLowerCase()] || "Unknown"}
+      </span>
+    );
+  };
+  
 
   const parseItemsGroupedByRoom = () => {
     const grouped = {};
@@ -135,9 +177,15 @@ const OrderCard = ({ order, setOrders }) => {
         </div>
 
         <div className="text-sm mb-4">
-          <p className="mb-1">Customer: <strong>{order.name || 'Unknown'}</strong></p>
-          <p className="mb-1">Email: {order.email}</p>
-        </div>
+  <p className="mb-1">Customer: <strong>{order.name || 'Unknown'}</strong></p>
+  <p className="mb-1">Email: {order.email}</p>
+
+  <div className="mt-2">
+    Payment Status: {renderPaymentBadge(order.payment_status || "pending")}
+  </div>
+</div>
+
+
 
         <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
           {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => {
@@ -173,7 +221,7 @@ const OrderCard = ({ order, setOrders }) => {
                           <span>₱{(item.menuPrice * item.quantity).toFixed(2)}</span>
                         </div>
                         <div className="text-xs text-gray-500">Stall: {item.room_name || 'N/A'}</div>
-                        <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.PENDING)}</div>
+                        <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.ORDER_PLACED)}</div>
 
                         {itemRated ? (
                           <div className="mt-1 text-xs text-green-600">

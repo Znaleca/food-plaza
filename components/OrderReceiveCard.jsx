@@ -5,11 +5,12 @@ import updateTableNumber from "@/app/actions/updateTableNumber";
 import updateOrderStatus from "@/app/actions/updateOrderStatus";
 
 const ORDER_STATUS = {
-  PENDING: "pending",
+  ORDER_PLACED: "order-placed",
   PREPARING: "preparing",
   READY: "ready",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
+  FAILED: "failed",
 };
 
 const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
@@ -60,25 +61,27 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   const renderStatusBadge = (status) => {
     const normalized = String(status || "").toLowerCase();
     const styleMap = {
-      pending: "bg-blue-500/20 text-blue-300 border border-blue-400/50",
+      "order-placed": "bg-blue-500/20 text-blue-300 border border-blue-400/50",
       preparing: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
       ready: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/50",
       completed: "bg-green-500/20 text-green-300 border border-green-400/50",
       cancelled: "bg-red-500/20 text-red-300 border border-red-400/50",
+      failed: "bg-gray-500/20 text-gray-300 border border-gray-400/50",
     };
 
     const statusTextMap = {
-      pending: "Order Placed",
+      "order-placed": "Order Placed",
       preparing: "Preparing",
       ready: "Ready",
       completed: "Completed",
       cancelled: "Cancelled",
+      failed: "Failed",
     };
 
     return (
       <span
         className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm whitespace-nowrap
-          ${styleMap[normalized] || styleMap.pending}`}
+          ${styleMap[normalized] || styleMap["order-placed"]}`}
       >
         {statusTextMap[normalized] || "Order Placed"}
       </span>
@@ -125,7 +128,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {parsedItems.map((item) => {
-          const itemStatus = item.status || "pending";
+          const itemStatus = item.status || "order-placed";
           const idx = item.originalIndex;
 
           return (
@@ -158,7 +161,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
               <div className="flex flex-wrap gap-2 pt-2">
                 {Object.values(ORDER_STATUS).map((status) => {
                   const isActive = (statusUpdates[idx] || itemStatus) === status;
-                  const buttonText = status === "pending" ? "Order Placed" : status.charAt(0).toUpperCase() + status.slice(1);
+                  const buttonText = status === "order-placed" ? "Order Placed" : status.charAt(0).toUpperCase() + status.slice(1);
                   return (
                     <button
                       key={status}

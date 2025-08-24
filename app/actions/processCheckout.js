@@ -28,20 +28,16 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
 
     const stringifiedItems = cleanedCart.map((item) => JSON.stringify(item));
 
-    // Convert voucherMap to readable promo strings
     const promoStrings = Object.entries(voucherMap).map(([roomId, voucher]) => {
       const roomName = voucher?.roomName || `Room ${roomId}`;
       return `${roomName} - ${voucher?.title} (${voucher?.discount}% off)`;
     });
 
-    // --- Update redeemed[] in promotions collection ---
     for (const [, voucher] of Object.entries(voucherMap)) {
-      if (!voucher?.title) continue; // skip if voucher data is incomplete
-
-      // Look for promo by title (ideally use promo ID if available)
+      if (!voucher?.title) continue;
       const promoDocs = await databases.listDocuments(
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
-        process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS, // your promotions collection
+        process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS,
         [Query.equal('title', voucher.title)]
       );
 
@@ -49,7 +45,6 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
         const promo = promoDocs.documents[0];
         const redeemedList = Array.isArray(promo.redeemed) ? [...promo.redeemed] : [];
 
-        // Add user.id if not already redeemed
         if (!redeemedList.includes(user.id)) {
           redeemedList.push(user.id);
           await databases.updateDocument(
@@ -61,18 +56,20 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
         }
       }
     }
-    // ---------------------------------------------------
 
     const orderPayload = {
       user_id: user.id,
       name: user.name || 'Unknown User',
       email: user.email || 'Unknown Email',
-      status: ['pending'],
+      status: ['order-placed'],
       items: stringifiedItems,
       total: [baseTotal, serviceCharge, -discountAmount, finalTotal],
       spaces: spaceId || null,
       promos: promoStrings,
       created_at: new Date().toISOString(),
+      payment_status: "pending",   // 👈 add this default
+      payment_info: null,          // 👈 empty until webhook fills it
+      updated_at: new Date().toISOString(),
     };
 
     const response = await databases.createDocument(
