@@ -11,13 +11,13 @@ export async function POST(req) {
     const body = await req.json();
     const { databases } = await createAdminClient();
 
-    // Get external_id from Xendit webhook
+    // ✅ external_id from Xendit == Appwrite orderId
     const orderId = body.external_id;
     if (!orderId) {
       return new Response("Missing orderId", { status: 400 });
     }
 
-    // Normalize and map Xendit status → Appwrite enum
+    // ✅ Normalize Xendit status → Appwrite enum
     let status = (body.status || "").toUpperCase();
     let paymentStatus;
 
@@ -38,14 +38,14 @@ export async function POST(req) {
         paymentStatus = "pending";
     }
 
-    // Update Appwrite order doc
+    // ✅ Update Appwrite order doc
     await databases.updateDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
       orderId,
       {
         payment_status: paymentStatus,
-        payment_info: JSON.stringify(body),
+        payment_info: JSON.stringify(body),  // 👈 save raw Xendit webhook data
         updated_at: new Date().toISOString(),
       }
     );

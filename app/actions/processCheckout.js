@@ -33,6 +33,7 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       return `${roomName} - ${voucher?.title} (${voucher?.discount}% off)`;
     });
 
+    // ✅ Mark promos as redeemed
     for (const [, voucher] of Object.entries(voucherMap)) {
       if (!voucher?.title) continue;
       const promoDocs = await databases.listDocuments(
@@ -57,6 +58,9 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       }
     }
 
+    // ✅ Generate orderId manually so we can use it in Xendit external_id
+    const orderId = ID.unique();
+
     const orderPayload = {
       user_id: user.id,
       name: user.name || 'Unknown User',
@@ -67,22 +71,23 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       spaces: spaceId || null,
       promos: promoStrings,
       created_at: new Date().toISOString(),
-      payment_status: "pending",   // 👈 add this default
-      payment_info: null,          // 👈 empty until webhook fills it
+      payment_status: "pending",   // 👈 default
+      payment_info: null,          // 👈 filled by webhook later
       updated_at: new Date().toISOString(),
     };
 
+    // ✅ Save order using orderId
     const response = await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
-      ID.unique(),
+      orderId,
       orderPayload
     );
 
     return {
       success: true,
       message: "Order placed successfully!",
-      orderId: response.$id,
+      orderId,   // 👈 return this so frontend can send it to Xendit external_id
       order: response,
     };
   } catch (error) {
