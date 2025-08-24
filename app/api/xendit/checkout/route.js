@@ -2,14 +2,6 @@ import { NextResponse } from 'next/server';
 import { groupBy } from 'lodash';
 import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
 import processCheckout from '@/app/actions/processCheckout';
-import { Client, Databases, Query } from 'node-appwrite';
-
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT)
-  .setKey(process.env.NEXT_APPWRITE_KEY);
-
-const databases = new Databases(client);
 
 async function xenditFetch(endpoint, method, body, extraHeaders = {}) {
   const authHeader = `Basic ${Buffer.from(`${process.env.XENDIT_API_KEY}:`).toString('base64')}`;
@@ -33,7 +25,7 @@ async function xenditFetch(endpoint, method, body, extraHeaders = {}) {
 }
 
 function sanitizeForXendit(str) {
-  return str.replace(/[^a-zA-Z0-9 ]/g, '') || 'DefaultName';
+  return str.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 100) || 'DefaultName';
 }
 
 export async function POST(req) {
@@ -41,12 +33,14 @@ export async function POST(req) {
     const body = await req.json();
     const { items, user, totalAmount, voucherMap } = body;
 
+    // ✅ Save order first in Appwrite
     const orderResult = await processCheckout(items, null, voucherMap);
     if (!orderResult.success) {
       return NextResponse.json({ success: false, message: orderResult.message });
     }
     const orderId = orderResult.orderId;
 
+    // ✅ Build split rules
     const groupedItems = groupBy(items, 'room_id');
     const splitRoutes = [];
 
@@ -59,6 +53,7 @@ export async function POST(req) {
         0
       );
 
+      // Apply voucher
       const voucher = voucherMap?.[roomId];
       if (voucher?.discount) {
         const discountRate = Number(voucher.discount) / 100;
@@ -66,7 +61,6 @@ export async function POST(req) {
       }
 
       const roundedTotal = Math.round(stallTotal);
-
       const subAccountId = await getOrCreateSubAccount(roomId, roomName);
 
       splitRoutes.push({
@@ -75,40 +69,24 @@ export async function POST(req) {
         destination_account_id: subAccountId,
         reference_id: sanitizeForXendit(roomId),
       });
-
-      const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
-      const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
-
-      const result = await databases.listDocuments(databaseId, collectionId, [
-        Query.equal('room_id', roomId),
-      ]);
-
-      if (result.documents.length > 0) {
-        const doc = result.documents[0];
-        const currentBalance = doc.balance || 0;
-        const newBalance = currentBalance + roundedTotal;
-
-        await databases.updateDocument(databaseId, collectionId, doc.$id, {
-          balance: newBalance,
-          balance_updated_at: new Date().toISOString(),
-        });
-      }
     }
 
+    // ✅ Create split rule
     const splitRule = await xenditFetch('/split_rules', 'POST', {
       name: sanitizeForXendit(`Order ${orderId} Split`),
       description: sanitizeForXendit(`Order ${orderId} Split`),
       routes: splitRoutes,
     });
 
+    // ✅ Create invoice
     const invoice = await xenditFetch(
       '/v2/invoices',
       'POST',
       {
-        external_id: orderId,
+        external_id: `maproom_${orderId}`,
         amount: totalAmount,
         payer_email: user?.email || 'guest@example.com',
-        description: 'Food Order Payment',
+        description: `Food Order #${orderId}`,
         currency: 'PHP',
         success_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-status?orderId=${orderId}`,
         failure_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-failed`,
