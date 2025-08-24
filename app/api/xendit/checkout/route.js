@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 import { groupBy } from 'lodash';
 import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
 import processCheckout from '@/app/actions/processCheckout';
+import { Client, Databases, Query } from 'node-appwrite';
+
+const client = new Client()
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
+  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT)
+  .setKey(process.env.NEXT_APPWRITE_KEY);
+
+const databases = new Databases(client);
 
 async function xenditFetch(endpoint, method, body, extraHeaders = {}) {
   const authHeader = `Basic ${Buffer.from(`${process.env.XENDIT_API_KEY}:`).toString('base64')}`;
@@ -25,7 +33,7 @@ async function xenditFetch(endpoint, method, body, extraHeaders = {}) {
 }
 
 function sanitizeForXendit(str) {
-  return str.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 100) || 'DefaultName';
+  return str.replace(/[^a-zA-Z0-9 ]/g, '') || 'DefaultName';
 }
 
 export async function POST(req) {
@@ -33,14 +41,14 @@ export async function POST(req) {
     const body = await req.json();
     const { items, user, totalAmount, voucherMap } = body;
 
-    // Save order in Appwrite first
+    // 1. Save order in Appwrite
     const orderResult = await processCheckout(items, null, voucherMap);
     if (!orderResult.success) {
       return NextResponse.json({ success: false, message: orderResult.message });
     }
     const orderId = orderResult.orderId;
 
-    // Build split rules
+    // 2. Group items by stall and calculate totals
     const groupedItems = groupBy(items, 'room_id');
     const splitRoutes = [];
 
@@ -48,11 +56,13 @@ export async function POST(req) {
       const stallItems = groupedItems[roomId];
       const roomName = stallItems[0]?.room_name || `Stall ${roomId}`;
 
+      // 🧮 Calculate stall total
       let stallTotal = stallItems.reduce(
         (acc, item) => acc + (Number(item.menuPrice) * Number(item.quantity || 1)),
         0
       );
 
+      // Apply voucher if exists
       const voucher = voucherMap?.[roomId];
       if (voucher?.discount) {
         const discountRate = Number(voucher.discount) / 100;
@@ -60,32 +70,54 @@ export async function POST(req) {
       }
 
       const roundedTotal = Math.round(stallTotal);
+
+      // Get or create sub-account
       const subAccountId = await getOrCreateSubAccount(roomId, roomName);
 
+      // Add route for split rule
       splitRoutes.push({
         flat_amount: roundedTotal,
         currency: 'PHP',
         destination_account_id: subAccountId,
         reference_id: sanitizeForXendit(roomId),
       });
+
+      // --- Update Appwrite balance (internal ledger) ---
+      const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
+      const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
+
+      const result = await databases.listDocuments(databaseId, collectionId, [
+        Query.equal('room_id', roomId),
+      ]);
+
+      if (result.documents.length > 0) {
+        const doc = result.documents[0];
+        const currentBalance = doc.balance || 0;
+        const newBalance = currentBalance + roundedTotal;
+
+        await databases.updateDocument(databaseId, collectionId, doc.$id, {
+          balance: newBalance,
+          balance_updated_at: new Date().toISOString(),
+        });
+      }
     }
 
-    // Create split rule
+    // 3. Create Split Rule in Xendit
     const splitRule = await xenditFetch('/split_rules', 'POST', {
       name: sanitizeForXendit(`Order ${orderId} Split`),
       description: sanitizeForXendit(`Order ${orderId} Split`),
       routes: splitRoutes,
     });
 
-    // Create invoice
+    // 4. Create Invoice linked to split rule
     const invoice = await xenditFetch(
       '/v2/invoices',
       'POST',
       {
-        external_id: `maproom_${orderId}`,
+        external_id: orderId,
         amount: totalAmount,
         payer_email: user?.email || 'guest@example.com',
-        description: `Food Order #${orderId}`,
+        description: 'Food Order Payment',
         currency: 'PHP',
         success_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-status?orderId=${orderId}`,
         failure_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-failed`,
@@ -94,6 +126,7 @@ export async function POST(req) {
     );
 
     return NextResponse.json({ success: true, redirect_url: invoice.invoice_url });
+
   } catch (error) {
     console.error('❌ Checkout + Split Error:', error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

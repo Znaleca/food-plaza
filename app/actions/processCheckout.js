@@ -13,7 +13,10 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
   try {
     const { databases } = await createAdminClient();
     const { user } = await checkAuth();
-    if (!user) throw new Error("You must be logged in to place an order.");
+
+    if (!user) {
+      throw new Error("You must be logged in to place an order.");
+    }
 
     const {
       cleanedCart,
@@ -30,7 +33,6 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       return `${roomName} - ${voucher?.title} (${voucher?.discount}% off)`;
     });
 
-    // ✅ Mark promos as redeemed
     for (const [, voucher] of Object.entries(voucherMap)) {
       if (!voucher?.title) continue;
       const promoDocs = await databases.listDocuments(
@@ -42,6 +44,7 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       if (promoDocs.total > 0) {
         const promo = promoDocs.documents[0];
         const redeemedList = Array.isArray(promo.redeemed) ? [...promo.redeemed] : [];
+
         if (!redeemedList.includes(user.id)) {
           redeemedList.push(user.id);
           await databases.updateDocument(
@@ -54,10 +57,6 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       }
     }
 
-    // ✅ Generate unique orderId
-    const orderId = ID.unique();
-
-    // ✅ Create order doc
     const orderPayload = {
       user_id: user.id,
       name: user.name || 'Unknown User',
@@ -68,26 +67,27 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       spaces: spaceId || null,
       promos: promoStrings,
       created_at: new Date().toISOString(),
-      payment_status: "pending",
-      payment_info: null,  // 👈 filled by webhook
-      updated_at: new Date().toISOString(),
     };
 
-    await databases.createDocument(
+    const response = await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
-      orderId,
+      ID.unique(),
       orderPayload
     );
 
     return {
       success: true,
       message: "Order placed successfully!",
-      orderId,
+      orderId: response.$id,
+      order: response,
     };
   } catch (error) {
     console.error("Checkout error:", error);
-    return { success: false, message: error.message || "Checkout failed" };
+    return {
+      success: false,
+      message: error.message || "Checkout failed",
+    };
   }
 };
 

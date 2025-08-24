@@ -2,7 +2,7 @@ import { createAdminClient } from "@/config/appwrite";
 
 export async function POST(req) {
   try {
-    // Verify webhook token
+    // ✅ Verify webhook token
     const callbackToken = req.headers.get("x-callback-token");
     if (callbackToken !== process.env.XENDIT_WEBHOOK_TOKEN) {
       return new Response("Unauthorized webhook", { status: 401 });
@@ -16,10 +16,10 @@ export async function POST(req) {
       return new Response("Missing external_id", { status: 400 });
     }
 
-    // strip "maproom_" prefix
+    // ✅ Strip prefix if used
     const orderId = externalId.replace("maproom_", "");
 
-    // Normalize payment status
+    // ✅ Normalize payment status
     let status = (body.status || "").toUpperCase();
     let paymentStatus;
     switch (status) {
@@ -39,14 +39,21 @@ export async function POST(req) {
         paymentStatus = "pending";
     }
 
-    // Update order in Appwrite
+    // ✅ Ensure payment_info is a string & capped at 5000 chars
+    let paymentInfoString = JSON.stringify(body);
+    const maxLength = 5000; // match Appwrite schema limit
+    if (paymentInfoString.length > maxLength) {
+      paymentInfoString = paymentInfoString.slice(0, maxLength - 3) + "...";
+    }
+
+    // ✅ Update order in Appwrite
     await databases.updateDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
       orderId,
       {
         payment_status: paymentStatus,
-        payment_info: body,
+        payment_info: paymentInfoString,
         updated_at: new Date().toISOString(),
       }
     );
@@ -58,7 +65,7 @@ export async function POST(req) {
   }
 }
 
-// Reject non-POST
+// ✅ Reject non-POST requests
 export async function GET() {
   return new Response("Method Not Allowed", { status: 405 });
 }
