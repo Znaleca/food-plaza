@@ -7,7 +7,6 @@ export async function POST(req) {
     const body = await req.json();
     const { phone, name = "Customer" } = body;
 
-    // Check if the phone number is provided
     if (!phone) {
       return NextResponse.json(
         { success: false, message: "Phone number is required." },
@@ -15,30 +14,22 @@ export async function POST(req) {
       );
     }
 
-    // Debugging: Log the original phone number
-    console.log("Original phone number:", phone);
-
-    // Format the phone number to PH international format (+63)
+    // Format phone → PH (+63)
     const formattedPhone = phone.replace(/^0/, "+63");
 
-    // Debugging: Log the formatted phone number
-    console.log("Formatted phone number:", formattedPhone);
-
-    // Prepare the message
     const message = `Hi ${name}, your order has been placed! Thank you!`;
 
-    // Send the SMS via Semaphore
     const response = await fetch("https://api.semaphore.co/api/v4/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${API_KEY}`,
       },
       body: JSON.stringify({
         apikey: API_KEY,
         number: formattedPhone,
         message,
-        sendername: "SEMAPHORE", // Optional: replace with approved sender name
+        sendername: "SEMAPHORE", // must be approved sender name
       }),
     });
 
@@ -52,7 +43,6 @@ export async function POST(req) {
       );
     }
 
-    // Return success response
     return NextResponse.json({ success: true, result });
   } catch (error) {
     console.error("Error sending SMS via Semaphore:", error);

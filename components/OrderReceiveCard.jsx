@@ -19,6 +19,19 @@ const PAYMENT_STATUS = {
   FAILED: "failed",
 };
 
+const maskPhone = (phone) => {
+  if (!phone) return "No phone";
+  let normalized = phone.startsWith("0")
+    ? "+63" + phone.slice(1)
+    : phone.startsWith("63")
+    ? "+" + phone
+    : phone.startsWith("+63")
+    ? phone
+    : "+63" + phone;
+
+  return normalized.slice(0, 6) + "XXXXX" + normalized.slice(-2);
+};
+
 const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   const [editingTable, setEditingTable] = useState(order.tableNumber?.[0] || "");
   const [updating, setUpdating] = useState(false);
@@ -76,12 +89,30 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     try {
       setStatusUpdates((prev) => ({ ...prev, [index]: newStatus }));
       await updateOrderStatus(order.$id, index, newStatus);
+  
+      // 🚨 Send SMS if status is READY and phone exists
+      if (newStatus === ORDER_STATUS.READY && order.phone) {
+        try {
+          await fetch("/api/semaphore/order-ready", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              phone: order.phone,
+              name: order.name || "Customer",
+            }),
+          });
+        } catch (smsError) {
+          console.error("Failed to send SMS:", smsError);
+        }
+      }
+  
       refreshOrders();
     } catch (error) {
       console.error("Failed to update order status:", error);
       alert("Failed to update order item status");
     }
   };
+  
 
   const renderStatusBadge = (status) => {
     const normalized = String(status || "").toLowerCase();
@@ -161,6 +192,9 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
           <h2 className="text-base font-semibold">Order ID: {order.$id}</h2>
           <p className="text-sm text-neutral-300">
             {order.name || "Unknown"} ({order.email || "N/A"})
+          </p>
+          <p className="text-sm text-neutral-300">
+            {maskPhone(order.phone)}
           </p>
           <p className="text-xs text-neutral-400">
             Created: {new Date(order.created_at).toLocaleString()}

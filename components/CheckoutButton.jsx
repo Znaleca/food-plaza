@@ -46,10 +46,6 @@ const CheckoutButton = ({
   }, []);
 
   const handleCheckout = () => {
-    if (!phone) {
-      setMessage('No phone number found in your account.');
-      return;
-    }
     setMessage('');
     setIsPopupOpen(true);
   };
@@ -82,14 +78,17 @@ const CheckoutButton = ({
       const result = await response.json();
 
       if (result.success) {
-        await fetch('/api/semaphore', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone,
-            name: user?.name || 'Customer',
-          }),
-        });
+        // ✅ Send SMS only if phone exists
+        if (phone) {
+          await fetch('/api/semaphore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone,
+              name: user?.name || 'Customer',
+            }),
+          });
+        }
 
         localStorage.removeItem('cart');
         onCheckoutSuccess?.();
@@ -130,9 +129,9 @@ const CheckoutButton = ({
 
         <button
           onClick={handleCheckout}
-          disabled={loading || !phone}
+          disabled={loading}
           className={`w-full py-3 rounded-xl font-bold tracking-widest text-lg transition-all ${
-            loading || !phone
+            loading
               ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
               : 'bg-pink-600 text-white hover:bg-pink-700'
           }`}
@@ -151,13 +150,13 @@ const CheckoutButton = ({
               <p className="mt-2 text-3xl sm:text-4xl font-extrabold text-white">Your Order</p>
             </div>
 
-            {/* PHONE DISPLAY HERE */}
+            {/* PHONE DISPLAY */}
             <div className="flex items-center justify-center gap-3 bg-neutral-800 border border-neutral-700 rounded-xl px-5 py-3 mb-8">
               <div className="p-2 bg-pink-600 rounded-full shadow-md">
                 <FaPhone className="text-white w-4 h-4" />
               </div>
               <span className="font-medium text-lg">
-                {phone || 'No phone on file'}
+                {phone || 'No phone on file (SMS will not be sent)'}
               </span>
             </div>
 
@@ -217,17 +216,17 @@ const CheckoutButton = ({
             </div>
 
             <hr className="my-8 border-neutral-700" />
-<div className="mt-8">
-  <p className="text-xl font-bold text-white mb-4">Applied Promos</p>
-  <ul className="space-y-3 text-sm">
-    {promos.map((promo, idx) => (
-      <li key={idx} className="flex justify-between items-center text-neutral-300">
-        <span className="font-medium">{promo.roomName}: {promo.name}</span>
-        <span className="text-pink-400 font-semibold">{promo.discount}% off</span>
-      </li>
-    ))}
-  </ul>
-</div>
+            <div className="mt-8">
+              <p className="text-xl font-bold text-white mb-4">Applied Promos</p>
+              <ul className="space-y-3 text-sm">
+                {promos.map((promo, idx) => (
+                  <li key={idx} className="flex justify-between items-center text-neutral-300">
+                    <span className="font-medium">{promo.roomName}: {promo.name}</span>
+                    <span className="text-pink-400 font-semibold">{promo.discount}% off</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             <div className="flex justify-center gap-4 mt-8">
               <button
