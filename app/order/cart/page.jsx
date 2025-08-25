@@ -7,6 +7,7 @@ import VoucherWallet from '@/components/VoucherWallet';
 import CheckoutButton from '@/components/CheckoutButton';
 import UsedVoucherWallet from '@/components/UsedVoucherWallet';
 import getSingleSpace from '@/app/actions/getSingleSpace';
+import useVoucher from '@/app/actions/useVoucher';
 
 const OrderCartPage = () => {
   const [cart, setCart] = useState([]);
@@ -18,12 +19,12 @@ const OrderCartPage = () => {
   const [roomNames, setRoomNames] = useState({});
   const [openVoucherRoom, setOpenVoucherRoom] = useState(null);
   const [usedVoucherStates, setUsedVoucherStates] = useState({});
-  const [cartCount, setCartCount] = useState(0); // NEW — cart item count
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     const loadCartAndGroup = async () => {
       const savedCart = JSON.parse(localStorage.getItem('cart')) || [];
-      setCartCount(savedCart.reduce((sum, item) => sum + (item.quantity || 1), 0)); // update count
+      setCartCount(savedCart.reduce((sum, item) => sum + (item.quantity || 1), 0));
 
       const roomIds = [...new Set(savedCart.map(item => item.room_id))];
       const names = {};
@@ -45,6 +46,34 @@ const OrderCartPage = () => {
     loadCartAndGroup();
   }, []);
 
+  // NEW: Effect to check and automatically cancel vouchers
+  useEffect(() => {
+    const checkMinOrders = async () => {
+      const updatedVouchers = { ...activeVouchersPerRoom };
+      for (const roomId in updatedVouchers) {
+        const voucher = updatedVouchers[roomId];
+        if (voucher) {
+          const roomSubtotal = Object.values(groupedCart[roomId]?.items || {}).reduce(
+            (sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1),
+            0
+          );
+          
+          if (roomSubtotal < voucher.min_orders) {
+            console.log(`Subtotal for ${roomNames[roomId]} is ₱${roomSubtotal}, which is less than min order of ₱${voucher.min_orders}. Cancelling voucher.`);
+            await useVoucher(voucher.$id, false); // Cancel the voucher in the backend
+            setActiveVouchersPerRoom((prev) => ({ ...prev, [roomId]: null })); // Remove the voucher from the local state
+            setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: false })); // Update the voucher's "used" status
+          }
+        }
+      }
+    };
+
+    // Run this check whenever the cart items change
+    if (Object.keys(groupedCart).length > 0) {
+      checkMinOrders();
+    }
+  }, [groupedCart, activeVouchersPerRoom, roomNames, setUsedVoucherStates]);
+
   const groupItemsByRoom = (cartItems) => {
     const grouped = cartItems.reduce((acc, item) => {
       const roomId = item.room_id;
@@ -59,7 +88,7 @@ const OrderCartPage = () => {
 
   const updateCartStorage = (updatedCart) => {
     setCart(updatedCart);
-    setCartCount(updatedCart.reduce((sum, item) => sum + (item.quantity || 1), 0)); // update count
+    setCartCount(updatedCart.reduce((sum, item) => sum + (item.quantity || 1), 0));
     groupItemsByRoom(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
   };
@@ -320,7 +349,7 @@ const OrderCartPage = () => {
                 setSelectedItems({});
                 setSelectAll(false);
                 setSelectAllPerRoom({});
-                setCartCount(0); // reset counter
+                setCartCount(0);
               }}
             />
           </div>
@@ -336,8 +365,13 @@ const OrderCartPage = () => {
               onVoucherUsed={handleVoucherUsed}
               usedVoucherStates={usedVoucherStates}
               setUsedVoucherStates={setUsedVoucherStates}
+              roomSubtotal={
+                Object.values(groupedCart[openVoucherRoom]?.items || {}).reduce(
+                  (sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1),
+                  0
+                )
+              }
             />
-
             <div className="text-center mt-4">
               <button
                 onClick={() => setOpenVoucherRoom(null)}

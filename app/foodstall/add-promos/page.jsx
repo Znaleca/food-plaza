@@ -76,28 +76,40 @@ const AddPromosPage = () => {
               />
             </div>
           </div>
-
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-  <div>
-    <label className="block text-sm font-semibold mb-2">Valid From</label>
-    <input
-      type="date"
-      name="valid_from"
-      required
-      className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
-    />
-  </div>
-  <div>
-    <label className="block text-sm font-semibold mb-2">Valid To</label>
-    <input
-      type="date"
-      name="valid_to"
-      required
-      className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
-    />
-  </div>
-</div>
-
+          
+          {/* NEW: Minimum Orders Field */}
+          <div>
+            <label className="block text-sm font-semibold mb-2">Minimum Orders</label>
+            <input
+              type="number"
+              name="min_orders"
+              min="1"
+              defaultValue="1" // A default value is helpful for user experience
+              required
+              className="bg-neutral-900 border border-neutral-700 text-white rounded-lg w-full py-3 px-4"
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold mb-2">Valid From</label>
+              <input
+                type="date"
+                name="valid_from"
+                required
+                className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-2">Valid To</label>
+              <input
+                type="date"
+                name="valid_to"
+                required
+                className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
+              />
+            </div>
+          </div>
 
           <div className="flex justify-center pt-4">
             <button

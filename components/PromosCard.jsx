@@ -65,6 +65,13 @@ const PromosCard = ({ promo }) => {
         <p className="mt-2 text-gray-400 text-xs italic">{promo.description}</p>
       )}
 
+      {/* ✅ Minimum Order Requirement */}
+      {promo.min_orders && (
+        <p className="mt-1 text-sm text-yellow-400">
+          Minimum Order: ₱{promo.min_orders}
+        </p>
+      )}
+
       <div className="mt-3 flex items-center space-x-3">
         {isActive ? (
           <FaCheckCircle className="text-green-500 text-lg" />

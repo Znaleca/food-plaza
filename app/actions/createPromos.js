@@ -18,6 +18,7 @@ async function createPromos(previousState, formData) {
       const validFrom = formData.get('valid_from');
       const validTo = formData.get('valid_to');
       const quantity = parseInt(formData.get('quantity') || '1');
+      const min_orders = parseInt(formData.get('min_orders') || '1'); // NEW: Get min_orders from formData
       const claim = formData.get('claim') === 'true'; 
       
       const currentDate = new Date().toISOString().split('T')[0];
@@ -27,6 +28,7 @@ async function createPromos(previousState, formData) {
         title: formData.get('title'),
         description: formData.get('description'),
         discount,
+        min_orders, // NEW: Add min_orders to the promo data
         valid_from: validFrom,
         valid_to: validTo,
         status,

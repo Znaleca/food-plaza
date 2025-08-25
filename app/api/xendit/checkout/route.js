@@ -42,6 +42,7 @@ export async function POST(req) {
     const { items, user, totalAmount, voucherMap } = body;
 
     // 1. Save order in Appwrite
+    // Note: The total in this record already reflects the discount.
     const orderResult = await processCheckout(items, null, voucherMap);
     if (!orderResult.success) {
       return NextResponse.json({ success: false, message: orderResult.message });
@@ -51,6 +52,7 @@ export async function POST(req) {
     // 2. Group items by stall and calculate totals
     const groupedItems = groupBy(items, 'room_id');
     const splitRoutes = [];
+    let finalDiscountedTotal = 0; // ✅ New variable to track the final total for Xendit
 
     for (const roomId in groupedItems) {
       const stallItems = groupedItems[roomId];
@@ -62,7 +64,7 @@ export async function POST(req) {
         0
       );
 
-      // Apply voucher if exists
+      // Apply voucher if it exists
       const voucher = voucherMap?.[roomId];
       if (voucher?.discount) {
         const discountRate = Number(voucher.discount) / 100;
@@ -70,6 +72,9 @@ export async function POST(req) {
       }
 
       const roundedTotal = Math.round(stallTotal);
+      
+      // ✅ Add the discounted total for this stall to our final total
+      finalDiscountedTotal += roundedTotal;
 
       // Get or create sub-account
       const subAccountId = await getOrCreateSubAccount(roomId, roomName);
@@ -115,7 +120,7 @@ export async function POST(req) {
       'POST',
       {
         external_id: orderId,
-        amount: totalAmount,
+        amount: finalDiscountedTotal, // ✅ Use the correct, discounted total here!
         payer_email: user?.email || 'guest@example.com',
         description: 'Food Order Payment',
         currency: 'PHP',

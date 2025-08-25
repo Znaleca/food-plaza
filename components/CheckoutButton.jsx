@@ -1,8 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { FaPhone } from 'react-icons/fa';
+import getCurrentUser from '@/app/actions/getCurrentUser';
+
+// Helper function to format a number as Philippine currency
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+  }).format(amount);
+};
 
 const CheckoutButton = ({
   cart,
@@ -16,14 +26,28 @@ const CheckoutButton = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [phoneDigits, setPhoneDigits] = useState(''); // store only the 10 digits after +63
+  const [phone, setPhone] = useState('');
+  const [user, setUser] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  const isValidPhone = (digits) => /^\d{10}$/.test(digits);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        if (currentUser.phone) {
+          setPhone(currentUser.phone);
+        }
+      } catch (err) {
+        console.error('Error fetching user:', err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const handleCheckout = () => {
-    if (!isValidPhone(phoneDigits)) {
-      setMessage('Invalid phone number. Must be 10 digits after +63.');
+    if (!phone) {
+      setMessage('No phone number found in your account.');
       return;
     }
     setMessage('');
@@ -33,7 +57,6 @@ const CheckoutButton = ({
   const handleConfirmPayment = async () => {
     setLoading(true);
     try {
-      const user = JSON.parse(localStorage.getItem('user')) || {};
       const voucherMap = Object.fromEntries(
         Object.entries(activeVouchersPerRoom).map(([roomId, voucher]) => [
           roomId,
@@ -59,13 +82,12 @@ const CheckoutButton = ({
       const result = await response.json();
 
       if (result.success) {
-        // ✅ Changed from Twilio → Semaphore
         await fetch('/api/semaphore', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            phone: `+63${phoneDigits}`,
-            name: user.name || 'Customer',
+            phone,
+            name: user?.name || 'Customer',
           }),
         });
 
@@ -102,38 +124,15 @@ const CheckoutButton = ({
   };
 
   return (
-    <div className="bg-neutral-900 text-white px-6 py-12 rounded-xl shadow-md max-w-2xl mx-auto mt-12 w-full">
-      <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 shadow-inner space-y-6">
-        {/* PHONE INPUT */}
-        <div>
-          <label className="block text-sm font-semibold mb-2">Phone Number</label>
-          <div className="flex items-center border border-neutral-600 rounded-lg overflow-hidden bg-neutral-900">
-            <span className="flex items-center gap-2 px-3 text-gray-400 border-r border-neutral-700">
-              <FaPhone className="text-pink-500" />
-              +63
-            </span>
-            <input
-              type="tel"
-              inputMode="numeric"
-              pattern="\d*"
-              placeholder="9123456789"
-              value={phoneDigits}
-              onChange={(e) => {
-                const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setPhoneDigits(cleaned);
-              }}
-              className="flex-1 bg-neutral-900 text-white py-3 px-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-          </div>
-        </div>
-
+    <div className="bg-neutral-900 text-white px-6 py-12 max-w-2xl mx-auto mt-12 w-full">
+      <div className="text-center mb-8">
         {message && <p className="text-sm text-red-400">{message}</p>}
 
         <button
           onClick={handleCheckout}
-          disabled={loading || !isValidPhone(phoneDigits)}
+          disabled={loading || !phone}
           className={`w-full py-3 rounded-xl font-bold tracking-widest text-lg transition-all ${
-            loading || !isValidPhone(phoneDigits)
+            loading || !phone
               ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
               : 'bg-pink-600 text-white hover:bg-pink-700'
           }`}
@@ -150,6 +149,16 @@ const CheckoutButton = ({
             <div className="text-center mb-6">
               <h2 className="text-base text-pink-500 tracking-widest uppercase font-semibold">Summary</h2>
               <p className="mt-2 text-3xl sm:text-4xl font-extrabold text-white">Your Order</p>
+            </div>
+
+            {/* PHONE DISPLAY HERE */}
+            <div className="flex items-center justify-center gap-3 bg-neutral-800 border border-neutral-700 rounded-xl px-5 py-3 mb-8">
+              <div className="p-2 bg-pink-600 rounded-full shadow-md">
+                <FaPhone className="text-white w-4 h-4" />
+              </div>
+              <span className="font-medium text-lg">
+                {phone || 'No phone on file'}
+              </span>
             </div>
 
             <div className="space-y-8">
@@ -175,20 +184,27 @@ const CheckoutButton = ({
                           <span>
                             {item.menuName} {item.size && `(${item.size})`} × {item.quantity || 1}
                           </span>
-                          <span>₱{(item.menuPrice * (item.quantity || 1)).toFixed(2)}</span>
+                          <span>{formatCurrency(item.menuPrice * (item.quantity || 1))}</span>
                         </li>
                       ))}
                     </ul>
 
-                    <div className="mt-3 text-sm space-y-1">
-                      <p className="text-gray-400">Subtotal: ₱{subtotal.toFixed(2)}</p>
+                    <div className="mt-3 text-sm space-y-1 text-right">
+                      <p className="text-gray-400">
+                        <span className="font-normal text-left float-left">Subtotal:</span>
+                        {formatCurrency(subtotal)}
+                      </p>
                       {voucher && (
                         <p className="text-green-400">
-                          Discount ({voucher.discount}%): −₱{(subtotal - discountedSubtotal).toFixed(2)} ({voucher.title})
+                          <span className="font-normal text-left float-left">
+                            Discount ({voucher.discount}%):
+                          </span>
+                          −{formatCurrency(subtotal - discountedSubtotal)} ({voucher.title})
                         </p>
                       )}
                       <p className="font-semibold text-pink-400">
-                        Stall Total: ₱{discountedSubtotal.toFixed(2)}
+                        <span className="font-normal text-left float-left">Stall Total:</span>
+                        {formatCurrency(discountedSubtotal)}
                       </p>
                     </div>
                   </div>
@@ -197,20 +213,21 @@ const CheckoutButton = ({
             </div>
 
             <div className="text-center mt-8 text-2xl font-bold">
-              Total: <span className="text-pink-500">₱{total.toFixed(2)}</span>
+              Total: <span className="text-pink-500">{formatCurrency(total)}</span>
             </div>
 
-            <div className="text-center mt-8 text-sm text-gray-400">
-              <p>Applied Promos:</p>
-              <ul className="space-y-2">
-                {promos.map((promo, idx) => (
-                  <li key={idx} className="flex justify-between">
-                    <span>{promo.roomName}: {promo.name}</span>
-                    <span>{promo.discount}% off</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <hr className="my-8 border-neutral-700" />
+<div className="mt-8">
+  <p className="text-xl font-bold text-white mb-4">Applied Promos</p>
+  <ul className="space-y-3 text-sm">
+    {promos.map((promo, idx) => (
+      <li key={idx} className="flex justify-between items-center text-neutral-300">
+        <span className="font-medium">{promo.roomName}: {promo.name}</span>
+        <span className="text-pink-400 font-semibold">{promo.discount}% off</span>
+      </li>
+    ))}
+  </ul>
+</div>
 
             <div className="flex justify-center gap-4 mt-8">
               <button

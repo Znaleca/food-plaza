@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import updateTableNumber from "@/app/actions/updateTableNumber";
 import updateOrderStatus from "@/app/actions/updateOrderStatus";
 
@@ -13,6 +13,12 @@ const ORDER_STATUS = {
   FAILED: "failed",
 };
 
+const PAYMENT_STATUS = {
+  PENDING: "pending",
+  PAID: "paid",
+  FAILED: "failed",
+};
+
 const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   const [editingTable, setEditingTable] = useState(order.tableNumber?.[0] || "");
   const [updating, setUpdating] = useState(false);
@@ -20,6 +26,24 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   const [saveToast, setSaveToast] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTableNumber, setNewTableNumber] = useState(editingTable);
+
+  const paymentStatus = order.payment_status || PAYMENT_STATUS.FAILED;
+
+  // Auto mark items as failed if payment failed
+  useEffect(() => {
+    if (paymentStatus === PAYMENT_STATUS.FAILED) {
+      order.items.forEach((itemStr, idx) => {
+        try {
+          const parsed = JSON.parse(itemStr);
+          if (parsed.status !== ORDER_STATUS.FAILED) {
+            updateOrderStatus(order.$id, idx, ORDER_STATUS.FAILED);
+          }
+        } catch {
+          return;
+        }
+      });
+    }
+  }, [paymentStatus, order]);
 
   const openModal = () => {
     setNewTableNumber(editingTable);
@@ -48,6 +72,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   };
 
   const handleUpdateStatus = async (index, newStatus) => {
+    if (paymentStatus === PAYMENT_STATUS.FAILED) return; // block status change
     try {
       setStatusUpdates((prev) => ({ ...prev, [index]: newStatus }));
       await updateOrderStatus(order.$id, index, newStatus);
@@ -88,6 +113,29 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     );
   };
 
+  const renderPaymentBadge = () => {
+    const styleMap = {
+      [PAYMENT_STATUS.PENDING]: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
+      [PAYMENT_STATUS.PAID]: "bg-green-500/20 text-green-300 border border-green-400/50",
+      [PAYMENT_STATUS.FAILED]: "bg-red-500/20 text-red-300 border border-red-400/50",
+    };
+
+    const textMap = {
+      [PAYMENT_STATUS.PENDING]: "Pending",
+      [PAYMENT_STATUS.PAID]: "Paid",
+      [PAYMENT_STATUS.FAILED]: "Failed",
+    };
+
+    return (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm whitespace-nowrap
+          ${styleMap[paymentStatus]}`}
+      >
+        Payment: {textMap[paymentStatus]}
+      </span>
+    );
+  };
+
   const parsedItems = order.items
     .map((itemStr, idx) => {
       try {
@@ -101,15 +149,23 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
   if (parsedItems.length === 0) return null;
 
-  const totalAmount = parsedItems.reduce((acc, item) => acc + (item.menuPrice * (item.quantity || 1)), 0);
+  const totalAmount = parsedItems.reduce(
+    (acc, item) => acc + item.menuPrice * (item.quantity || 1),
+    0
+  );
 
   return (
-    <div className=" rounded-xl p-6 bg-neutral-900 text-white space-y-8">
+    <div className="rounded-xl p-6 bg-neutral-900 text-white space-y-8">
       <div className="flex justify-between items-start gap-4">
         <div className="space-y-1">
           <h2 className="text-base font-semibold">Order ID: {order.$id}</h2>
-          <p className="text-sm text-neutral-300">{order.name || "Unknown"} ({order.email || "N/A"})</p>
-          <p className="text-xs text-neutral-400">Created: {new Date(order.created_at).toLocaleString()}</p>
+          <p className="text-sm text-neutral-300">
+            {order.name || "Unknown"} ({order.email || "N/A"})
+          </p>
+          <p className="text-xs text-neutral-400">
+            Created: {new Date(order.created_at).toLocaleString()}
+          </p>
+          <div className="mt-1">{renderPaymentBadge()}</div>
         </div>
         <div className="flex items-center gap-2 relative">
           <button
@@ -128,7 +184,10 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {parsedItems.map((item) => {
-          const itemStatus = item.status || "order-placed";
+          const itemStatus =
+            paymentStatus === PAYMENT_STATUS.FAILED
+              ? ORDER_STATUS.FAILED
+              : item.status || ORDER_STATUS.ORDER_PLACED;
           const idx = item.originalIndex;
 
           return (
@@ -155,21 +214,35 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
                 {renderStatusBadge(itemStatus)}
               </div>
 
-              <p className="text-sm text-neutral-300">₱{(item.menuPrice * (item.quantity || 1)).toFixed(2)}</p>
+              <p className="text-sm text-neutral-300">
+                ₱{(item.menuPrice * (item.quantity || 1)).toFixed(2)}
+              </p>
               <p className="text-sm text-neutral-400">Qty: {item.quantity || 1}</p>
 
               <div className="flex flex-wrap gap-2 pt-2">
                 {Object.values(ORDER_STATUS).map((status) => {
-                  const isActive = (statusUpdates[idx] || itemStatus) === status;
-                  const buttonText = status === "order-placed" ? "Order Placed" : status.charAt(0).toUpperCase() + status.slice(1);
+                  const isActive =
+                    (statusUpdates[idx] || itemStatus) === status;
+                  const buttonText =
+                    status === "order-placed"
+                      ? "Order Placed"
+                      : status.charAt(0).toUpperCase() + status.slice(1);
                   return (
                     <button
                       key={status}
                       onClick={() => handleUpdateStatus(idx, status)}
+                      disabled={paymentStatus === PAYMENT_STATUS.FAILED}
                       className={`text-xs px-3 py-1 rounded-full border font-medium transition
-                        ${isActive
-                          ? "bg-pink-500 text-white border-pink-500"
-                          : "bg-neutral-900 text-neutral-300 border-neutral-600 hover:bg-pink-600 hover:text-white"}`}
+                        ${
+                          isActive
+                            ? "bg-pink-500 text-white border-pink-500"
+                            : "bg-neutral-900 text-neutral-300 border-neutral-600 hover:bg-pink-600 hover:text-white"
+                        }
+                        ${
+                          paymentStatus === PAYMENT_STATUS.FAILED
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                     >
                       {buttonText}
                     </button>
@@ -182,13 +255,17 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
       </div>
 
       <div className="text-right pt-4 border-t border-neutral-700">
-        <p className="text-lg font-semibold text-pink-400 mt-2">Total: ₱{totalAmount.toFixed(2)}</p>
+        <p className="text-lg font-semibold text-pink-400 mt-2">
+          Total: ₱{totalAmount.toFixed(2)}
+        </p>
       </div>
 
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-neutral-800 p-6 rounded-lg w-full max-w-md">
-            <h3 className="text-lg font-semibold text-white mb-4">Update Table Number</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Update Table Number
+            </h3>
             <input
               type="number"
               value={newTableNumber}

@@ -48,7 +48,7 @@ const MyOrdersPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white px-4 py-10">
+    <div className="min-h-screen text-white px-4 py-10">
       <div className="max-w-6xl mx-auto bg-neutral-900 text-white shadow-xl border-2 border-pink-600 rounded-2xl p-8">
         {/* Header style like FoodStallPage */}
         <div className="text-center mb-12">

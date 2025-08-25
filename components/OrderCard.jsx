@@ -181,11 +181,9 @@ const OrderCard = ({ order, setOrders }) => {
   <p className="mb-1">Email: {order.email}</p>
 
   <div className="mt-2">
-    Payment Status: {renderPaymentBadge(order.payment_status || "pending")}
+    Payment Status: {renderPaymentBadge(order.payment_status || "failed")}
   </div>
 </div>
-
-
 
         <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
           {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => {

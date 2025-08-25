@@ -83,6 +83,13 @@ const VouchersCard = ({ voucher, onClaim }) => {
         <p className="mt-2 text-gray-400 text-xs italic">{voucher.description}</p>
       )}
 
+      {/* ✅ Minimum Order Requirement */}
+      {voucher.min_orders && (
+        <p className="mt-1 text-sm text-yellow-400">
+          Minimum Order: ₱{voucher.min_orders}
+        </p>
+      )}
+
       {/* Status */}
       <div className="mt-3 flex items-center space-x-3">
         {isActive ? (

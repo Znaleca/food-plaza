@@ -61,6 +61,7 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       user_id: user.id,
       name: user.name || 'Unknown User',
       email: user.email || 'Unknown Email',
+      phone: user.phone || 'No phone',
       status: ['order-placed'],
       items: stringifiedItems,
       total: [baseTotal, serviceCharge, -discountAmount, finalTotal],
@@ -68,6 +69,7 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       promos: promoStrings,
       created_at: new Date().toISOString(),
     };
+
 
     const response = await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,

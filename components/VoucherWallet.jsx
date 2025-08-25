@@ -8,7 +8,7 @@ import UseVoucherButton from './UseVoucherButton';
 import CancelVoucherButton from './CancelVoucherButton';
 import getRoomByUserId from '@/app/actions/getRoomByUserId';
 
-const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsedVoucherStates }) => {
+const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsedVoucherStates, roomSubtotal }) => {
   const [vouchers, setVouchers] = useState([]);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -122,6 +122,12 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
                 <p className="mt-2 text-gray-400 text-xs italic">{voucher.description}</p>
               )}
 
+              {voucher.min_orders && (
+                <p className="mt-1 text-sm text-yellow-400">
+                  Minimum Order: ₱{voucher.min_orders}
+                </p>
+              )}
+
               <div className="mt-3 flex items-center space-x-3">
                 {isActive ? (
                   <FaCheckCircle className="text-green-500 text-lg" />
@@ -138,12 +144,15 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
                   {!isUsed ? (
                     <UseVoucherButton
                       voucherId={voucher.$id}
+                      minOrders={voucher.min_orders || 0}
+                      roomSubtotal={roomSubtotal}
                       onUsed={() => {
                         setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: true }));
                         onVoucherUsed?.({
                           $id: voucher.$id,
                           discount: voucher.discount,
                           title: voucher.title,
+                          min_orders: voucher.min_orders || 0,
                         });
                       }}
                     />
