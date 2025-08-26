@@ -1,11 +1,16 @@
 import React from 'react';
 import getPromos from '@/app/actions/getPromos';
 import getCurrentUser from '@/app/actions/getCurrentUser';
+import getRoomByUserId from '@/app/actions/getRoomByUserId';
 import PromosCard from '@/components/PromosCard';
 
 const PromosPage = async () => {
   const user = await getCurrentUser();
   const promos = await getPromos(user?.$id);
+
+  // Fetch stall name for the current user's room
+  const room = user ? await getRoomByUserId(user.$id) : null;
+  const stallName = room?.name || 'Unknown Stall';
 
   return (
     <div className="container mx-auto py-12 bg-neutral-900 text-white">
@@ -19,7 +24,7 @@ const PromosPage = async () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {promos && promos.length > 0 ? (
           promos.map((promo) => (
-            <PromosCard key={promo.$id} promo={promo} />
+            <PromosCard key={promo.$id} promo={promo} stallName={stallName} />
           ))
         ) : (
           <p className="col-span-full text-center text-gray-500">No promos available.</p>

@@ -52,8 +52,9 @@ function RoomSpace({ params }) {
               const item = JSON.parse(itemStr);
               if (item.room_id === id) {
                 const key = item.menuName || item.menu_name;
-                itemCount[key] = (itemCount[key] || 0) + 1;
-              }
+                const qty = Number(item.quantity) || 1;
+                itemCount[key] = (itemCount[key] || 0) + qty;
+                              }
             } catch {}
           });
         });

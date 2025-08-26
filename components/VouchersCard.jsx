@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaCheckCircle, FaTimesCircle, FaPercent, FaStore } from 'react-icons/fa';
+import { FaPercent, FaStore, FaCalendarAlt, FaMoneyBillWave } from 'react-icons/fa';
 import VoucherClaimingButton from './VoucherClaimingButton';
-import getRoomByUserId from '@/app/actions/getRoomByUserId';
 
-const VouchersCard = ({ voucher, onClaim }) => {
+const VouchersCard = ({ voucher, stallName, onClaim }) => {
   const [claimed, setClaimed] = useState(false);
-  const [stallName, setStallName] = useState('');
 
   useEffect(() => {
     const claimedVouchers = JSON.parse(localStorage.getItem('claimedVouchers')) || {};
@@ -15,15 +13,6 @@ const VouchersCard = ({ voucher, onClaim }) => {
       setClaimed(true);
     }
   }, [voucher.$id]);
-
-  useEffect(() => {
-    (async () => {
-      if (voucher?.user_id) {
-        const stall = await getRoomByUserId(voucher.user_id);
-        setStallName(stall?.name || 'Unknown Stall');
-      }
-    })();
-  }, [voucher?.user_id]);
 
   const handleClaim = () => {
     setClaimed(true);
@@ -47,67 +36,100 @@ const VouchersCard = ({ voucher, onClaim }) => {
 
   if (!voucher || claimed) return null;
 
+  const claimedUsersCount = voucher.claimed_users?.length || 0;
+  const totalQuantity = voucher.quantity || 0;
+  const remainingVouchers = totalQuantity - claimedUsersCount;
+  const isSoldOut = remainingVouchers <= 0;
+  const claimedPercentage = (claimedUsersCount / totalQuantity) * 100;
+
   return (
     <div
-      className={`relative w-full max-w-md mx-auto p-4 bg-neutral-900 text-white rounded-lg shadow-md border-2 border-pink-600 transition-all duration-300 
-      ${!isActive ? 'opacity-60' : 'hover:shadow-lg'}`}
+      className={`relative w-full max-w-xl h-52 mx-auto bg-neutral-900 text-white rounded-2xl shadow-xl border-2 border-pink-600 overflow-hidden transition-all duration-300 
+      ${!isActive || isSoldOut ? 'opacity-60' : 'hover:scale-105 hover:shadow-2xl'}`}
     >
-      {/* "Expired" Overlay */}
-      {!isActive && (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-4xl font-semibold opacity-40 pointer-events-none">
-          EXPIRED
+      {/* Overlay for expired/sold out states */}
+      {(!isActive || isSoldOut) && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-50 text-white rounded-2xl">
+          <p className="text-2xl font-extrabold tracking-wide uppercase">
+            {!isActive ? 'Expired' : 'Sold Out'}
+          </p>
         </div>
       )}
 
-      {/* Voucher Icon and Info */}
-      <div className="flex items-center space-x-4">
-        <div className="w-16 h-16 flex items-center justify-center bg-neutral-700 rounded-full">
-          <FaPercent className="text-white text-2xl" />
+      {/* Main landscape content container */}
+      <div className="relative z-10 flex h-full">
+        {/* Left Section: Main Discount */}
+        <div className="flex flex-col items-center justify-center flex-1 p-4 border-r border-neutral-700">
+          <div className="flex items-center justify-center w-16 h-16 mb-2 bg-pink-600 rounded-full">
+            <FaPercent className="text-white text-3xl" />
+          </div>
+          <h3 className="text-2xl font-bold text-pink-400 text-center leading-tight">
+            {voucher.discount || 'N/A'}% OFF
+          </h3>
+          <p className="text-lg font-semibold mt-1 text-center">{voucher.title || 'Voucher Title'}</p>
+          {voucher.description && (
+            <p className="mt-2 text-gray-400 text-xs italic text-center max-w-[90%]">
+              {voucher.description}
+            </p>
+          )}
         </div>
 
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold">{voucher.title || 'Voucher Title'}</h3>
-          <p className="text-sm text-pink-400">{voucher.discount || 'N/A'}% OFF</p>
-          <div className="mt-1 flex flex-col text-sm text-gray-400">
-            <span><strong>Valid From:</strong> {formatDate(voucher.valid_from)}</span>
-            <span><strong>Valid To:</strong> {formatDate(voucher.valid_to)}</span>
-            <span className="flex items-center gap-2 mt-1 text-blue-400">
-              <FaStore /> <strong>Food Stall:</strong> {stallName}
-            </span>
+        {/* Right Section: Details and Action */}
+        <div className="flex flex-col justify-between flex-1 p-4 space-y-2">
+          <div className="flex flex-col space-y-1 text-sm">
+            <div className="flex items-center gap-2 text-gray-400">
+              <FaStore className="text-blue-400" />
+              <span>
+                <strong className="text-white font-medium">Stall:</strong> {stallName}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-400">
+              <FaCalendarAlt className="text-white" />
+              <span>
+                <strong className="text-white font-medium">Valid To:</strong> {formatDate(voucher.valid_to)}
+              </span>
+            </div>
+            {voucher.min_orders && (
+              <div className="flex items-center gap-2 text-gray-400">
+                <FaMoneyBillWave className="text-white" />
+                <span>
+                  <strong className="text-white font-medium">Min. Order:</strong> ₱{voucher.min_orders}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {isActive && !isSoldOut && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="text-yellow-500">{remainingVouchers} left</span>
+                <span className="text-gray-400">{claimedUsersCount} / {totalQuantity} claimed</span>
+              </div>
+              <div className="w-full bg-neutral-800 rounded-full h-2">
+                <div
+                  className="bg-pink-600 h-2 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${claimedPercentage}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            {isActive && !isSoldOut ? (
+              <VoucherClaimingButton 
+                voucherId={voucher.$id} 
+                onClaim={handleClaim} 
+                claimedUsersCount={claimedUsersCount}
+                quantity={totalQuantity}
+              />
+            ) : (
+              <button className="bg-neutral-800 text-gray-500 px-4 py-2 rounded-lg font-semibold w-full cursor-not-allowed text-sm">
+                {isSoldOut ? 'Sold Out' : 'Expired'}
+              </button>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Description */}
-      {voucher.description && (
-        <p className="mt-2 text-gray-400 text-xs italic">{voucher.description}</p>
-      )}
-
-      {/* ✅ Minimum Order Requirement */}
-      {voucher.min_orders && (
-        <p className="mt-1 text-sm text-yellow-400">
-          Minimum Order: ₱{voucher.min_orders}
-        </p>
-      )}
-
-      {/* Status */}
-      <div className="mt-3 flex items-center space-x-3">
-        {isActive ? (
-          <FaCheckCircle className="text-green-500 text-lg" />
-        ) : (
-          <FaTimesCircle className="text-red-500 text-lg" />
-        )}
-        <span className={`text-sm ${isActive ? 'text-green-400' : 'text-red-400'}`}>
-          {isActive ? 'Active' : 'Expired'}
-        </span>
-      </div>
-
-      {/* Claim Button */}
-      {isActive && (
-        <div className="mt-4">
-          <VoucherClaimingButton voucherId={voucher.$id} onClaim={handleClaim} />
-        </div>
-      )}
     </div>
   );
 };

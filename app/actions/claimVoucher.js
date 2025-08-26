@@ -1,3 +1,5 @@
+// app/actions/claimVoucher.js
+
 'use server';
 
 import { createAdminClient } from '@/config/appwrite';
@@ -20,12 +22,14 @@ const claimVoucher = async (voucherId) => {
 
     const claimedUsers = voucher.claimed_users || [];
 
-    if (claimedUsers.includes(user.id)) {
-      throw new Error('You have already claimed this voucher.');
-    }
-
+    // Check if the voucher quantity has been reached.
+    // This is a crucial check to prevent over-claiming.
     if (claimedUsers.length >= voucher.quantity) {
       throw new Error('This voucher is no longer available.');
+    }
+
+    if (claimedUsers.includes(user.id)) {
+      throw new Error('You have already claimed this voucher.');
     }
 
     claimedUsers.push(user.id);
