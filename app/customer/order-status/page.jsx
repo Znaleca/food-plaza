@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import getUserOrders from '@/app/actions/getUserOrders';
 import OrderCard from '@/components/OrderCard';
+import LoadingSpinner from '@/components/LoadingSpinner'; // <-- import here
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState([]);
@@ -38,7 +39,7 @@ const OrderStatusPage = () => {
         </div>
 
         {loading ? (
-          <p className="text-gray-400 text-center">Loading...</p>
+          <LoadingSpinner message="Loading your orders..." />
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
         ) : orders.length === 0 ? (

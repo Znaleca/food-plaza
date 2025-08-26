@@ -6,6 +6,7 @@ import getAllClaimedVouchers from '@/app/actions/getAllClaimedVoucher';
 import VouchersCard from '@/components/VouchersCard';
 import checkAuth from '@/app/actions/checkAuth';
 import getRoomByUserId from '@/app/actions/getRoomByUserId';
+import LoadingSpinner from '@/components/LoadingSpinner'; // <-- import here
 
 const CustomerPromoPage = () => {
   const [promos, setPromos] = useState([]);
@@ -65,13 +66,9 @@ const CustomerPromoPage = () => {
         </p>
       </div>
 
-      {/* Improved Loading UI with a single, simple spinner */}
+      {/* Use retro neon LoadingSpinner */}
       {loading ? (
-        <div className="col-span-full flex flex-col justify-center items-center py-20">
-          <div className="relative">
-            <div className="animate-spin h-16 w-16 rounded-full border-4 border-b-transparent border-t-pink-600 border-l-purple-500 border-r-transparent"></div>
-          </div>
-        </div>
+        <LoadingSpinner message="Loading promotions..." />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {promos.length > 0 ? (

@@ -5,6 +5,7 @@ import getAllSpaces from '@/app/actions/getAllSpaces';
 import getAllReviews from '@/app/actions/getAllReviews';
 import SpaceCard from '@/components/SpaceCard';
 import dynamic from 'next/dynamic';
+import LoadingSpinner from '@/components/LoadingSpinner'; // <-- import here
 
 const MenuBrowse = dynamic(() => import('@/components/MenuBrowse'), { ssr: false });
 
@@ -29,7 +30,6 @@ export default function BrowsePage() {
 
         const allReviews = reviewData?.orders || [];
 
-        // Group and average ratings by room_name
         const ratingMap = {};
 
         allReviews.forEach((order) => {
@@ -58,7 +58,6 @@ export default function BrowsePage() {
           });
         });
 
-        // Add rating data into each space
         const enrichedRooms = (spaces || []).map((room) => {
           const ratingData = ratingMap[room.name] || { total: 0, count: 0 };
           const averageRating =
@@ -84,12 +83,7 @@ export default function BrowsePage() {
   const toggleView = () => setShowMenu((prev) => !prev);
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-96">
-        <div className="animate-spin h-12 w-12 border-4 border-t-transparent border-blue-500 border-solid rounded-full"></div>
-        <p className="mt-4 text-lg text-gray-500">Loading...</p>
-      </div>
-    );
+    return <LoadingSpinner message="Loading food stalls..." />; // <-- replaced inline spinner
   }
 
   return (
@@ -98,7 +92,7 @@ export default function BrowsePage() {
         <button
           onClick={toggleView}
           className="px-8 py-4 tracking-widest uppercase font-bold text-2xl text-white rounded-full bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-700 hover:to-fuchsia-700 shadow-lg hover:scale-105 transition-all flex items-center gap-3 animate-fade-in delay-500 mb-28"
-          >
+        >
           {showMenu ? 'Food Stalls' : 'Menu'}
         </button>
       </div>
