@@ -23,7 +23,7 @@ export async function POST(req) {
     }
 
     // ✅ Strip prefix
-    const orderId = externalId.replace("maproom_", "");
+    const orderId = externalId.replace("thecorner_", "");
 
     // Normalize payment status
     let status = (body.status || body.data?.status || "").toUpperCase();

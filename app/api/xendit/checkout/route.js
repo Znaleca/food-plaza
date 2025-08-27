@@ -112,7 +112,7 @@ export async function POST(req) {
       '/v2/invoices',
       'POST',
       {
-        external_id: `maproom_${orderId}`, // ✅ FIXED external_id
+        external_id: `thecorner_${orderId}`, // ✅ FIXED external_id
         amount: finalDiscountedTotal,
         payer_email: user?.email || 'guest@example.com',
         description: 'Food Order Payment',
