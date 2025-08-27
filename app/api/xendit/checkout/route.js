@@ -1,3 +1,4 @@
+// checkout handler
 import { NextResponse } from 'next/server';
 import { groupBy } from 'lodash';
 import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
@@ -42,7 +43,6 @@ export async function POST(req) {
     const { items, user, totalAmount, voucherMap } = body;
 
     // 1. Save order in Appwrite
-    // Note: The total in this record already reflects the discount.
     const orderResult = await processCheckout(items, null, voucherMap);
     if (!orderResult.success) {
       return NextResponse.json({ success: false, message: orderResult.message });
@@ -52,19 +52,17 @@ export async function POST(req) {
     // 2. Group items by stall and calculate totals
     const groupedItems = groupBy(items, 'room_id');
     const splitRoutes = [];
-    let finalDiscountedTotal = 0; // ✅ New variable to track the final total for Xendit
+    let finalDiscountedTotal = 0;
 
     for (const roomId in groupedItems) {
       const stallItems = groupedItems[roomId];
       const roomName = stallItems[0]?.room_name || `Stall ${roomId}`;
 
-      // 🧮 Calculate stall total
       let stallTotal = stallItems.reduce(
         (acc, item) => acc + (Number(item.menuPrice) * Number(item.quantity || 1)),
         0
       );
 
-      // Apply voucher if it exists
       const voucher = voucherMap?.[roomId];
       if (voucher?.discount) {
         const discountRate = Number(voucher.discount) / 100;
@@ -72,14 +70,10 @@ export async function POST(req) {
       }
 
       const roundedTotal = Math.round(stallTotal);
-      
-      // ✅ Add the discounted total for this stall to our final total
       finalDiscountedTotal += roundedTotal;
 
-      // Get or create sub-account
       const subAccountId = await getOrCreateSubAccount(roomId, roomName);
 
-      // Add route for split rule
       splitRoutes.push({
         flat_amount: roundedTotal,
         currency: 'PHP',
@@ -87,7 +81,6 @@ export async function POST(req) {
         reference_id: sanitizeForXendit(roomId),
       });
 
-      // --- Update Appwrite balance (internal ledger) ---
       const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
       const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
 
@@ -107,20 +100,20 @@ export async function POST(req) {
       }
     }
 
-    // 3. Create Split Rule in Xendit
+    // 3. Create Split Rule
     const splitRule = await xenditFetch('/split_rules', 'POST', {
       name: sanitizeForXendit(`Order ${orderId} Split`),
       description: sanitizeForXendit(`Order ${orderId} Split`),
       routes: splitRoutes,
     });
 
-    // 4. Create Invoice linked to split rule
+    // 4. Create Invoice with prefixed external_id
     const invoice = await xenditFetch(
       '/v2/invoices',
       'POST',
       {
-        external_id: orderId,
-        amount: finalDiscountedTotal, // ✅ Use the correct, discounted total here!
+        external_id: `maproom_${orderId}`, // ✅ FIXED external_id
+        amount: finalDiscountedTotal,
         payer_email: user?.email || 'guest@example.com',
         description: 'Food Order Payment',
         currency: 'PHP',
@@ -131,7 +124,6 @@ export async function POST(req) {
     );
 
     return NextResponse.json({ success: true, redirect_url: invoice.invoice_url });
-
   } catch (error) {
     console.error('❌ Checkout + Split Error:', error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

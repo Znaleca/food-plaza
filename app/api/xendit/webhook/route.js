@@ -2,7 +2,6 @@ import { createAdminClient } from "@/config/appwrite";
 
 export async function POST(req) {
   try {
-    // ✅ Verify webhook token
     const callbackToken = req.headers.get("x-callback-token");
     if (callbackToken !== process.env.XENDIT_WEBHOOK_TOKEN) {
       return new Response("Unauthorized webhook", { status: 401 });
@@ -11,16 +10,23 @@ export async function POST(req) {
     const body = await req.json();
     const { databases } = await createAdminClient();
 
-    const externalId = body.external_id;
+    // ✅ Try to read external_id in multiple possible places
+    const externalId =
+      body.external_id ||
+      body.data?.external_id || // some webhook types wrap in `data`
+      body.invoice?.external_id || // fallback if invoice object exists
+      null;
+
     if (!externalId) {
+      console.error("❌ Webhook missing external_id:", body);
       return new Response("Missing external_id", { status: 400 });
     }
 
-    // ✅ Strip prefix if used
+    // ✅ Strip prefix
     const orderId = externalId.replace("maproom_", "");
 
-    // ✅ Normalize payment status
-    let status = (body.status || "").toUpperCase();
+    // Normalize payment status
+    let status = (body.status || body.data?.status || "").toUpperCase();
     let paymentStatus;
     switch (status) {
       case "PAID":
@@ -39,9 +45,9 @@ export async function POST(req) {
         paymentStatus = "pending";
     }
 
-    // ✅ Ensure payment_info is a string & capped at 5000 chars
+    // ✅ Cap payment_info length
     let paymentInfoString = JSON.stringify(body);
-    const maxLength = 5000; // match Appwrite schema limit
+    const maxLength = 5000;
     if (paymentInfoString.length > maxLength) {
       paymentInfoString = paymentInfoString.slice(0, maxLength - 3) + "...";
     }
@@ -65,7 +71,6 @@ export async function POST(req) {
   }
 }
 
-// ✅ Reject non-POST requests
 export async function GET() {
   return new Response("Method Not Allowed", { status: 405 });
 }

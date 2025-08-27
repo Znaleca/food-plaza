@@ -9,49 +9,36 @@ const databases = new Databases(client);
 
 async function getOrCreateSubAccount(roomId, roomName) {
   try {
-    // Validate roomId
     if (!roomId || roomId === '') {
-      console.error('Invalid roomId provided:', roomId);
-      throw new Error('Invalid roomId'); 
+      throw new Error('Invalid roomId');
     }
 
-    // Default roomName if missing
     if (!roomName || roomName === '') {
-      console.warn(`Room name is missing for roomId: ${roomId}`);
       roomName = `Stall ${roomId}`;
     }
 
     const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
     const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
 
-    // 1. Check if sub-account already exists for the given roomId
+    // 1. Check if sub-account already exists
     const result = await databases.listDocuments(databaseId, collectionId, [
       Query.equal('room_id', roomId),
     ]);
 
     if (result.documents.length > 0) {
-      console.log(`Sub-account found for roomId: ${roomId}`);
+      console.log(`✅ Sub-account found for roomId: ${roomId}`);
       return result.documents[0].xendit_account_id;
     }
 
-    // Ensure XENDIT_API_KEY is provided
     const xenditKey = process.env.XENDIT_API_KEY;
     if (!xenditKey) throw new Error('Missing XENDIT_API_KEY');
 
-    // 2. Sanitize roomName and roomId to avoid illegal characters
-    const sanitizedRoomName = roomName.toLowerCase().replace(/[^a-z0-9]/g, ''); 
-    const sanitizedRoomId = roomId.replace(/[^a-z0-9]/g, ''); 
-
-    // Debug: Log the final body being sent to Xendit
-    console.log({
-      email: `${sanitizedRoomName}@gmail.com`,
-      type: 'MANAGED',
-      business_name: sanitizedRoomId,
-    });
+    const sanitizedRoomName = roomName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const sanitizedRoomId = roomId.replace(/[^a-z0-9]/g, '');
 
     const authHeader = `Basic ${Buffer.from(`${xenditKey}:`).toString('base64')}`;
-    
-    // 3. Create new sub-account in Xendit
+
+    // 2. Create new sub-account in Xendit
     const xenditResponse = await fetch('https://api.xendit.co/v2/accounts', {
       method: 'POST',
       headers: {
@@ -59,32 +46,32 @@ async function getOrCreateSubAccount(roomId, roomName) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: `${sanitizedRoomName}@gmail.com`,
+        email: `${sanitizedRoomName}_${sanitizedRoomId}@gmail.com`, // ✅ unique email
         type: 'MANAGED',
-        business_name: sanitizedRoomId,
+        business_name: roomName, // ✅ keep human-readable
       }),
     });
 
     const data = await xenditResponse.json();
 
-    // Check if the request was successful
     if (!xenditResponse.ok) {
-      console.error('Xendit sub-account creation failed:', data);
+      console.error('❌ Xendit sub-account creation failed:', data);
       throw new Error(data.message || 'Failed to create sub-account');
     }
 
-    console.log(`Created sub-account for roomId: ${roomId} with Xendit account ID: ${data.id}`);
+    console.log(`✅ Created sub-account for roomId: ${roomId} → Xendit ID: ${data.id}`);
 
-    // 4. Save sub-account to Appwrite
+    // 3. Save sub-account to Appwrite
     await databases.createDocument(databaseId, collectionId, 'unique()', {
       room_id: roomId,
       xendit_account_id: data.id,
       stall_name: roomName,
+      balance: 0, // ✅ optional but useful
     });
 
     return data.id;
   } catch (err) {
-    console.error('Sub-account error:', err);
+    console.error('❌ Sub-account error:', err);
     throw err;
   }
 }
