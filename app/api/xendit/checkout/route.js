@@ -1,8 +1,15 @@
-// app/api/xendit/split-payment/route.js
 import { NextResponse } from 'next/server';
 import { groupBy } from 'lodash';
 import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
 import processCheckout from '@/app/actions/processCheckout';
+import { Client, Databases, Query } from 'node-appwrite';
+
+const client = new Client()
+  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
+  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT)
+  .setKey(process.env.NEXT_APPWRITE_KEY);
+
+const databases = new Databases(client);
 
 async function xenditFetch(endpoint, method, body, extraHeaders = {}) {
   const authHeader = `Basic ${Buffer.from(`${process.env.XENDIT_API_KEY}:`).toString('base64')}`;
@@ -26,28 +33,26 @@ async function xenditFetch(endpoint, method, body, extraHeaders = {}) {
 }
 
 function sanitizeForXendit(str) {
-  return str.replace(/[^a-zA-Z0-9-_ ]/g, '') || 'DefaultName';
+  return str.replace(/[^a-zA-Z0-9 ]/g, '') || 'DefaultName';
 }
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { items, user, voucherMap } = body;
+    const { items, user, totalAmount, voucherMap } = body;
 
     // 1. Save order in Appwrite
+    // Note: The total in this record already reflects the discount.
     const orderResult = await processCheckout(items, null, voucherMap);
     if (!orderResult.success) {
       return NextResponse.json({ success: false, message: orderResult.message });
     }
     const orderId = orderResult.orderId;
 
-    // ✅ Always prefix external_id to match webhook
-    const externalId = `maproom_${orderId}`;
-
     // 2. Group items by stall and calculate totals
     const groupedItems = groupBy(items, 'room_id');
     const splitRoutes = [];
-    let finalDiscountedTotal = 0;
+    let finalDiscountedTotal = 0; // ✅ New variable to track the final total for Xendit
 
     for (const roomId in groupedItems) {
       const stallItems = groupedItems[roomId];
@@ -67,6 +72,8 @@ export async function POST(req) {
       }
 
       const roundedTotal = Math.round(stallTotal);
+      
+      // ✅ Add the discounted total for this stall to our final total
       finalDiscountedTotal += roundedTotal;
 
       // Get or create sub-account
@@ -79,6 +86,25 @@ export async function POST(req) {
         destination_account_id: subAccountId,
         reference_id: sanitizeForXendit(roomId),
       });
+
+      // --- Update Appwrite balance (internal ledger) ---
+      const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
+      const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
+
+      const result = await databases.listDocuments(databaseId, collectionId, [
+        Query.equal('room_id', roomId),
+      ]);
+
+      if (result.documents.length > 0) {
+        const doc = result.documents[0];
+        const currentBalance = doc.balance || 0;
+        const newBalance = currentBalance + roundedTotal;
+
+        await databases.updateDocument(databaseId, collectionId, doc.$id, {
+          balance: newBalance,
+          balance_updated_at: new Date().toISOString(),
+        });
+      }
     }
 
     // 3. Create Split Rule in Xendit
@@ -93,8 +119,8 @@ export async function POST(req) {
       '/v2/invoices',
       'POST',
       {
-        external_id: externalId,
-        amount: finalDiscountedTotal,
+        external_id: orderId,
+        amount: finalDiscountedTotal, // ✅ Use the correct, discounted total here!
         payer_email: user?.email || 'guest@example.com',
         description: 'Food Order Payment',
         currency: 'PHP',

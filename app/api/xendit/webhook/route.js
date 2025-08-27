@@ -1,4 +1,3 @@
-// app/api/xendit/webhook/route.js
 import { createAdminClient } from "@/config/appwrite";
 
 export async function POST(req) {
@@ -17,7 +16,7 @@ export async function POST(req) {
       return new Response("Missing external_id", { status: 400 });
     }
 
-    // ✅ Always prefixed with maproom_, strip it
+    // ✅ Strip prefix if used
     const orderId = externalId.replace("maproom_", "");
 
     // ✅ Normalize payment status
@@ -35,13 +34,14 @@ export async function POST(req) {
       case "FAILED":
         paymentStatus = "failed";
         break;
+      case "PENDING":
       default:
         paymentStatus = "pending";
     }
 
-    // ✅ Ensure payment_info is a string & capped
+    // ✅ Ensure payment_info is a string & capped at 5000 chars
     let paymentInfoString = JSON.stringify(body);
-    const maxLength = 5000;
+    const maxLength = 5000; // match Appwrite schema limit
     if (paymentInfoString.length > maxLength) {
       paymentInfoString = paymentInfoString.slice(0, maxLength - 3) + "...";
     }
@@ -58,43 +58,7 @@ export async function POST(req) {
       }
     );
 
-    // ✅ Only after successful payment, update balances
-    if (paymentStatus === "paid") {
-      try {
-        // The split info is in body.routes (from Xendit split rule callback)
-        if (Array.isArray(body.routes)) {
-          for (const route of body.routes) {
-            const { reference_id, flat_amount } = route;
-
-            // Update corresponding sub-account balance
-            const collectionId =
-              process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
-            const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
-
-            const result = await databases.listDocuments(databaseId, collectionId, [
-              Query.equal("room_id", reference_id),
-            ]);
-
-            if (result.documents.length > 0) {
-              const doc = result.documents[0];
-              const currentBalance = doc.balance || 0;
-              const newBalance = currentBalance + Number(flat_amount || 0);
-
-              await databases.updateDocument(databaseId, collectionId, doc.$id, {
-                balance: newBalance,
-                balance_updated_at: new Date().toISOString(),
-              });
-            }
-          }
-        }
-      } catch (balanceError) {
-        console.error("⚠️ Balance update failed:", balanceError);
-      }
-    }
-
-    return new Response(`✅ Webhook processed: ${paymentStatus}`, {
-      status: 200,
-    });
+    return new Response(`✅ Webhook processed: ${paymentStatus}`, { status: 200 });
   } catch (error) {
     console.error("❌ Webhook error:", error);
     return new Response("Webhook processing failed", { status: 500 });
