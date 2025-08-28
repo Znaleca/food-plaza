@@ -5,7 +5,7 @@ import updateTableNumber from "@/app/actions/updateTableNumber";
 import updateOrderStatus from "@/app/actions/updateOrderStatus";
 
 const ORDER_STATUS = {
-  ORDER_PLACED: "order-placed",
+  PENDING: "pending",
   PREPARING: "preparing",
   READY: "ready",
   COMPLETED: "completed",
@@ -35,7 +35,6 @@ const maskPhone = (phone) => {
 const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   const [editingTable, setEditingTable] = useState(order.tableNumber?.[0] || "");
   const [updating, setUpdating] = useState(false);
-  const [statusUpdates, setStatusUpdates] = useState({});
   const [saveToast, setSaveToast] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTableNumber, setNewTableNumber] = useState(editingTable);
@@ -84,40 +83,58 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     }
   };
 
-  const handleUpdateStatus = async (index, newStatus) => {
-    if (paymentStatus === PAYMENT_STATUS.FAILED) return; // block status change
-    try {
-      setStatusUpdates((prev) => ({ ...prev, [index]: newStatus }));
-      await updateOrderStatus(order.$id, index, newStatus);
-  
-      // 🚨 Send SMS if status is READY and phone exists
-      if (newStatus === ORDER_STATUS.READY && order.phone) {
-        try {
+// --- NEW: update status for all items in this stall ---
+const handleUpdateStallStatus = async (newStatus, items) => {
+  if (paymentStatus === PAYMENT_STATUS.FAILED) return;
+  try {
+    await Promise.all(
+      items.map((item) =>
+        updateOrderStatus(order.$id, item.originalIndex, newStatus)
+      )
+    );
+
+    // Send SMS only once per status
+    if (order.phone) {
+      try {
+        if (newStatus === ORDER_STATUS.PREPARING) {
+          await fetch("/api/semaphore", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              phone: order.phone,
+              name: order.name || "Customer",
+              message: `Hi ${order.name || "Customer"}, your order from ${roomName} is now being prepared. 🍳 Please wait while we get it ready!`,
+            }),
+          });
+        } else if (newStatus === ORDER_STATUS.READY) {
           await fetch("/api/semaphore/order-ready", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               phone: order.phone,
               name: order.name || "Customer",
+              message: `Hi ${order.name || "Customer"}! ✅ Your order from ${roomName} is READY for pickup. 🚀 Please proceed to the counter. Thank you!`,
             }),
           });
-        } catch (smsError) {
-          console.error("Failed to send SMS:", smsError);
         }
+      } catch (smsError) {
+        console.error("Failed to send SMS:", smsError);
       }
-  
-      refreshOrders();
-    } catch (error) {
-      console.error("Failed to update order status:", error);
-      alert("Failed to update order item status");
     }
-  };
-  
+
+    refreshOrders();
+  } catch (error) {
+    console.error("Failed to update stall status:", error);
+    alert("Failed to update stall status");
+  }
+};
+
+
 
   const renderStatusBadge = (status) => {
     const normalized = String(status || "").toLowerCase();
     const styleMap = {
-      "order-placed": "bg-blue-500/20 text-blue-300 border border-blue-400/50",
+      "pending": "bg-blue-500/20 text-blue-300 border border-blue-400/50",
       preparing: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
       ready: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/50",
       completed: "bg-green-500/20 text-green-300 border border-green-400/50",
@@ -126,7 +143,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     };
 
     const statusTextMap = {
-      "order-placed": "Order Placed",
+      pending: "Pending",
       preparing: "Preparing",
       ready: "Ready",
       completed: "Completed",
@@ -137,9 +154,9 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     return (
       <span
         className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm whitespace-nowrap
-          ${styleMap[normalized] || styleMap["order-placed"]}`}
+          ${styleMap[normalized] || styleMap["pending"]}`}
       >
-        {statusTextMap[normalized] || "Order Placed"}
+        {statusTextMap[normalized] || "Pending"}
       </span>
     );
   };
@@ -167,6 +184,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     );
   };
 
+  // Parse only items for this stall
   const parsedItems = order.items
     .map((itemStr, idx) => {
       try {
@@ -179,6 +197,12 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     .filter((item) => item && item.room_name === roomName);
 
   if (parsedItems.length === 0) return null;
+
+  // Stall-wide status = first item’s status
+  const stallStatus =
+    paymentStatus === PAYMENT_STATUS.FAILED
+      ? ORDER_STATUS.FAILED
+      : parsedItems[0].status || ORDER_STATUS.PENDING;
 
   const totalAmount = parsedItems.reduce(
     (acc, item) => acc + item.menuPrice * (item.quantity || 1),
@@ -193,9 +217,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
           <p className="text-sm text-neutral-300">
             {order.name || "Unknown"} ({order.email || "N/A"})
           </p>
-          <p className="text-sm text-neutral-300">
-            {maskPhone(order.phone)}
-          </p>
+          <p className="text-sm text-neutral-300">{maskPhone(order.phone)}</p>
           <p className="text-xs text-neutral-400">
             Created: {new Date(order.created_at).toLocaleString()}
           </p>
@@ -216,74 +238,64 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
         </div>
       </div>
 
+      {/* Items */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {parsedItems.map((item) => {
-          const itemStatus =
-            paymentStatus === PAYMENT_STATUS.FAILED
-              ? ORDER_STATUS.FAILED
-              : item.status || ORDER_STATUS.ORDER_PLACED;
-          const idx = item.originalIndex;
-
-          return (
-            <div
-              key={idx}
-              className="p-4 rounded-lg border border-neutral-700 bg-neutral-800 flex flex-col space-y-3"
-            >
-              <div className="flex justify-center">
-                <div className="w-20 h-20 rounded-full overflow-hidden border border-neutral-700 flex items-center justify-center bg-neutral-700">
-                  {item.menuImage ? (
-                    <img
-                      src={item.menuImage}
-                      alt={item.menuName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-xs text-neutral-400">No Image</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <p className="font-medium text-white">{item.menuName}</p>
-                {renderStatusBadge(itemStatus)}
-              </div>
-
-              <p className="text-sm text-neutral-300">
-                ₱{(item.menuPrice * (item.quantity || 1)).toFixed(2)}
-              </p>
-              <p className="text-sm text-neutral-400">Qty: {item.quantity || 1}</p>
-
-              <div className="flex flex-wrap gap-2 pt-2">
-                {Object.values(ORDER_STATUS).map((status) => {
-                  const isActive =
-                    (statusUpdates[idx] || itemStatus) === status;
-                  const buttonText =
-                    status === "order-placed"
-                      ? "Order Placed"
-                      : status.charAt(0).toUpperCase() + status.slice(1);
-                  return (
-                    <button
-                      key={status}
-                      onClick={() => handleUpdateStatus(idx, status)}
-                      disabled={paymentStatus === PAYMENT_STATUS.FAILED}
-                      className={`text-xs px-3 py-1 rounded-full border font-medium transition
-                        ${
-                          isActive
-                            ? "bg-pink-500 text-white border-pink-500"
-                            : "bg-neutral-900 text-neutral-300 border-neutral-600 hover:bg-pink-600 hover:text-white"
-                        }
-                        ${
-                          paymentStatus === PAYMENT_STATUS.FAILED
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                        }`}
-                    >
-                      {buttonText}
-                    </button>
-                  );
-                })}
+        {parsedItems.map((item) => (
+          <div
+            key={item.originalIndex}
+            className="p-4 rounded-lg border border-neutral-700 bg-neutral-800 flex flex-col space-y-3"
+          >
+            <div className="flex justify-center">
+              <div className="w-20 h-20 rounded-full overflow-hidden border border-neutral-700 flex items-center justify-center bg-neutral-700">
+                {item.menuImage ? (
+                  <img
+                    src={item.menuImage}
+                    alt={item.menuName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xs text-neutral-400">No Image</span>
+                )}
               </div>
             </div>
+
+            <p className="font-medium text-white">{item.menuName}</p>
+            <p className="text-sm text-neutral-300">
+              ₱{(item.menuPrice * (item.quantity || 1)).toFixed(2)}
+            </p>
+            <p className="text-sm text-neutral-400">Qty: {item.quantity || 1}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Stall-wide status controls */}
+      <div className="flex flex-wrap gap-2 pt-4 border-t border-neutral-700">
+        {Object.values(ORDER_STATUS).map((status) => {
+          const isActive = stallStatus === status;
+          const buttonText =
+            status === "pending"
+              ? "Pending"
+              : status.charAt(0).toUpperCase() + status.slice(1);
+
+          return (
+            <button
+              key={status}
+              onClick={() => handleUpdateStallStatus(status, parsedItems)}
+              disabled={paymentStatus === PAYMENT_STATUS.FAILED}
+              className={`text-xs px-3 py-1 rounded-full border font-medium transition
+                ${
+                  isActive
+                    ? "bg-pink-500 text-white border-pink-500"
+                    : "bg-neutral-900 text-neutral-300 border-neutral-600 hover:bg-pink-600 hover:text-white"
+                }
+                ${
+                  paymentStatus === PAYMENT_STATUS.FAILED
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+            >
+              {buttonText}
+            </button>
           );
         })}
       </div>

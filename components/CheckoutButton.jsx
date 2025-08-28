@@ -84,15 +84,6 @@ const CheckoutButton = ({
       const result = await response.json();
 
       if (result.success) {
-        await fetch('/api/semaphore', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone,
-            name: user?.name || 'Customer',
-          }),
-        });
-
         localStorage.removeItem('cart');
         onCheckoutSuccess?.();
 

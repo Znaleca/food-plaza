@@ -6,7 +6,7 @@ import { faStar as solidStar } from '@fortawesome/free-solid-svg-icons';
 import updateRating from '@/app/actions/updateRating';
 
 const MENU_STATUS = {
-  ORDER_PLACED: 'order-placed',
+  PENDING: 'pending',
   PREPARING: 'preparing',
   READY: 'ready',
   COMPLETED: 'completed',
@@ -72,7 +72,7 @@ const OrderCard = ({ order, setOrders }) => {
   const renderStatusBadge = (status) => {
     const base = 'px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase';
     const badgeColors = {
-      [MENU_STATUS.ORDER_PLACED]: 'bg-blue-600',
+      [MENU_STATUS.PENDING]: 'bg-blue-600',
       [MENU_STATUS.PREPARING]: 'bg-yellow-600',
       [MENU_STATUS.READY]: 'bg-purple-600',
       [MENU_STATUS.COMPLETED]: 'bg-green-600',
@@ -81,7 +81,7 @@ const OrderCard = ({ order, setOrders }) => {
     };
 
     const statusTextMap = {
-      [MENU_STATUS.ORDER_PLACED]: 'Order Placed',
+      [MENU_STATUS.PENDING]: 'Pending',
       [MENU_STATUS.PREPARING]: 'Preparing',
       [MENU_STATUS.READY]: 'Ready',
       [MENU_STATUS.COMPLETED]: 'Completed',
@@ -91,7 +91,7 @@ const OrderCard = ({ order, setOrders }) => {
 
     return (
       <span className={`${base} ${badgeColors[status] || 'bg-gray-600'} text-white`}>
-        {statusTextMap[status] || 'Order Placed'}
+        {statusTextMap[status] || 'Pending'}
       </span>
     );
   };
@@ -219,7 +219,7 @@ const OrderCard = ({ order, setOrders }) => {
                           <span>₱{(item.menuPrice * item.quantity).toFixed(2)}</span>
                         </div>
                         <div className="text-xs text-gray-500">Stall: {item.room_name || 'N/A'}</div>
-                        <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.ORDER_PLACED)}</div>
+                        <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.PENDING)}</div>
 
                         {itemRated ? (
                           <div className="mt-1 text-xs text-green-600">

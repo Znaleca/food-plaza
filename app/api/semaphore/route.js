@@ -5,7 +5,7 @@ const API_KEY = process.env.SEMAPHORE_API_KEY;
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { phone, name = "Customer" } = body;
+    const { phone, message } = body;
 
     if (!phone) {
       return NextResponse.json(
@@ -14,12 +14,15 @@ export async function POST(req) {
       );
     }
 
-    // Format phone → PH (+63)
-    const formattedPhone = phone.replace(/^0/, "+63");
+    if (!message) {
+      return NextResponse.json(
+        { success: false, message: "Message is required." },
+        { status: 400 }
+      );
+    }
 
-    const message = `Hi ${name}, your order has been placed! Thank you!`;
-
-    const response = await fetch("https://api.semaphore.co/api/v4/messages", {
+    // Send SMS via Semaphore
+    const resp = await fetch("https://semaphore.co/api/v4/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -27,27 +30,19 @@ export async function POST(req) {
       },
       body: JSON.stringify({
         apikey: API_KEY,
-        number: formattedPhone,
-        message,
-        sendername: "SEMAPHORE", // must be approved sender name
+        number: phone,
+        message: message,
+        sendername: "TheCorner", // <- customize sender name
       }),
     });
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("Semaphore Error:", result);
-      return NextResponse.json(
-        { success: false, message: result.message || "Failed to send SMS." },
-        { status: 500 }
-      );
-    }
+    const result = await resp.json();
 
     return NextResponse.json({ success: true, result });
   } catch (error) {
-    console.error("Error sending SMS via Semaphore:", error);
+    console.error("Semaphore error:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to send SMS." },
+      { success: false, message: "Failed to send SMS" },
       { status: 500 }
     );
   }
