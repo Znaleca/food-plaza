@@ -29,7 +29,7 @@ export async function POST(req) {
         apikey: API_KEY,
         number: formattedPhone,
         message,
-        sendername: "TheCorner", // must be approved sender name
+        sendername: "SEMAPHORE", // must be approved sender name
       }),
     });
 
