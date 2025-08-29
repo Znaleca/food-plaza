@@ -2,19 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { FaChevronLeft, FaChevronRight, FaTimes } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 
 const SpacesImage = ({ imageUrls }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const nextImage = () => {
-    setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
-  };
-
-  const prevImage = () => {
-    setCurrentIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
-  };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -42,8 +33,8 @@ const SpacesImage = ({ imageUrls }) => {
           onClick={() => setIsModalOpen(true)}
         >
           <Image
-            src={imageUrls[currentIndex]}
-            alt={`Room image ${currentIndex + 1}`}
+            src={imageUrls[0]} // Always use the first image
+            alt="Room image"
             fill
             sizes="100vw"
             style={{ objectFit: "cover" }}
@@ -59,46 +50,6 @@ const SpacesImage = ({ imageUrls }) => {
           No Images Available
         </div>
       )}
-
-      {/* Nav Arrows */}
-      {imageUrls.length > 1 && (
-        <>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              prevImage();
-            }}
-            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-80 transition"
-            aria-label="Previous Image"
-          >
-            <FaChevronLeft />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              nextImage();
-            }}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-80 transition"
-            aria-label="Next Image"
-          >
-            <FaChevronRight />
-          </button>
-        </>
-      )}
-
-      {/* Dot Navigation */}
-      <div className="flex justify-center mt-3 space-x-2">
-        {imageUrls.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`w-3 h-3 rounded-full transition duration-300 ${
-              currentIndex === index ? "bg-pink-500 scale-110" : "bg-gray-400 hover:bg-gray-500"
-            }`}
-            aria-label={`Go to image ${index + 1}`}
-          />
-        ))}
-      </div>
 
       {/* Modal View */}
       {isModalOpen && (
@@ -118,8 +69,8 @@ const SpacesImage = ({ imageUrls }) => {
               <FaTimes />
             </button>
             <Image
-              src={imageUrls[currentIndex]}
-              alt={`Full view of image ${currentIndex + 1}`}
+              src={imageUrls[0]} // Always use the first image
+              alt="Full view of image"
               width={1200}
               height={800}
               style={{ objectFit: "contain" }}

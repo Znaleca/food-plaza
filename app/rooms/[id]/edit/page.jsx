@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
@@ -28,6 +28,8 @@ export default function EditSpacePage({ params }) {
   const [newImages, setNewImages] = useState([]);
   const [otherCategory, setOtherCategory] = useState("");
   const [customCategories, setCustomCategories] = useState([]);
+  const fileInputRef = useRef(null); // <-- declare ref here
+
 
 
   // Load stall data
@@ -374,16 +376,53 @@ export default function EditSpacePage({ params }) {
 
 
         {/* Upload Images */}
-        <div>
-          <label className="block font-semibold mb-2">Upload Food Stall Image/Logo</label>
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={e => setNewImages([...e.target.files])}
-            className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6"
-          />
-        </div>
+{/* Stall Image/Logo Upload */}
+<div>
+  <label className="block font-semibold mb-2">Upload Food Stall Image/Logo</label>
+
+  {/* Hidden native file input */}
+  <input
+    ref={fileInputRef}
+    type="file"
+    accept="image/*"
+    id="stallImage"
+    onChange={e => {
+      const file = e.target.files[0];
+      setNewImages(file ? [file] : []);
+    }}
+    className="hidden"
+  />
+
+  {/* Custom button instead of default file input */}
+  <label
+    htmlFor="stallImage"
+    className="cursor-pointer bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6 block text-center hover:bg-neutral-700"
+  >
+    {newImages.length > 0 ? "Change Image" : "Choose File"}
+  </label>
+
+  {newImages.length > 0 && (
+    <div className="mt-4 relative w-48 h-48">
+      <img
+        src={URL.createObjectURL(newImages[0])}
+        alt="Stall preview"
+        className="w-full h-full object-cover rounded-lg"
+      />
+      <button
+        type="button"
+        onClick={() => {
+          setNewImages([]);
+          if (fileInputRef.current) fileInputRef.current.value = ''; // reset
+        }}
+        className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold"
+        aria-label="Remove image"
+      >
+        &times;
+      </button>
+    </div>
+  )}
+</div>
+
 
         {/* Submit */}
         <button
