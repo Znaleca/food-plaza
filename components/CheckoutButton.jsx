@@ -29,6 +29,9 @@ const CheckoutButton = ({
   const [user, setUser] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  // ✅ check if at least one item is selected
+  const hasSelectedItems = Object.values(selectedItems || {}).some((isSelected) => isSelected);
+
   // ✅ load user from checkAuth
   useEffect(() => {
     const fetchUser = async () => {
@@ -123,9 +126,9 @@ const CheckoutButton = ({
 
         <button
           onClick={handleCheckout}
-          disabled={loading || !phone}
+          disabled={loading || !phone || !hasSelectedItems} // ✅ disable when no items selected
           className={`w-full py-3 rounded-xl font-bold tracking-widest text-lg transition-all ${
-            loading || !phone
+            loading || !phone || !hasSelectedItems
               ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
               : 'bg-pink-600 text-white hover:bg-pink-700'
           }`}
