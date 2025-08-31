@@ -178,6 +178,7 @@ const SearchResultPage = () => {
                       roomId={m.roomId || rooms.find((r) => r.menuData.includes(m))?.id}
                       menuItem={m}
                       roomName={rooms.find((r) => r.menuData.includes(m))?.name || ""}
+                      allMenus={allMenus} // Pass allMenus to enable recommendations
                     />
                   ))}
                 </div>

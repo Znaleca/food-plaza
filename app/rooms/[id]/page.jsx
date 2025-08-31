@@ -8,7 +8,7 @@ import getAllOrders from '@/app/actions/getAllOrders';
 import SpacesImage from '@/components/SpacesImage';
 import MenuPopUp from '@/components/MenuPopUp';
 import CustomerRatingCard from '@/components/CustomerRatingCard';
-import BestSellers from '@/components/BestSellers'; // <-- This is the missing import
+import BestSellers from '@/components/BestSellers';
 
 const categories = ['Drinks', 'Add-Ons', 'Meals', 'Snacks', 'Dessert'];
 
@@ -115,22 +115,23 @@ function RoomSpace({ params }) {
 
   const imageUrls = (room.images || []).map(toURL);
 
-  const addToCart = ({ name, basePrice, extraFee, quantity, size, image, menuId }) => {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    cart.push({
-      menuName: name,
-      menuPrice: basePrice + extraFee,
-      basePrice,
-      extraFee,
-      size,
-      quantity,
-      menuImage: image,
-      room_name: room.name,
-      room_id: id,
-      menuId,
+  const handleSelectMenu = (menuItem) => {
+    const recommendedMenus = menuData.filter(
+      (m) => m.type === menuItem.type && m.menuId !== menuItem.menuId
+    );
+
+    setSelectedMenu({
+      name: menuItem.name,
+      price: menuItem.price,
+      image: menuItem.image,
+      roomName: room.name,
+      description: menuItem.description,
+      smallFee: menuItem.smallFee,
+      mediumFee: menuItem.mediumFee,
+      largeFee: menuItem.largeFee,
+      menuId: menuItem.menuId,
+      recommendedMenus,
     });
-    localStorage.setItem('cart', JSON.stringify(cart));
-    alert('Item added to cart!');
   };
 
   return (
@@ -196,17 +197,7 @@ function RoomSpace({ params }) {
                     key={m.idx}
                     onClick={() => {
                       if (!m.isAvailable) return;
-                      setSelectedMenu({
-                        name: m.name,
-                        price: m.price,
-                        image: m.image,
-                        roomName: room.name,
-                        description: m.description,
-                        smallFee: m.smallFee,
-                        mediumFee: m.mediumFee,
-                        largeFee: m.largeFee,
-                        menuId: m.menuId,
-                      });
+                      handleSelectMenu(m);
                     }}
                     className={`relative border border-pink-600 rounded-md bg-neutral-800 p-3 flex flex-col items-center transition ${
                       m.isAvailable
@@ -255,8 +246,10 @@ function RoomSpace({ params }) {
           roomName={selectedMenu.roomName}
           roomId={id}
           description={selectedMenu.description}
+          recommendedMenus={selectedMenu.recommendedMenus}
+          onSelectMenu={(item) => handleSelectMenu(item)}
           onClose={() => setSelectedMenu(null)}
-          onAddToCart={addToCart}
+          onAddToCart={() => setSelectedMenu(null)}
         />
       )}
     </div>

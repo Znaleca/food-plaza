@@ -5,12 +5,13 @@ import Image from "next/image";
 import MenuPopUp from "@/components/MenuPopUp";
 import clsx from 'clsx';
 
-const BrowseCardMenu = ({ roomId, menuItem, roomName }) => {
+const BrowseCardMenu = ({ roomId, menuItem, roomName, allMenus }) => { // allMenus is a new prop
   const [selectedMenu, setSelectedMenu] = useState(null);
 
   const handleClick = () => {
     if (!menuItem.isAvailable) return;
-    setSelectedMenu({ ...menuItem, roomName });
+    // Pass the menu item details and the entire list of menus for recommendations
+    setSelectedMenu({ ...menuItem, roomName, allMenus });
   };
 
   const cardClasses = clsx(
@@ -83,6 +84,10 @@ const BrowseCardMenu = ({ roomId, menuItem, roomName }) => {
           roomName={selectedMenu.roomName}
           roomId={roomId}
           description={selectedMenu.description}
+          recommendedMenus={selectedMenu.allMenus.filter( // Filter recommendations directly here
+            (m) => m.type === selectedMenu.type && m.menuId !== selectedMenu.menuId
+          )}
+          onSelectMenu={(item) => setSelectedMenu({ ...item, roomName, allMenus: selectedMenu.allMenus })}
           onClose={() => setSelectedMenu(null)}
           onAddToCart={() => setSelectedMenu(null)}
         />
