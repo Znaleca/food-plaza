@@ -107,7 +107,7 @@ export default function BrowsePreview() {
   return (
     <div className="w-full">
       {/* Toggle Button */}
-      <div className="flex justify-center mb-8">
+<div className="flex justify-center mt-60 sm:mt-0 mb-8">
         <button
           onClick={toggleView}
           className="px-8 py-4 tracking-widest uppercase font-bold text-2xl text-white rounded-full bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-700 hover:to-fuchsia-700 shadow-lg hover:scale-105 transition-all flex items-center gap-3"

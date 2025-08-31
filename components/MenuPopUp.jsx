@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FaPlus, FaMinus } from 'react-icons/fa6';
 import { useAuth } from '@/context/authContext';
 
@@ -79,13 +79,26 @@ export default function MenuPopUp({
     onAddToCart();
   };
 
+  // 🔒 Lock background scroll when popup is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 font-sans overflow-y-auto">
-      <div className="bg-neutral-950 w-full max-w-4xl max-h-[80vh] rounded-lg shadow-xl relative flex overflow-hidden my-8">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 font-sans">
+      <div
+        className="
+          bg-neutral-950 w-full max-w-4xl max-h-[90vh] rounded-lg shadow-xl relative 
+          flex flex-col md:flex-row overflow-hidden my-4
+        "
+      >
         {/* Left Section (Image) */}
-        <div className="w-1/2 bg-black flex items-center justify-center p-4">
+        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-4">
           {menuImage ? (
-            <div className="w-full h-[420px] flex items-center justify-center">
+            <div className="w-full h-[250px] md:h-[420px] flex items-center justify-center">
               <img
                 src={menuImage}
                 alt={item}
@@ -93,41 +106,41 @@ export default function MenuPopUp({
               />
             </div>
           ) : (
-            <div className="w-full h-[420px] bg-neutral-700 rounded-lg flex items-center justify-center text-xs text-neutral-400">
+            <div className="w-full h-[250px] md:h-[420px] bg-neutral-700 rounded-lg flex items-center justify-center text-xs text-neutral-400">
               No Image
             </div>
           )}
         </div>
 
-        {/* Right Section (Details and Recommendations) */}
-        <div className="w-1/2 p-8 text-neutral-200 relative flex flex-col">
+        {/* Right Section */}
+        <div className="w-full md:w-1/2 p-6 md:p-8 text-neutral-200 relative flex flex-col">
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-neutral-400 hover:text-white transition-colors text-2xl"
+            className="absolute top-3 right-3 text-neutral-400 hover:text-white transition-colors text-2xl"
             aria-label="Close"
           >
             ×
           </button>
 
-          {/* Item Details */}
-          <div className="flex-grow overflow-y-auto pr-2 -mr-2">
+          {/* Scrollable content on mobile */}
+          <div className="flex-grow overflow-y-auto pr-1 md:pr-2 -mr-1 md:-mr-2">
             <p className="text-xs text-pink-500 font-semibold mb-1 uppercase">{roomName}</p>
-            <h1 className="text-3xl font-bold mb-1">{item}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1">{item}</h1>
             <p className="text-xs italic text-neutral-400 mb-4">{description}</p>
 
             {/* Conditional Price or Size Options */}
             {isOneSize ? (
-              <p className="text-xl font-semibold text-neutral-300 mb-6">₱{price}</p>
+              <p className="text-lg md:text-xl font-semibold text-neutral-300 mb-6">₱{price}</p>
             ) : (
               <div className="mb-6">
                 <h3 className="text-sm font-semibold mb-2">Choose Size</h3>
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   {availableSizes.map(({ key, fee: sizeFee }) => (
                     <button
                       key={key}
                       onClick={() => setSize(key)}
-                      className={`px-4 py-2 rounded-lg font-semibold border-2 transition-colors ${
+                      className={`px-3 py-2 rounded-lg font-semibold border-2 transition-colors text-sm md:text-base ${
                         size === key
                           ? 'bg-pink-600 border-pink-600'
                           : 'bg-transparent border-neutral-700 hover:bg-neutral-800'
@@ -146,8 +159,10 @@ export default function MenuPopUp({
             {/* Recommended Section */}
             {recommendedMenus.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3 text-neutral-200">Recommended </h3>
-                <ul className="space-y-4">
+                <h3 className="text-base md:text-lg font-semibold mb-3 text-neutral-200">
+                  Recommended
+                </h3>
+                <ul className="space-y-3">
                   {recommendedMenus.map((rec) => (
                     <li
                       key={rec.menuId || rec.name}
@@ -159,10 +174,10 @@ export default function MenuPopUp({
                           <img
                             src={rec.image}
                             alt={rec.name}
-                            className="w-14 h-14 rounded-md object-cover mr-4 shadow-sm"
+                            className="w-12 h-12 md:w-14 md:h-14 rounded-md object-cover mr-3 md:mr-4 shadow-sm"
                           />
                         ) : (
-                          <div className="w-14 h-14 bg-neutral-700 rounded-md mr-4 flex items-center justify-center text-xs text-neutral-400">
+                          <div className="w-12 h-12 md:w-14 md:h-14 bg-neutral-700 rounded-md mr-3 md:mr-4 flex items-center justify-center text-xs text-neutral-400">
                             No Image
                           </div>
                         )}
@@ -183,7 +198,13 @@ export default function MenuPopUp({
           </div>
 
           {/* Add to Order Footer */}
-          <div className="mt-auto pt-6 border-t border-neutral-800 flex items-center justify-between">
+          <div
+            className="
+              border-t border-neutral-800 flex items-center justify-between gap-4 pt-4 md:pt-6 
+              md:static md:mt-auto 
+              fixed bottom-0 left-0 right-0 bg-neutral-950 p-4 md:p-0
+            "
+          >
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => adjustQty(-1)}
@@ -192,7 +213,9 @@ export default function MenuPopUp({
               >
                 <FaMinus size={14} className="text-neutral-300" />
               </button>
-              <span className="text-xl font-semibold w-6 text-center text-neutral-200">{qty}</span>
+              <span className="text-lg md:text-xl font-semibold w-6 text-center text-neutral-200">
+                {qty}
+              </span>
               <button
                 onClick={() => adjustQty(1)}
                 className="bg-neutral-800 p-2 rounded-full hover:bg-neutral-700 transition-colors"
@@ -203,7 +226,7 @@ export default function MenuPopUp({
             </div>
             <button
               onClick={handleAdd}
-              className="bg-white hover:bg-gray-400 text-black py-3 px-6 rounded-full font-semibold shadow-lg transition-colors text-lg"
+              className="w-full md:w-auto bg-white hover:bg-gray-400 text-black py-3 px-6 rounded-full font-semibold shadow-lg transition-colors text-base md:text-lg"
             >
               Add {qty} to order ₱{total}
             </button>
