@@ -81,9 +81,10 @@ export default function MenuPopUp({
 
   // 🔒 Lock background scroll when popup is open
   useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = originalStyle;
     };
   }, []);
 
@@ -92,7 +93,7 @@ export default function MenuPopUp({
       <div
         className="
           bg-neutral-950 w-full max-w-4xl max-h-[90vh] rounded-lg shadow-xl relative 
-          flex flex-col md:flex-row overflow-hidden my-4
+          flex flex-col md:flex-row overflow-auto my-4
         "
       >
         {/* Left Section (Image) */}
@@ -123,8 +124,8 @@ export default function MenuPopUp({
             ×
           </button>
 
-          {/* Scrollable content on mobile */}
-          <div className="flex-grow overflow-y-auto pr-1 md:pr-2 -mr-1 md:-mr-2">
+          {/* Scrollable content */}
+          <div className="flex-grow overflow-y-auto pr-1 md:pr-2 -mr-1 md:-mr-2 max-h-[70vh]">
             <p className="text-xs text-pink-500 font-semibold mb-1 uppercase">{roomName}</p>
             <h1 className="text-2xl md:text-3xl font-bold mb-1">{item}</h1>
             <p className="text-xs italic text-neutral-400 mb-4">{description}</p>
