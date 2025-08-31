@@ -1,23 +1,24 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 
 const features = [
   {
-    href: '/?view=menu',
+    id: 'browse',
+    target: 'menu',
     img: '/images/menu.png',
     title: 'Menu',
     desc: 'Browse our diverse food options.',
   },
   {
-    href: '/?view=stall',
+    id: 'browse',
+    target: 'stall',
     img: '/images/stall.png',
     title: 'Food Stalls',
     desc: 'Discover menus from different food stalls.',
   },
   {
-    href: '/reviews',
+    id: 'reviews',
     img: '/images/reviews.png',
     title: 'Reviews',
     desc: 'Read honest feedback from foodies.',
@@ -31,6 +32,21 @@ const features = [
 ];
 
 const FeaturesSection = () => {
+  const handleScroll = (id, target) => {
+    const section = document.getElementById(id);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+
+      if (id === 'browse' && target) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('view', target); // updates query param
+        window.history.replaceState({}, '', url);
+        // dispatch event so BrowsePreview reacts immediately
+        window.dispatchEvent(new Event('popstate'));
+      }
+    }
+  };
+
   return (
     <section className="w-full min-h-screen bg-neutral-900 text-white py-20 flex flex-col items-center">
       {/* Header */}
@@ -45,27 +61,49 @@ const FeaturesSection = () => {
 
       {/* Features Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-5xl w-full px-4">
-        {features.map((feature) => (
-          <Link
-            key={feature.title}
-            href={feature.href}
-            className="group flex flex-col items-center text-center text-gray-200 hover:text-white transition-colors duration-300"
-          >
-            <div className="w-28 h-28 rounded-full border-2 border-transparent bg-gradient-to-r from-pink-600 to-fuchsia-600 p-[2px] shadow-lg group-hover:scale-105 transition-transform duration-300">
-              <div className="w-full h-full rounded-full bg-neutral-900 flex items-center justify-center">
-                <Image
-                  src={feature.img}
-                  alt={feature.title}
-                  width={56}
-                  height={56}
-                  className="transition-transform duration-300 group-hover:scale-110"
-                />
+        {features.map((feature) =>
+          feature.href ? (
+            <a
+              key={feature.title}
+              href={feature.href}
+              className="group flex flex-col items-center text-center text-gray-200 hover:text-white transition-colors duration-300"
+            >
+              <div className="w-28 h-28 rounded-full border-2 border-transparent bg-gradient-to-r from-pink-600 to-fuchsia-600 p-[2px] shadow-lg group-hover:scale-105 transition-transform duration-300">
+                <div className="w-full h-full rounded-full bg-neutral-900 flex items-center justify-center">
+                  <Image
+                    src={feature.img}
+                    alt={feature.title}
+                    width={56}
+                    height={56}
+                    className="transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
               </div>
-            </div>
-            <span className="mt-4 font-semibold text-base sm:text-lg">{feature.title}</span>
-            <p className="text-sm text-gray-400 mt-1">{feature.desc}</p>
-          </Link>
-        ))}
+              <span className="mt-4 font-semibold text-base sm:text-lg">{feature.title}</span>
+              <p className="text-sm text-gray-400 mt-1">{feature.desc}</p>
+            </a>
+          ) : (
+            <button
+              key={feature.title}
+              onClick={() => handleScroll(feature.id, feature.target)}
+              className="group flex flex-col items-center text-center text-gray-200 hover:text-white transition-colors duration-300"
+            >
+              <div className="w-28 h-28 rounded-full border-2 border-transparent bg-gradient-to-r from-pink-600 to-fuchsia-600 p-[2px] shadow-lg group-hover:scale-105 transition-transform duration-300">
+                <div className="w-full h-full rounded-full bg-neutral-900 flex items-center justify-center">
+                  <Image
+                    src={feature.img}
+                    alt={feature.title}
+                    width={56}
+                    height={56}
+                    className="transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
+              </div>
+              <span className="mt-4 font-semibold text-base sm:text-lg">{feature.title}</span>
+              <p className="text-sm text-gray-400 mt-1">{feature.desc}</p>
+            </button>
+          )
+        )}
       </div>
     </section>
   );

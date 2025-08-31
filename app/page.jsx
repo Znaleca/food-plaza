@@ -1,134 +1,104 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import getAllSpaces from '@/app/actions/getAllSpaces';
-import getAllReviews from '@/app/actions/getAllReviews';
-import SpaceCard from '@/components/SpaceCard';
-import dynamic from 'next/dynamic';
-import LoadingSpinner from '@/components/LoadingSpinner'; // <-- import here
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import FeaturedPage from '@/components/FeaturedPage';
+import SearchBar from '@/components/SearchBar';
+import FeaturesSection from '@/components/FeaturesSection';
+import AboutSection from '@/components/AboutSection';
+import RateCard from '@/components/RateCard';
+import { FaArrowRight } from 'react-icons/fa6';
+import BrowsePreview from '@/components/BrowsePreview';
 
-const MenuBrowse = dynamic(() => import('@/components/MenuBrowse'), { ssr: false });
+const HomePage = () => {
+  const router = useRouter();
 
-export default function BrowsePage() {
-  const [rooms, setRooms] = useState([]);
-  const [showMenu, setShowMenu] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const handleReserveClick = () => {
+    router.push('/search');
+  };
 
+  // ✅ Scroll to section if URL has hash (#browse or #reviews)
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const viewParam = urlParams.get('view');
-    setShowMenu(viewParam === 'menu');
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [spaces, reviewData] = await Promise.all([
-          getAllSpaces(),
-          getAllReviews(1, 100),
-        ]);
-
-        const allReviews = reviewData?.orders || [];
-
-        const ratingMap = {};
-
-        allReviews.forEach((order) => {
-          const { items, rated, rating } = order;
-
-          items.forEach((itemStr, idx) => {
-            if (!rated?.[idx]) return;
-
-            let item;
-            try {
-              item = JSON.parse(itemStr);
-            } catch {
-              return;
-            }
-
-            const roomName = item.room_name;
-            if (!roomName) return;
-
-            if (!ratingMap[roomName]) {
-              ratingMap[roomName] = { total: 0, count: 0 };
-            }
-
-            const value = Number(rating?.[idx]) || 0;
-            ratingMap[roomName].total += value;
-            ratingMap[roomName].count += 1;
-          });
-        });
-
-        const enrichedRooms = (spaces || []).map((room) => {
-          const ratingData = ratingMap[room.name] || { total: 0, count: 0 };
-          const averageRating =
-            ratingData.count > 0 ? ratingData.total / ratingData.count : 0;
-          return {
-            ...room,
-            averageRating,
-            reviewCount: ratingData.count,
-          };
-        });
-
-        setRooms(enrichedRooms);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+    const hash = window.location.hash;
+    if (hash) {
+      const section = document.querySelector(hash);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
       }
-    };
-
-    fetchData();
+    }
   }, []);
-
-  const toggleView = () => setShowMenu((prev) => !prev);
-
-  if (loading) {
-    return <LoadingSpinner message="Loading food stalls..." />; // <-- replaced inline spinner
-  }
 
   return (
-    <>
-      <div className="flex justify-center -mb-20">
+    <div className="w-full min-h-screen bg-neutral-900 text-white overflow-x-hidden">
+      {/* Hero Section */}
+      <section className="flex flex-col items-center justify-center text-center px-4 sm:px-6 pt-32 pb-20 bg-neutral-900">
+        <h1 className="text-4xl mt-20 sm:text-6xl md:text-8xl font-extrabold leading-tight tracking-tight">
+          <span className="font-poppins text-5xl sm:text-7xl md:text-9xl tracking-widest bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent animate-fade-in">
+            THE CORNER
+          </span>
+        </h1>
+        <span className="mt-4 block text-xl sm:text-3xl md:text-2xl font-light text-white tracking-widest">
+          FOOD PLAZA
+        </span>
+
+        {/* Search Bar */}
+        <div className="mt-8 w-full max-w-xs sm:max-w-md animate-fade-in delay-300">
+          <SearchBar />
+        </div>
+
+        {/* Call To Action Button */}
         <button
-          onClick={toggleView}
-          className="px-8 py-4 tracking-widest uppercase font-bold text-2xl text-white rounded-full bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-700 hover:to-fuchsia-700 shadow-lg hover:scale-105 transition-all flex items-center gap-3 animate-fade-in delay-500 mb-28"
+          onClick={handleReserveClick}
+          className="mt-8 px-8 py-3 text-lg sm:text-xl font-semibold tracking-wide bg-gradient-to-r from-pink-600 to-fuchsia-600 hover:from-pink-700 hover:to-fuchsia-700 rounded-full shadow-lg hover:scale-105 transition-all flex items-center gap-3 animate-fade-in delay-500"
         >
-          {showMenu ? 'Food Stalls' : 'Menu'}
+          Browse <FaArrowRight className="text-white text-xl" />
         </button>
-      </div>
+      </section>
 
-      <div className="text-center mb-10 px-4">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">
-          {showMenu ? 'BROWSE MENUS' : 'BROWSE FOOD STALLS'}
-        </h2>
-        <p className="mt-4 text-3xl sm:text-5xl font-bold text-white tracking-wider">
-          {showMenu ? 'Find something delicious.' : 'Find something you crave.'}
-        </p>
-      </div>
+      {/* Features Section */}
+      <section className="py-14 -mb-80 bg-neutral-900">
+        <div className="container mx-auto px-4">
+          <FeaturesSection />
+        </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {showMenu ? (
-          <MenuBrowse />
-        ) : rooms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-96">
-            <p className="mt-4 text-lg text-gray-500">
-              No food stalls available at the moment. Please check back later.
+      {/* 📌 Food Stall / Menu Section */}
+      <section id="browse" className="py-14 bg-neutral-900 scroll-mt-28">
+        <div className="container mx-auto px-4">
+          <BrowsePreview />
+        </div>
+      </section>
+
+      {/* ⭐ Reviews Section */}
+      <section id="reviews" className=" py-20 bg-neutral-900">
+        <div className="container mx-auto px-4 text-center">
+          <div className="text-center mb-16 px-4">
+            <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">
+              REVIEWS
+            </h2>
+            <p className="mt-4 text-3xl sm:text-5xl font-extrabold text-white">
+              Your opinion is important
             </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-40">
-            {rooms.map((room, index) => (
-              <SpaceCard
-                key={room.$id}
-                room={room}
-                averageRating={room.averageRating}
-                reviewCount={room.reviewCount}
-                priority={index < 4}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+          <RateCard />
+        </div>
+      </section>
+
+      {/* Featured Menu Section */}
+      <section className="py-14 bg-neutral-900">
+        <div className="container mx-auto px-4">
+          <FeaturedPage />
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section className="py-20 bg-neutral-900">
+        <div className="container mx-auto px-4">
+          <AboutSection />
+        </div>
+      </section>
+    </div>
   );
-}
+};
+
+export default HomePage;

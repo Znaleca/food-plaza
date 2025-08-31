@@ -34,7 +34,7 @@ const LoginPage = () => {
       } else if (isFoodstall) {
         router.push("/foodstall");
       } else {
-        router.push("/home");
+        router.push("/");
       }
     }
   }, [state]);

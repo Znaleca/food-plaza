@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import logo from '@/assets/images/logo.svg';
-import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus, FaHome, FaUtensils, FaBoxOpen, FaGift, FaCaretRight } from 'react-icons/fa';
+import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus, FaHome, FaBoxOpen, FaGift, FaCaretRight } from 'react-icons/fa';
 import { FaGear, FaCircleUser, FaCartShopping } from "react-icons/fa6";
 import { useState, useEffect } from "react";
 import destroySession from "@/app/actions/destroySession";
@@ -92,7 +92,7 @@ const Header = () => {
                 </span>
               </div>
             ) : (
-              <Link href="/home" className="flex items-center">
+              <Link href="/" className="flex items-center">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
                   <span className="bg-clip-text text-transparent bg-white">THE</span>
@@ -107,8 +107,7 @@ const Header = () => {
             <div className="ml-10 flex items-center gap-6 text-sm font-medium text-white">
               {isAuthenticated && !isAdmin && !isFoodstall && (
                 <>
-                  <Link href="/home" className="hover:text-pink-600 transition">Home</Link>
-                  <Link href="/" className="hover:text-pink-600 transition">Browse</Link>
+                  <Link href="/" className="hover:text-pink-600 transition">Home</Link>
                   <Link href="/customer/order-status" className="hover:text-pink-600 transition">My Orders</Link>
                 </>
               )}
@@ -214,11 +213,9 @@ const Header = () => {
           <div className="md:hidden mt-4 space-y-2 text-white bg-neutral-800 rounded-md p-4">
             {isAuthenticated && !isAdmin && !isFoodstall && (
               <>
-                <Link href="/home" className="flex items-center gap-2 hover:text-pink-600">
-                  <FaHome /> Home
-                </Link>
+                
                 <Link href="/" className="flex items-center gap-2 hover:text-pink-600">
-                  <FaUtensils /> Browse
+                  <FaHome /> Home
                 </Link>
                 <Link href="/customer/order-status" className="flex items-center gap-2 hover:text-pink-600">
                   <FaBoxOpen /> My Orders

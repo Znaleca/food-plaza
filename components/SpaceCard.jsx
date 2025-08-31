@@ -39,7 +39,7 @@ const SpaceCard = ({ room, priority = false, averageRating = 0, reviewCount = 0 
           </h3>
           <div className="w-12 h-0.5 bg-gray-600 mx-auto mb-4" />
           <p className="text-xs text-gray-400 mb-1">
-            <span className="font-semibold text-white">Type:</span>{' '}
+            <span className="font-semibold text-white">Category:</span>{' '}
             {room.type?.join(' • ') || 'N/A'}
           </p>
 

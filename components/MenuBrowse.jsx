@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react';
 import getFeaturedMenu from '@/app/actions/getFeaturedMenu';
 import Link from 'next/link';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const MenuBrowse = () => {
   const [featuredMenus, setFeaturedMenus] = useState([]);
@@ -21,18 +20,6 @@ const MenuBrowse = () => {
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-    }
-  };
-
   // Group menus by room (stall)
   const groupedMenus = featuredMenus.reduce((acc, menu) => {
     if (!acc[menu.roomId]) {
@@ -46,27 +33,18 @@ const MenuBrowse = () => {
   }, {});
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-24 bg-neutral-900">
-      
-
+    <div className="w-full bg-neutral-900">
       {Object.entries(groupedMenus).length > 0 ? (
         Object.entries(groupedMenus).map(([roomId, { roomName, menus }]) => (
-          <div key={roomId} className="mb-20">
-            <h3 className="text-white text-2xl font-semibold mb-6">{roomName}</h3>
+          <div key={roomId} className="mb-16">
+            <h3 className="text-white text-2xl font-semibold mb-6 px-4">
+              {roomName}
+            </h3>
             <div className="relative">
-              {/* Left Scroll Button */}
-              <button
-                onClick={scrollLeft}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black p-3 rounded-full text-white hover:bg-gray-800 transition z-10 shadow-lg"
-                aria-label="Scroll left"
-              >
-                <FaChevronLeft size={20} />
-              </button>
-
               {/* Scrollable Container */}
               <div
                 ref={scrollRef}
-                className="flex space-x-6 overflow-x-auto scrollbar-hide px-10"
+                className="flex space-x-6 overflow-x-auto scrollbar-hide px-4"
               >
                 {menus.map((menu) => (
                   <Link
@@ -85,24 +63,19 @@ const MenuBrowse = () => {
                         <p className="text-gray-500 text-sm text-center">No Image</p>
                       </div>
                     )}
-                    <h4 className="text-md font-semibold text-center">{menu.menuName}</h4>
+                    <h4 className="text-md font-semibold text-center">
+                      {menu.menuName}
+                    </h4>
                   </Link>
                 ))}
               </div>
-
-              {/* Right Scroll Button */}
-              <button
-                onClick={scrollRight}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black p-3 rounded-full text-white hover:bg-gray-800 transition z-10 shadow-lg"
-                aria-label="Scroll right"
-              >
-                <FaChevronRight size={20} />
-              </button>
             </div>
           </div>
         ))
       ) : (
-        <p className="text-center text-gray-400">No menus available.</p>
+        <p className="text-center text-gray-400 py-10">
+          No menus available.
+        </p>
       )}
     </div>
   );

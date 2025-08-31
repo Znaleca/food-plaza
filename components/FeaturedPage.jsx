@@ -48,7 +48,7 @@ const FeaturedPage = () => {
         <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">
           OUR MENUS
         </h2>
-        <p className="mt-4 text-xl sm:text-5xl font-bold text-white tracking-widest">
+        <p className="mt-4 text-xl sm:text-5xl mb-40 font-bold text-white tracking-widest">
         Enjoy a taste of comfort and flavor.
         </p>
       </div>
