@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaCheckCircle, FaTimesCircle, FaPercent, FaStore, FaCheck } from 'react-icons/fa';
+import { FaPercent, FaStore, FaCalendarAlt, FaMoneyBillWave, FaCheck } from 'react-icons/fa';
 import getAllClaimedVouchers from '@/app/actions/getAllClaimedVoucher';
 import checkAuth from '@/app/actions/checkAuth';
 import UseVoucherButton from './UseVoucherButton';
@@ -71,7 +71,7 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto mt-6 p-4 bg-neutral-900 shadow-sm rounded-lg">
+    <div className="w-full max-w-3xl mx-auto mt-6">
       <h2 className="text-2xl font-medium text-pink-600 text-center mb-6">Voucher Wallet</h2>
 
       <div className="space-y-6">
@@ -80,93 +80,127 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
           const isUsed = usedVoucherStates[voucher.$id];
           const stallName = stallData[voucher.$id]?.name || 'Unknown Stall';
 
+          const claimedUsersCount = voucher.claimed_users?.length || 0;
+          const totalQuantity = voucher.quantity || 0;
+          const remainingVouchers = totalQuantity - claimedUsersCount;
+          const claimedPercentage = (claimedUsersCount / totalQuantity) * 100;
+          const isSoldOut = remainingVouchers <= 0;
+
           return (
             <div
               key={voucher.$id}
-              className={`relative w-full max-w-md mx-auto p-4 bg-neutral-900 text-white rounded-lg transition-all duration-300 
-              ${!isActive ? 'opacity-60' : 'shadow-md hover:shadow-lg'} border-2 border-pink-600 
-              ${!isActive ? 'border-opacity-50' : ''}`}
+              className={`relative w-full h-52 mx-auto bg-neutral-900 text-white rounded-2xl shadow-xl border-2 border-pink-600 overflow-hidden transition-all duration-300
+              ${!isActive || isSoldOut ? 'opacity-60' : 'hover:scale-105 hover:shadow-2xl'}`}
             >
+              {/* Overlay states */}
+              {(!isActive || isSoldOut) && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-50 text-white rounded-2xl">
+                  <p className="text-2xl font-extrabold tracking-wide uppercase">
+                    {!isActive ? 'Expired' : 'Sold Out'}
+                  </p>
+                </div>
+              )}
+
               {isUsed && (
-                <div className="absolute top-2 right-2 bg-green-700 text-white text-xs font-medium px-2 py-1 rounded shadow z-10 flex items-center gap-1">
+                <div className="absolute top-2 right-2 bg-green-700 text-white text-xs font-medium px-2 py-1 rounded shadow z-20 flex items-center gap-1">
                   <FaCheck className="text-white text-xs" />
                   Applied
                 </div>
               )}
 
-              {!isActive && (
-                <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-4xl font-semibold opacity-40 pointer-events-none">
-                  EXPIRED
+              <div className="relative z-10 flex h-full">
+                {/* Left Section */}
+                <div className="flex flex-col items-center justify-center flex-1 p-4 border-r border-neutral-700">
+                  <div className="flex items-center justify-center w-16 h-16 mb-2 bg-pink-600 rounded-full">
+                    <FaPercent className="text-white text-3xl" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-pink-400 text-center leading-tight">
+                    {voucher.discount || 'N/A'}% OFF
+                  </h3>
+                  <p className="text-lg font-semibold mt-1 text-center">{voucher.title || 'Voucher Title'}</p>
+                  {voucher.description && (
+                    <p className="mt-2 text-gray-400 text-xs italic text-center max-w-[90%]">
+                      {voucher.description}
+                    </p>
+                  )}
                 </div>
-              )}
 
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 flex items-center justify-center bg-neutral-700 rounded-full">
-                  <FaPercent className="text-white text-2xl" />
-                </div>
+                {/* Right Section */}
+                <div className="flex flex-col justify-between flex-1 p-4 space-y-2">
+                  <div className="flex flex-col space-y-1 text-sm">
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <FaStore className="text-blue-400" />
+                      <span>
+                        <strong className="text-white font-medium">Stall:</strong> {stallName}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <FaCalendarAlt className="text-white" />
+                      <span>
+                        <strong className="text-white font-medium">Valid To:</strong> {formatDate(voucher.valid_to)}
+                      </span>
+                    </div>
+                    {voucher.min_orders && (
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <FaMoneyBillWave className="text-white" />
+                        <span>
+                          <strong className="text-white font-medium">Min. Order:</strong> ₱{voucher.min_orders}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white">{voucher.title || 'Voucher Title'}</h3>
-                  <p className="text-sm text-pink-400">{voucher.discount}% OFF</p>
-                  <div className="mt-1 flex flex-col text-sm text-gray-400">
-                    <span><strong>From:</strong> {formatDate(voucher.valid_from)}</span>
-                    <span><strong>To:</strong> {formatDate(voucher.valid_to)}</span>
-                    <span className="flex items-center gap-2 mt-1 text-blue-400">
-                      <FaStore /> <strong>Food Stall:</strong> {stallName}
-                    </span>
+                  {/* Progress bar */}
+                  {isActive && !isSoldOut && (
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs font-semibold">
+                        <span className="text-yellow-500">{remainingVouchers} left</span>
+                        <span className="text-gray-400">{claimedUsersCount} / {totalQuantity} claimed</span>
+                      </div>
+                      <div className="w-full bg-neutral-800 rounded-full h-2">
+                        <div
+                          className="bg-pink-600 h-2 rounded-full transition-all duration-500 ease-out"
+                          style={{ width: `${claimedPercentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div>
+                    {isActive && !isSoldOut ? (
+                      !isUsed ? (
+                        <UseVoucherButton
+                          voucherId={voucher.$id}
+                          minOrders={voucher.min_orders || 0}
+                          roomSubtotal={roomSubtotal}
+                          onUsed={() => {
+                            setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: true }));
+                            onVoucherUsed?.({
+                              $id: voucher.$id,
+                              discount: voucher.discount,
+                              title: voucher.title,
+                              min_orders: voucher.min_orders || 0,
+                            });
+                          }}
+                        />
+                      ) : (
+                        <CancelVoucherButton
+                          voucherId={voucher.$id}
+                          onCancelled={() => {
+                            setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: false }));
+                            onVoucherUsed?.(null);
+                          }}
+                        />
+                      )
+                    ) : (
+                      <button className="bg-neutral-800 text-gray-500 px-4 py-2 rounded-lg font-semibold w-full cursor-not-allowed text-sm">
+                        {isSoldOut ? 'Sold Out' : 'Expired'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
-
-              {voucher.description && (
-                <p className="mt-2 text-gray-400 text-xs italic">{voucher.description}</p>
-              )}
-
-              {voucher.min_orders && (
-                <p className="mt-1 text-sm text-yellow-400">
-                  Minimum Order: ₱{voucher.min_orders}
-                </p>
-              )}
-
-              <div className="mt-3 flex items-center space-x-3">
-                {isActive ? (
-                  <FaCheckCircle className="text-green-500 text-lg" />
-                ) : (
-                  <FaTimesCircle className="text-red-500 text-lg" />
-                )}
-                <span className={`text-sm ${isActive ? 'text-green-400' : 'text-red-400'}`}>
-                  {isActive ? 'Active' : 'Expired'}
-                </span>
-              </div>
-
-              {isActive && (
-                <div className="mt-4 flex space-x-3">
-                  {!isUsed ? (
-                    <UseVoucherButton
-                      voucherId={voucher.$id}
-                      minOrders={voucher.min_orders || 0}
-                      roomSubtotal={roomSubtotal}
-                      onUsed={() => {
-                        setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: true }));
-                        onVoucherUsed?.({
-                          $id: voucher.$id,
-                          discount: voucher.discount,
-                          title: voucher.title,
-                          min_orders: voucher.min_orders || 0,
-                        });
-                      }}
-                    />
-                  ) : (
-                    <CancelVoucherButton
-                      voucherId={voucher.$id}
-                      onCancelled={() => {
-                        setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: false }));
-                        onVoucherUsed?.(null);
-                      }}
-                    />
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
