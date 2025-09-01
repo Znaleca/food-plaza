@@ -6,6 +6,7 @@ import getAllSpaces from "../actions/getAllSpaces";
 import BrowseCardStall from "@/components/BrowseCardStall";
 import BrowseCardMenu from "@/components/BrowseCardMenu";
 import BrowseFilter from "@/components/BrowseFilter";
+import { FaChevronRight, FaChevronLeft } from "react-icons/fa";
 
 const SearchResultPage = () => {
   const router = useRouter();
@@ -15,6 +16,7 @@ const SearchResultPage = () => {
   const [searchInput, setSearchInput] = useState("");
   const [category, setCategory] = useState("All");
   const [displayType, setDisplayType] = useState("Menus"); 
+  const [isFilterOpen, setIsFilterOpen] = useState(false); // mobile toggle
 
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
@@ -76,9 +78,8 @@ const SearchResultPage = () => {
   }, [displayType]);
 
   useEffect(() => {
-    let filtered = [...rooms]; // Start with a copy of all rooms
+    let filtered = [...rooms];
 
-    // Apply search filter first
     if (searchInput) {
       filtered = rooms.filter(
         (room) =>
@@ -89,15 +90,12 @@ const SearchResultPage = () => {
       );
     } 
     
-    // Apply category filter based on display type
     if (category !== "All") {
       if (displayType === "Menus") {
-        // Filter rooms that contain menus of the selected category
         filtered = filtered.filter(room => 
           room.menuData.some(menuItem => menuItem.type === category)
         );
       } else {
-        // Filter stalls by their type
         filtered = filtered.filter(room => 
           room.type.includes(category)
         );
@@ -129,8 +127,6 @@ const SearchResultPage = () => {
   }
 
   const allMenus = rooms.flatMap((room) => room.menuData);
-
-  // Filter the menus based on the search input and selected category
   const filteredMenus = allMenus.filter(menu => {
     const matchesSearch = menu.name.toLowerCase().includes(searchInput.toLowerCase());
     const matchesCategory = category === "All" || menu.type === category;
@@ -153,7 +149,14 @@ const SearchResultPage = () => {
       {/* Main Layout */}
       <div className="flex gap-12">
         {/* Sidebar Filter */}
-        <aside className="hidden md:block w-60 shrink-0">
+        <aside
+          className={`
+            bg-neutral-800 shadow-xl p-6 w-64 z-40 transition-transform duration-300
+            fixed top-0 left-0 h-full overflow-y-auto scrollbar-thin
+            md:relative md:translate-x-0
+            ${isFilterOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          `}
+        >
           <BrowseFilter
             activeCategory={category}
             onChange={setCategory}
@@ -162,10 +165,20 @@ const SearchResultPage = () => {
           />
         </aside>
 
+        {/* Floating Toggle Button for Mobile */}
+        <button
+          className="fixed top-1/2 -translate-y-1/2 bg-neutral-700 text-white rounded-full p-2 shadow-lg md:hidden z-50 transition-all duration-300"
+          style={{
+            left: isFilterOpen ? '16rem' : '0.5rem',
+          }}
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+        >
+          {isFilterOpen ? <FaChevronLeft /> : <FaChevronRight />}
+        </button>
+
         {/* Content */}
         <main className="flex-1">
           {displayType === "Menus" ? (
-            // Menu Items Section
             <section className="mb-16">
               <h3 className="text-3xl font-bold mb-8 border-b border-gray-700 pb-2">
                 {searchInput ? "Matching Menu Items" : "All Menu"}
@@ -178,7 +191,7 @@ const SearchResultPage = () => {
                       roomId={m.roomId || rooms.find((r) => r.menuData.includes(m))?.id}
                       menuItem={m}
                       roomName={rooms.find((r) => r.menuData.includes(m))?.name || ""}
-                      allMenus={allMenus} // Pass allMenus to enable recommendations
+                      allMenus={allMenus}
                     />
                   ))}
                 </div>
@@ -187,7 +200,6 @@ const SearchResultPage = () => {
               )}
             </section>
           ) : (
-            // Food Stalls Section
             <section>
               <h2 className="text-3xl font-bold mb-8 border-b border-gray-700 pb-2">
                 {searchInput ? `Food Stalls for "${searchInput}"` : "All Food Stalls"}
