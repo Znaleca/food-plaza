@@ -47,6 +47,7 @@
     "resend": "^4.5.1",
     "slick-carousel": "^1.8.1",
     "swiper": "^11.1.15",
+    "tailwind-scrollbar-hide": "^4.0.0",
     "twilio": "^5.5.2",
     "xendit-node": "^6.4.0"
   },
