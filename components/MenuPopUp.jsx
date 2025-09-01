@@ -33,7 +33,7 @@ export default function MenuPopUp({
   const availableSizes = sizeDefs.filter((s) => s.fee !== 0);
   const isOneSize = availableSizes.length === 0;
 
-  const [size, setSize] = useState(isOneSize ? 'ONE' : availableSizes[0]?.key || '');
+  const [size, setSize] = useState(isOneSize ? 'ONE' : '');
   const [qty, setQty] = useState(1);
 
   const fee = isOneSize ? 0 : availableSizes.find((s) => s.key === size)?.fee ?? 0;
@@ -43,6 +43,8 @@ export default function MenuPopUp({
   const adjustQty = (d) => setQty((q) => Math.max(1, q + d));
 
   const handleAdd = () => {
+    if (!size) return; // 🚫 Prevent if no size selected
+
     const newItem = {
       menuId: `${roomId}_${item}`,
       menuName: item,
@@ -87,6 +89,33 @@ export default function MenuPopUp({
       document.body.style.overflow = originalStyle;
     };
   }, []);
+
+  // ✅ Handle recommended menu selection
+  const handleSelectMenu = (rec) => {
+    if (!rec) return;
+
+    const recSizes = [
+      { key: 'S', fee: Number(rec.smallFee) || 0 },
+      { key: 'M', fee: Number(rec.mediumFee) || 0 },
+      { key: 'L', fee: Number(rec.largeFee) || 0 },
+    ].filter((s) => s.fee !== 0);
+
+    const isRecOneSize = recSizes.length === 0;
+
+    let defaultSize = 'ONE';
+    if (!isRecOneSize) {
+      if (recSizes.length === 1) {
+        defaultSize = recSizes[0].key; // auto-pick the only available size
+      } else {
+        defaultSize = ''; // require user to choose
+      }
+    }
+
+    setSize(defaultSize);
+    setQty(1);
+
+    if (onSelectMenu) onSelectMenu(rec);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 font-sans">
@@ -168,7 +197,7 @@ export default function MenuPopUp({
                     <li
                       key={rec.menuId || rec.name}
                       className="flex items-center justify-between cursor-pointer hover:bg-neutral-800 rounded-md p-2 transition-colors"
-                      onClick={() => onSelectMenu && onSelectMenu(rec)}
+                      onClick={() => handleSelectMenu(rec)}
                     >
                       <div className="flex items-center">
                         {rec.image ? (
@@ -227,9 +256,14 @@ export default function MenuPopUp({
             </div>
             <button
               onClick={handleAdd}
-              className="w-full md:w-auto bg-white hover:bg-gray-400 text-black py-3 px-6 rounded-full font-semibold shadow-lg transition-colors text-base md:text-lg"
+              disabled={!size} // 🚫 Disabled if no size
+              className={`w-full md:w-auto py-3 px-6 rounded-full font-semibold shadow-lg text-base md:text-lg transition-colors ${
+                size
+                  ? 'bg-white hover:bg-gray-400 text-black'
+                  : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              }`}
             >
-              Add {qty} to order ₱{total}
+              {size ? `Add ${qty} to order ₱${total}` : 'Select a size first'}
             </button>
           </div>
         </div>
