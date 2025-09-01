@@ -33,7 +33,18 @@ export default function MenuPopUp({
   const availableSizes = sizeDefs.filter((s) => s.fee !== 0);
   const isOneSize = availableSizes.length === 0;
 
-  const [size, setSize] = useState(isOneSize ? 'ONE' : '');
+  // ✅ Auto-pick size based on rules
+  const autoPickSize = (sizes) => {
+    const keys = sizes.map((s) => s.key);
+    if (keys.includes('S') && keys.includes('M') && keys.includes('L')) return 'S';
+    if (keys.length === 1) return keys[0]; // only one size
+    if (keys.includes('M') && keys.includes('L') && !keys.includes('S')) return 'M';
+    return ''; // default: force user to choose
+  };
+
+  const [size, setSize] = useState(
+    isOneSize ? 'ONE' : autoPickSize(availableSizes)
+  );
   const [qty, setQty] = useState(1);
 
   const fee = isOneSize ? 0 : availableSizes.find((s) => s.key === size)?.fee ?? 0;
@@ -104,11 +115,7 @@ export default function MenuPopUp({
 
     let defaultSize = 'ONE';
     if (!isRecOneSize) {
-      if (recSizes.length === 1) {
-        defaultSize = recSizes[0].key; // auto-pick the only available size
-      } else {
-        defaultSize = ''; // require user to choose
-      }
+      defaultSize = autoPickSize(recSizes);
     }
 
     setSize(defaultSize);
@@ -120,11 +127,13 @@ export default function MenuPopUp({
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 font-sans">
       <div
-        className="
-          bg-neutral-950 w-full max-w-4xl max-h-[90vh] rounded-lg shadow-xl relative 
-          flex flex-col md:flex-row overflow-auto my-4
-        "
-      >
+  className="
+    bg-neutral-950 w-full max-w-4xl rounded-lg shadow-xl relative 
+    flex flex-col md:flex-row overflow-auto my-4
+    max-h-[90vh] md:max-h-[70vh]
+  "
+>
+
         {/* Left Section (Image) */}
         <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-4">
           {menuImage ? (
