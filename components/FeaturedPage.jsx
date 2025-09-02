@@ -23,14 +23,14 @@ const FeaturedPage = () => {
     <div className="bg-neutral-900 py-16 sm:py-28 lg:py-40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         {/* Header */}
-        <header className="text-center mb-12 sm:mb-20 px-4">
-          <h2 className="text-sm sm:text-xl text-pink-600 font-light tracking-widest uppercase">
-            Categories
-          </h2>
-          <p className="mt-4 text-2xl sm:text-4xl lg:text-6xl font-extrabold leading-tight text-white">
-            Explore what you crave
-          </p>
-        </header>
+        <header className="text-center mb-16 px-4">
+        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">
+          CATEGORIES
+        </h2>
+        <p className="mt-4 text-3xl sm:text-5xl font-extrabold leading-tight">
+          Find something that suites your crave
+        </p>
+      </header>
 
         {/* Category Grid */}
         <div className="flex flex-col items-center gap-10 sm:gap-14">
