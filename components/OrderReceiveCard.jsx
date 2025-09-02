@@ -83,58 +83,54 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     }
   };
 
-// --- NEW: update status for all items in this stall ---
-const handleUpdateStallStatus = async (newStatus, items) => {
-  if (paymentStatus === PAYMENT_STATUS.FAILED) return;
-  try {
-    await Promise.all(
-      items.map((item) =>
-        updateOrderStatus(order.$id, item.originalIndex, newStatus)
-      )
-    );
+  const handleUpdateStallStatus = async (newStatus, items) => {
+    if (paymentStatus === PAYMENT_STATUS.FAILED) return;
+    try {
+      await Promise.all(
+        items.map((item) =>
+          updateOrderStatus(order.$id, item.originalIndex, newStatus)
+        )
+      );
 
-    // Send SMS only once per status
-    if (order.phone) {
-      try {
-        if (newStatus === ORDER_STATUS.PREPARING) {
-          await fetch("/api/semaphore", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              phone: order.phone,
-              name: order.name || "Customer",
-              message: `Hi ${order.name || "Customer"}, your order from ${roomName} is now being prepared. 🍳 Please wait while we get it ready!`,
-            }),
-          });
-        } else if (newStatus === ORDER_STATUS.READY) {
-          await fetch("/api/semaphore/order-ready", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              phone: order.phone,
-              name: order.name || "Customer",
-              message: `Hi ${order.name || "Customer"}! ✅ Your order from ${roomName} is READY for pickup. 🚀 Please proceed to the counter. Thank you!`,
-            }),
-          });
+      if (order.phone) {
+        try {
+          if (newStatus === ORDER_STATUS.PREPARING) {
+            await fetch("/api/semaphore", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                phone: order.phone,
+                name: order.name || "Customer",
+                message: `Hi ${order.name || "Customer"}, your order from ${roomName} is now being prepared. 🍳 Please wait while we get it ready!`,
+              }),
+            });
+          } else if (newStatus === ORDER_STATUS.READY) {
+            await fetch("/api/semaphore/order-ready", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                phone: order.phone,
+                name: order.name || "Customer",
+                message: `Hi ${order.name || "Customer"}! ✅ Your order from ${roomName} is READY for pickup. 🚀 Please proceed to the counter. Thank you!`,
+              }),
+            });
+          }
+        } catch (smsError) {
+          console.error("Failed to send SMS:", smsError);
         }
-      } catch (smsError) {
-        console.error("Failed to send SMS:", smsError);
       }
+
+      refreshOrders();
+    } catch (error) {
+      console.error("Failed to update stall status:", error);
+      alert("Failed to update stall status");
     }
-
-    refreshOrders();
-  } catch (error) {
-    console.error("Failed to update stall status:", error);
-    alert("Failed to update stall status");
-  }
-};
-
-
+  };
 
   const renderStatusBadge = (status) => {
     const normalized = String(status || "").toLowerCase();
     const styleMap = {
-      "pending": "bg-blue-500/20 text-blue-300 border border-blue-400/50",
+      pending: "bg-blue-500/20 text-blue-300 border border-blue-400/50",
       preparing: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
       ready: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/50",
       completed: "bg-green-500/20 text-green-300 border border-green-400/50",
@@ -163,9 +159,12 @@ const handleUpdateStallStatus = async (newStatus, items) => {
 
   const renderPaymentBadge = () => {
     const styleMap = {
-      [PAYMENT_STATUS.PENDING]: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
-      [PAYMENT_STATUS.PAID]: "bg-green-500/20 text-green-300 border border-green-400/50",
-      [PAYMENT_STATUS.FAILED]: "bg-red-500/20 text-red-300 border border-red-400/50",
+      [PAYMENT_STATUS.PENDING]:
+        "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
+      [PAYMENT_STATUS.PAID]:
+        "bg-green-500/20 text-green-300 border border-green-400/50",
+      [PAYMENT_STATUS.FAILED]:
+        "bg-red-500/20 text-red-300 border border-red-400/50",
     };
 
     const textMap = {
@@ -184,7 +183,6 @@ const handleUpdateStallStatus = async (newStatus, items) => {
     );
   };
 
-  // Parse only items for this stall
   const parsedItems = order.items
     .map((itemStr, idx) => {
       try {
@@ -198,7 +196,6 @@ const handleUpdateStallStatus = async (newStatus, items) => {
 
   if (parsedItems.length === 0) return null;
 
-  // Stall-wide status = first item’s status
   const stallStatus =
     paymentStatus === PAYMENT_STATUS.FAILED
       ? ORDER_STATUS.FAILED
@@ -210,8 +207,8 @@ const handleUpdateStallStatus = async (newStatus, items) => {
   );
 
   return (
-    <div className="rounded-xl p-6 bg-neutral-900 text-white space-y-8">
-      <div className="flex justify-between items-start gap-4">
+    <div className="rounded-xl p-4 bg-neutral-900 text-white space-y-6">
+      <div className="flex flex-col gap-4">
         <div className="space-y-1">
           <h2 className="text-base font-semibold">Order ID: {order.$id}</h2>
           <p className="text-sm text-neutral-300">
@@ -223,23 +220,20 @@ const handleUpdateStallStatus = async (newStatus, items) => {
           </p>
           <div className="mt-1">{renderPaymentBadge()}</div>
         </div>
-        <div className="flex items-center gap-2 relative">
-          <button
-            onClick={openModal}
-            className="text-xs px-4 py-1.5 rounded border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white transition"
-          >
-            Change Table #
-          </button>
-          {saveToast && (
-            <div className="absolute top-full left-0 mt-1 text-xs text-green-400 bg-green-800 px-2 py-0.5 rounded">
-              Table saved
-            </div>
-          )}
-        </div>
+        <button
+          onClick={openModal}
+          className="text-xs px-4 py-1.5 rounded border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white transition self-start"
+        >
+          Change Table #
+        </button>
+        {saveToast && (
+          <div className="text-xs text-green-400 bg-green-800 px-2 py-0.5 rounded">
+            Table saved
+          </div>
+        )}
       </div>
 
-      {/* Items */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {parsedItems.map((item) => (
           <div
             key={item.originalIndex}
@@ -268,7 +262,6 @@ const handleUpdateStallStatus = async (newStatus, items) => {
         ))}
       </div>
 
-      {/* Stall-wide status controls */}
       <div className="flex flex-wrap gap-2 pt-4 border-t border-neutral-700">
         {Object.values(ORDER_STATUS).map((status) => {
           const isActive = stallStatus === status;
