@@ -1,13 +1,46 @@
-// components/AboutPage.jsx
+'use client';
+
+import React, { useEffect, useState, useRef } from 'react';
 
 const AboutPage = () => {
   const team = [
-    { name: "Lanz", role: "Main Developer", image: "/images/lanz.jpg" },
     { name: "Russel", role: "Documenter", image: "/images/russel.jpg" },
     { name: "Maricon", role: "Front-End", image: "/images/maricon.jpg" },
+    { name: "Lanz", role: "Main Developer", image: "/images/lanz.jpg" },
     { name: "Jasper", role: "Documenter", image: "/images/jasper.jpg" },
     { name: "Christler", role: "Documenter", image: "/images/christler.jpg" },
   ];
+
+  const [visibleIndexes, setVisibleIndexes] = useState([]);
+  const refs = useRef([]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const index = Number(entry.target.dataset.index);
+          if (entry.isIntersecting) {
+            // Show when visible
+            setVisibleIndexes((prev) => [...new Set([...prev, index])]);
+          } else {
+            // Reset when out of view
+            setVisibleIndexes((prev) => prev.filter((i) => i !== index));
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+
+    refs.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      refs.current.forEach((el) => {
+        if (el) observer.unobserve(el);
+      });
+    };
+  }, []);
 
   return (
     <div className="w-full min-h-screen bg-neutral-900 text-white p-8 flex flex-col items-center">
@@ -51,25 +84,40 @@ const AboutPage = () => {
       </div>
 
       {/* Team Section */}
-      <div className="w-full max-w-6xl mb-16">
+      <div className="w-full max-w-3xl mb-16">
         <h2 className="text-center text-3xl sm:text-4xl font-bold text-white mb-12">
           Meet the Team
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-10">
-          {team.map((person, index) => (
-            <div
-              key={index}
-              className="flex flex-col items-center bg-neutral-800 p-6 rounded-2xl shadow-lg hover:scale-105 transition-transform duration-300"
-            >
-              <img
-                src={person.image}
-                alt={person.name}
-                className="w-28 h-28 rounded-full object-cover mb-4 border-4 border-pink-500 shadow-md"
-              />
-              <p className="text-lg font-semibold">{person.name}</p>
-              <p className="text-sm text-gray-400">{person.role}</p>
-            </div>
-          ))}
+        <div className="flex flex-col gap-8">
+          {team.map((person, index) => {
+            const isVisible = visibleIndexes.includes(index);
+            return (
+              <div
+                key={index}
+                ref={(el) => (refs.current[index] = el)}
+                data-index={index}
+                className={`flex flex-col sm:flex-row items-center bg-neutral-800 p-6 rounded-2xl shadow-lg transform transition-all duration-700 ease-out
+                  ${
+                    isVisible
+                      ? "opacity-100 scale-100 translate-y-0"
+                      : "opacity-0 scale-50 translate-y-10"
+                  }`}
+                style={{
+                  transitionDelay: isVisible ? `${index * 150}ms` : "0ms", // staggered delay
+                }}
+              >
+                <img
+                  src={person.image}
+                  alt={person.name}
+                  className="w-28 h-28 rounded-full object-cover mb-4 sm:mb-0 sm:mr-6 border-4 border-pink-500 shadow-md"
+                />
+                <div className="text-center sm:text-left">
+                  <p className="text-lg font-semibold">{person.name}</p>
+                  <p className="text-sm text-gray-400">{person.role}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

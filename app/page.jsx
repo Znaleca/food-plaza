@@ -68,28 +68,27 @@ const HomePage = () => {
           <BrowsePreview />
         </div>
       </section>
-
-      {/* ⭐ Reviews Section */}
-      <section id="reviews" className=" py-20 bg-neutral-900">
-        <div className="container mx-auto px-4 text-center">
-          <div className="text-center mb-16 px-4">
-            <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">
-              REVIEWS
-            </h2>
-            <p className="mt-4 text-3xl sm:text-5xl font-extrabold text-white">
-              Your opinion is important
-            </p>
-          </div>
-          <RateCard />
-        </div>
-      </section>
-
+      
       {/* Featured Menu Section */}
       <section className="py-14 bg-neutral-900">
         <div className="container mx-auto px-4">
           <FeaturedPage />
         </div>
       </section>
+
+       {/* ⭐ Reviews Section */}
+       <section id="reviews" className="py-20 bg-neutral-900 w-full min-h-screen flex flex-col items-center justify-center text-center">
+        <div className="text-center mb-16 px-4">
+          <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">
+            REVIEWS
+          </h2>
+          <p className="mt-4 text-3xl sm:text-5xl font-extrabold text-white">
+            Your opinion is important
+          </p>
+        </div>
+        <RateCard />
+      </section>
+    
 
       {/* About Section */}
       <section className="py-20 bg-neutral-900">

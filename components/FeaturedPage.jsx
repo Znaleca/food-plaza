@@ -1,101 +1,108 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import getFeaturedMenu from '@/app/actions/getFeaturedMenu';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import Image from 'next/image';
 
 const FeaturedPage = () => {
-  const [featuredMenus, setFeaturedMenus] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const categories = [
+    { name: 'Meals', image: '/images/Meals.png' },
+    { name: 'Snacks', image: '/images/Snacks.png' },
+    { name: 'Drinks', image: '/images/Drinks.png' },
+    { name: 'Dessert', image: '/images/Dessert.png' },
+    { name: 'Add-ons', image: '/images/Add-ons.png' },
+  ];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await getFeaturedMenu();
-      setFeaturedMenus(data);
-    };
-
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) =>
-        featuredMenus.length > 0
-          ? (prev + 4) % featuredMenus.length
-          : 0
-      );
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [featuredMenus]);
-
-  const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
-  const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
-
-  const getCurrentBatch = () => {
-    if (!featuredMenus.length) return [];
-    const batch = featuredMenus.slice(currentIndex, currentIndex + 4);
-    if (batch.length < 4) {
-      return [...batch, ...featuredMenus.slice(0, 4 - batch.length)];
-    }
-    return batch;
+  const cardVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.6, ease: 'easeOut' } },
+    exit: { opacity: 0, transition: { duration: 0.4, ease: 'easeIn' } },
   };
 
-  const currentMenus = getCurrentBatch();
-
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 bg-neutral-900 transition-all duration-700">
-      <div className="text-center mb-12 px-4">
-        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">
-          OUR MENUS
-        </h2>
-        <p className="mt-4 text-xl sm:text-5xl mb-40 font-bold text-white tracking-widest">
-        Enjoy a taste of comfort and flavor.
-        </p>
-      </div>
+    <div className="bg-neutral-900 py-16 sm:py-28 lg:py-40">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+        {/* Header */}
+        <header className="text-center mb-12 sm:mb-20 px-4">
+          <h2 className="text-sm sm:text-xl text-pink-600 font-light tracking-widest uppercase">
+            Categories
+          </h2>
+          <p className="mt-4 text-2xl sm:text-4xl lg:text-6xl font-extrabold leading-tight text-white">
+            Explore what you crave
+          </p>
+        </header>
 
-      {currentMenus.length > 0 ? (
-        <div className="grid grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="flex flex-col space-y-6">
-            {currentMenus.slice(0, 2).map((menu) => (
-              <div key={menu.id} className="bg-black rounded-xl overflow-hidden shadow-md">
-                {menu.menuImage ? (
-                  <img
-                    src={`https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${menu.menuImage}/view?project=${projectId}`}
-                    alt={menu.menuName}
-                    className="w-full h-64 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-64 bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-600">No Image</span>
+        {/* Category Grid */}
+        <div className="flex flex-col items-center gap-10 sm:gap-14">
+          {/* Top row (3 cards) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-12 w-full">
+            {categories.slice(0, 3).map((cat) => (
+              <motion.div
+                key={cat.name}
+                variants={cardVariants}
+                initial="hidden"
+                whileInView="visible"
+                exit="exit"
+                viewport={{ once: false, amount: 0.3 }}
+                className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-neutral-800 bg-neutral-900 transition-all duration-300 hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20"
+              >
+                <Link
+                  href={`/search?category=${encodeURIComponent(cat.name)}&displayType=Menus`}
+                  className="block p-4 sm:p-5"
+                >
+                  <div className="flex items-center sm:space-x-8 flex-col sm:flex-row text-center sm:text-left">
+                    <div className="relative h-28 w-28 sm:h-44 sm:w-44 flex-shrink-0">
+                      <Image
+                        src={cat.image}
+                        alt={cat.name}
+                        fill
+                        className="object-contain transition-transform duration-300"
+                      />
+                    </div>
+                    <h3 className="mt-4 sm:mt-0 text-lg sm:text-2xl lg:text-3xl font-bold text-white group-hover:text-pink-400 transition-colors">
+                      {cat.name}
+                    </h3>
                   </div>
-                )}
-              </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
 
-          {/* Right Column */}
-          <div className="flex flex-col space-y-6">
-            {currentMenus.slice(2, 4).map((menu) => (
-              <div key={menu.id} className="bg-black rounded-xl overflow-hidden shadow-md">
-                {menu.menuImage ? (
-                  <img
-                    src={`https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${menu.menuImage}/view?project=${projectId}`}
-                    alt={menu.menuName}
-                    className="w-full h-64 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-64 bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-600">No Image</span>
+          {/* Bottom row (2 cards) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 w-full max-w-2xl sm:max-w-4xl">
+            {categories.slice(3).map((cat) => (
+              <motion.div
+                key={cat.name}
+                variants={cardVariants}
+                initial="hidden"
+                whileInView="visible"
+                exit="exit"
+                viewport={{ once: false, amount: 0.3 }}
+                className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-neutral-800 bg-neutral-900 transition-all duration-300 hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20"
+              >
+                <Link
+                  href={`/search?category=${encodeURIComponent(cat.name)}&displayType=Menus`}
+                  className="block p-6 sm:p-10"
+                >
+                  <div className="flex items-center sm:space-x-8 flex-col sm:flex-row text-center sm:text-left">
+                    <div className="relative h-28 w-28 sm:h-44 sm:w-44 flex-shrink-0">
+                      <Image
+                        src={cat.image}
+                        alt={cat.name}
+                        fill
+                        className="object-contain transition-transform duration-300"
+                      />
+                    </div>
+                    <h3 className="mt-4 sm:mt-0 text-lg sm:text-2xl lg:text-3xl font-bold text-white group-hover:text-pink-400 transition-colors">
+                      {cat.name}
+                    </h3>
                   </div>
-                )}
-              </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </div>
-      ) : (
-        <p className="text-center text-gray-500">No featured menus available.</p>
-      )}
+      </div>
     </div>
   );
 };

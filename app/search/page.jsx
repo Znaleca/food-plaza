@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import getAllSpaces from "../actions/getAllSpaces";
 import BrowseCardStall from "@/components/BrowseCardStall";
 import BrowseCardMenu from "@/components/BrowseCardMenu";
@@ -10,12 +10,14 @@ import { FaChevronRight, FaChevronLeft } from "react-icons/fa";
 
 const SearchResultPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [rooms, setRooms] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchInput, setSearchInput] = useState("");
-  const [category, setCategory] = useState("All");
-  const [displayType, setDisplayType] = useState("Menus"); 
+  const [searchInput, setSearchInput] = useState(searchParams.get("query") || "");
+  const [category, setCategory] = useState(searchParams.get("category") || "All");
+  const [displayType, setDisplayType] = useState(searchParams.get("displayType") || "Menus");
   const [isFilterOpen, setIsFilterOpen] = useState(false); // mobile toggle
 
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
@@ -72,10 +74,12 @@ const SearchResultPage = () => {
     fetchRooms();
   }, []);
 
+  // Keep state synced with URL
   useEffect(() => {
-    // Reset category when display type changes
-    setCategory('All');
-  }, [displayType]);
+    setCategory(searchParams.get("category") || "All");
+    setDisplayType(searchParams.get("displayType") || "Menus");
+    setSearchInput(searchParams.get("query") || "");
+  }, [searchParams]);
 
   useEffect(() => {
     let filtered = [...rooms];
@@ -88,32 +92,30 @@ const SearchResultPage = () => {
             menuItem.name.toLowerCase().includes(searchInput.toLowerCase())
           )
       );
-    } 
-    
+    }
+
     if (category !== "All") {
       if (displayType === "Menus") {
-        filtered = filtered.filter(room => 
-          room.menuData.some(menuItem => menuItem.type === category)
+        filtered = filtered.filter((room) =>
+          room.menuData.some((menuItem) => menuItem.type === category)
         );
       } else {
-        filtered = filtered.filter(room => 
-          room.type.includes(category)
-        );
+        filtered = filtered.filter((room) => room.type.includes(category));
       }
     }
 
     setFilteredRooms(filtered);
-
   }, [searchInput, rooms, category, displayType]);
 
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchInput(value);
-    if (value) {
-      router.push(`/search?query=${encodeURIComponent(value)}`, { scroll: false });
-    } else {
-      router.push("/search", { scroll: false });
-    }
+    router.push(
+      value
+        ? `/search?query=${encodeURIComponent(value)}&category=${encodeURIComponent(category)}&displayType=${encodeURIComponent(displayType)}`
+        : `/search?category=${encodeURIComponent(category)}&displayType=${encodeURIComponent(displayType)}`,
+      { scroll: false }
+    );
   };
 
   if (loading) {
@@ -127,7 +129,7 @@ const SearchResultPage = () => {
   }
 
   const allMenus = rooms.flatMap((room) => room.menuData);
-  const filteredMenus = allMenus.filter(menu => {
+  const filteredMenus = allMenus.filter((menu) => {
     const matchesSearch = menu.name.toLowerCase().includes(searchInput.toLowerCase());
     const matchesCategory = category === "All" || menu.type === category;
     return matchesSearch && matchesCategory;
@@ -159,9 +161,13 @@ const SearchResultPage = () => {
         >
           <BrowseFilter
             activeCategory={category}
-            onChange={setCategory}
-            activeDisplayType={displayType} 
-            onDisplayTypeChange={setDisplayType}
+            onChange={(cat) =>
+              router.push(`/search?query=${encodeURIComponent(searchInput)}&category=${encodeURIComponent(cat)}&displayType=${encodeURIComponent(displayType)}`)
+            }
+            activeDisplayType={displayType}
+            onDisplayTypeChange={(type) =>
+              router.push(`/search?query=${encodeURIComponent(searchInput)}&category=${encodeURIComponent(category)}&displayType=${encodeURIComponent(type)}`)
+            }
           />
         </aside>
 
@@ -188,7 +194,7 @@ const SearchResultPage = () => {
                   {filteredMenus.map((m) => (
                     <BrowseCardMenu
                       key={m.menuId}
-                      roomId={m.roomId || rooms.find((r) => r.menuData.includes(m))?.id}
+                      roomId={rooms.find((r) => r.menuData.includes(m))?.id}
                       menuItem={m}
                       roomName={rooms.find((r) => r.menuData.includes(m))?.name || ""}
                       allMenus={allMenus}
