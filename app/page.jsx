@@ -89,13 +89,11 @@ const HomePage = () => {
         <RateCard />
       </section>
     
-
-      {/* About Section */}
-      <section className="py-20 bg-neutral-900">
-        <div className="container mx-auto px-4">
-          <AboutSection />
-        </div>
-      </section>
+<section id="about-us" className="py-20 bg-neutral-900 scroll-mt-5">
+    <div className="w-full">
+        <AboutSection />
+    </div>
+</section>
     </div>
   );
 };

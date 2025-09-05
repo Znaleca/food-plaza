@@ -17,6 +17,7 @@ module.exports = {
         'fade-in': 'fadeIn 1s ease-out forwards',
         'spin-slow': 'spin 8s linear infinite',
         'spin-slow-reverse': 'spin-reverse 8s linear infinite',
+        'pulse-slow': 'pulse-slow 8s infinite ease-in-out',
       },
       keyframes: {
         spin: {
@@ -34,6 +35,10 @@ module.exports = {
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        'pulse-slow': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '0.15' },
+          '50%': { transform: 'scale(1.05)', opacity: '0.25' },
         },
       },
     },

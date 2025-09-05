@@ -1,3 +1,5 @@
+// Header.js
+
 'use client';
 
 import { useRouter } from "next/navigation";
@@ -76,6 +78,23 @@ const Header = () => {
     };
   }, [isDropdownOpen]);
 
+  // NEW: Function to handle smooth scrolling to sections
+  const handleScrollToSection = (e, sectionId) => {
+    e.preventDefault(); // Prevent default link behavior
+    
+    // Check if we are on the homepage
+    if (window.location.pathname !== '/') {
+      // If not, navigate to the homepage and the browser's default hash behavior will take over
+      router.push(`/#${sectionId}`);
+    } else {
+      // If we are already on the homepage, perform the smooth scroll
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
 
   return (
     <header className="bg-neutral-800 shadow-md">
@@ -108,7 +127,9 @@ const Header = () => {
             {!isAuthenticated && (
                 <>
                   <Link href="/" className="hover:text-pink-600 transition">Home</Link>
-                  <Link href="/about" className="hover:text-pink-600 transition">About Us</Link>
+                  <Link href="/#browse" onClick={(e) => handleScrollToSection(e, 'browse')} className="hover:text-pink-600 transition">Browse</Link>
+
+                  <Link href="/#about-us" onClick={(e) => handleScrollToSection(e, 'about-us')} className="hover:text-pink-600 transition">About Us</Link>
                   <Link href="/customer/promos" className="hover:text-pink-600 transition">Promotions</Link>
 
                 </>
@@ -117,8 +138,10 @@ const Header = () => {
               {isCustomer &&(
                 <>
                 <Link href="/" className="hover:text-pink-600 transition">Home</Link>
+                <Link href="/#browse" onClick={(e) => handleScrollToSection(e, 'browse')} className="hover:text-pink-600 transition">Browse</Link>
+
                 <Link href="/customer/order-status" className="hover:text-pink-600 transition">My Orders</Link>
-                <Link href="/about" className="hover:text-pink-600 transition">About Us</Link>
+                <Link href="/#about-us" onClick={(e) => handleScrollToSection(e, 'about-us')} className="hover:text-pink-600 transition">About Us</Link>
                 <Link href="/customer/promos" className="hover:text-pink-600 transition">Promotions</Link>
                 </>
               )}
@@ -233,7 +256,7 @@ const Header = () => {
                 <Link href="/" className="flex items-center gap-2 hover:text-pink-600">
                   <FaHome /> Home
                 </Link>
-                <Link href="/about" className="flex items-center gap-2 hover:text-pink-600">
+                <Link href="/#about-us" onClick={(e) => handleScrollToSection(e, 'about-us')} className="flex items-center gap-2 hover:text-pink-600">
                   <FaHome /> About Us
                 </Link>
                 <Link href="/order/cart" className="flex items-center gap-2 hover:text-pink-600">
