@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { FaPercent, FaStore, FaCalendarAlt, FaMoneyBillWave } from 'react-icons/fa';
-import VoucherClaimingButton from './VoucherClaimingButton';
+import Link from 'next/link';
 
-const VouchersCard = ({ voucher, stallName, onClaim }) => {
+const VouchersCard = ({ voucher, stallName, onClaim, isAuthenticated }) => {
   const [claimed, setClaimed] = useState(false);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const VouchersCard = ({ voucher, stallName, onClaim }) => {
   const isSoldOut = remainingVouchers <= 0;
   const claimedPercentage = (claimedUsersCount / totalQuantity) * 100;
 
-  // Don't show the card if the voucher is expired
+  // Don't show the card if the voucher is expired or already claimed
   if (!isActive || claimed) return null;
 
   return (
@@ -117,12 +117,21 @@ const VouchersCard = ({ voucher, stallName, onClaim }) => {
 
           <div>
             {isActive && !isSoldOut ? (
-              <VoucherClaimingButton 
-                voucherId={voucher.$id} 
-                onClaim={handleClaim} 
-                claimedUsersCount={claimedUsersCount}
-                quantity={totalQuantity}
-              />
+              isAuthenticated ? (
+                <button
+                  onClick={handleClaim}
+                  className="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg font-semibold w-full transition-colors text-sm"
+                >
+                  Claim Voucher
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold w-full text-center transition-colors text-sm block"
+                >
+                  Sign in to claim
+                </Link>
+              )
             ) : (
               <button className="bg-neutral-800 text-gray-500 px-4 py-2 rounded-lg font-semibold w-full cursor-not-allowed text-sm">
                 Sold Out

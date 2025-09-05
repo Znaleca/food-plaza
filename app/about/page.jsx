@@ -87,7 +87,7 @@ const AboutPage = () => {
         <img
           src={person.image}
           alt={person.name}
-          className="w-36 h-36 rounded-full object-cover mb-6 border-4 border-indigo-400
+          className="w-36 h-36 rounded-full object-cover mb-6 border-4 border-indigo-700
           shadow-xl shadow-indigo-400/30 group-hover:shadow-pink-500/50 transition-all duration-300"
         />
         <div className="text-center">
@@ -99,20 +99,22 @@ const AboutPage = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-neutral-950 text-white p-8 overflow-hidden font-sans">
+    <div className="w-full min-h-screen bg-neutral-900 text-white p-8 overflow-hidden font-sans relative">
+      {/* Global Light Effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="animate-spin-slow-reverse absolute -top-20 -left-20 w-96 h-96 bg-pink-600 opacity-15 rounded-full mix-blend-screen filter blur-3xl"></div>
+        <div className="animate-spin-slow absolute -bottom-20 -right-20 w-[28rem] h-[28rem] bg-indigo-500 opacity-15 rounded-full mix-blend-screen filter blur-3xl"></div>
+      </div>
+
       {/* Header Section */}
-      <div className="mt-12 sm:mt-16 text-center mb-8 px-4 relative">
+      <div className="mt-12 sm:mt-16 text-center mb-8 px-4 relative z-10">
         <p className="mt-4 text-3xl sm:text-8xl md:text-9xl font-extrabold text-white leading-tight tracking-tighter animate-fade-in-up">
           ABOUT US
         </p>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="animate-spin-slow-reverse absolute -top-10 -left-10 w-48 h-48 bg-pink-600 opacity-15 rounded-full mix-blend-screen filter blur-3xl"></div>
-          <div className="animate-spin-slow absolute -bottom-10 -right-10 w-64 h-64 bg-indigo-500 opacity-15 rounded-full mix-blend-screen filter blur-3xl"></div>
-        </div>
       </div>
 
       {/* Description Section */}
-      <div className="text-center max-w-4xl mx-auto mb-20 px-4 animate-fade-in delay-200">
+      <div className="text-center max-w-4xl mx-auto mb-20 px-4 animate-fade-in delay-200 z-10 relative">
         <p className="text-xl sm:text-2xl font-light text-gray-300 leading-relaxed">
           The Corner is more than just a food plaza — it's a celebration of
           culinary diversity, creativity, and community. We bring together
@@ -122,7 +124,7 @@ const AboutPage = () => {
       </div>
 
       {/* Values Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 max-w-6xl w-full text-center mx-auto mb-20">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 max-w-6xl w-full text-center mx-auto mb-20 relative z-10">
         {[
           { icon: FaUsers, title: "Community", description: "We thrive on connection and shared experiences." },
           { icon: FaLeaf, title: "Quality", description: "Only the freshest ingredients and boldest flavors." },
@@ -138,8 +140,8 @@ const AboutPage = () => {
                 ${valuesVisible ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 translate-y-10"}`}
               style={{ transitionDelay: valuesVisible ? `${index * 150}ms` : "0ms" }}
             >
-              <Icon className="text-6xl text-pink-500 mb-6 animate-spin-slow-on-hover" /> {/* Larger Spinning Icon */}
-              <span className="font-bold text-2xl text-indigo-400 mb-2">{value.title}</span>
+              <Icon className="text-6xl text-pink-500 mb-6 animate-spin-slow-on-hover" />
+              <span className="font-bold text-2xl text-indigo-500 mb-2">{value.title}</span>
               <p className="text-sm text-gray-400">{value.description}</p>
             </div>
           );
@@ -147,7 +149,7 @@ const AboutPage = () => {
       </div>
 
       {/* Team Section */}
-      <div className="w-full max-w-7xl mx-auto mb-20">
+      <div className="w-full max-w-7xl mx-auto mb-20 relative z-10">
         <h2 className="text-center text-4xl sm:text-5xl font-bold text-white mb-16 animate-fade-in delay-500">
           Meet the Team
         </h2>
@@ -167,7 +169,7 @@ const AboutPage = () => {
       </div>
 
       {/* Final Note */}
-      <div className="text-center max-w-3xl mx-auto px-4 animate-fade-in delay-700">
+      <div className="text-center max-w-3xl mx-auto px-4 animate-fade-in delay-700 relative z-10">
         <p className="text-lg sm:text-xl font-light text-gray-400 leading-relaxed">
           Whether you're grabbing a quick bite or exploring new tastes, The
           Corner is your destination for unforgettable food and friendly vibes.

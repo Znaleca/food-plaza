@@ -10,6 +10,7 @@ import SpecialDiscount from '@/components/SpecialDiscount';
 import getSingleSpace from '@/app/actions/getSingleSpace';
 import useVoucher from '@/app/actions/useVoucher';
 import getSpecialDiscount from '@/app/actions/getSpecialDiscount';
+import checkAuth from '@/app/actions/checkAuth'; // Import the server action
 
 const OrderCartPage = () => {
   const [cart, setCart] = useState([]);
@@ -25,18 +26,26 @@ const OrderCartPage = () => {
   const [openSpecialDiscount, setOpenSpecialDiscount] = useState(false);
   const [specialDiscountData, setSpecialDiscountData] = useState(null);
   const [cartCount, setCartCount] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // New state for auth
+  const [loadingAuth, setLoadingAuth] = useState(true); // New state for loading
 
-  // Check if user has special discount on mount
+  // Check if user has special discount and authentication status on mount
   useEffect(() => {
-    const checkSpecial = async () => {
-      const res = await getSpecialDiscount();
-      if (res.success && res.documents.length > 0) {
-        setSpecialDiscountData(res.documents[0]);
+    const loadInitialData = async () => {
+      const [authRes, specialRes] = await Promise.all([
+        checkAuth(),
+        getSpecialDiscount(),
+      ]);
+      setIsAuthenticated(authRes.isAuthenticated);
+      setLoadingAuth(false);
+      
+      if (specialRes.success && specialRes.documents.length > 0) {
+        setSpecialDiscountData(specialRes.documents[0]);
       } else {
         setSpecialDiscountData(null);
       }
     };
-    checkSpecial();
+    loadInitialData();
   }, []);
 
   useEffect(() => {
@@ -126,7 +135,6 @@ const OrderCartPage = () => {
   };
 
   const handleVoucherUsed = (voucher) => {
-    // If a voucher is selected, apply it and cancel any special discount for that room
     if (voucher) {
       setActiveVouchersPerRoom((prev) => ({
         ...prev,
@@ -137,7 +145,6 @@ const OrderCartPage = () => {
         [openVoucherRoom]: false,
       }));
     } else {
-      // If a voucher is canceled, remove it
       setActiveVouchersPerRoom((prev) => ({
         ...prev,
         [openVoucherRoom]: null,
@@ -152,7 +159,6 @@ const OrderCartPage = () => {
       const isCurrentlyActive = newActive[roomId];
       newActive[roomId] = !isCurrentlyActive;
 
-      // If special discount is being applied, cancel any active voucher for this room
       if (!isCurrentlyActive) {
         setActiveVouchersPerRoom((prevVouchers) => {
           const newVouchers = { ...prevVouchers };
@@ -179,7 +185,6 @@ const OrderCartPage = () => {
       const voucher = activeVouchersPerRoom[roomId];
       const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
 
-      // Priority: A specific voucher is always preferred over the special card
       if (voucher) {
         discount = (voucher.discount / 100) * roomTotal;
       } else if (isSpecialDiscountActive) {
@@ -274,6 +279,15 @@ const OrderCartPage = () => {
     setOpenSpecialDiscount(false);
     window.location.reload();
   };
+  
+  // Display a loading state while fetching auth status
+  if (loadingAuth) {
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-64 bg-neutral-900 text-white text-center">
+        <p className="text-xl text-pink-600">Loading your cart...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-64 bg-neutral-900 text-white">
@@ -330,7 +344,7 @@ const OrderCartPage = () => {
                   className="form-checkbox h-4 w-4 text-pink-600 bg-neutral-700 border-gray-600 mr-2"
                 />
                 {roomNames[roomId] || roomName}
-                {hasSelectedItems && (
+                {hasSelectedItems && isAuthenticated && ( // Conditionally render these buttons
                   <div className="flex items-center ml-4 space-x-2">
                     <button
                       onClick={() => setOpenVoucherRoom(roomId)}
@@ -430,7 +444,7 @@ const OrderCartPage = () => {
       )}
 
       {/* CHECKOUT */}
-      {cart.length > 0 && (
+      {cart.length > 0 && isAuthenticated ? (
         <>
           {Object.keys(combinedVoucherMap).length > 0 && (
             <div className="mt-8">
@@ -483,6 +497,15 @@ const OrderCartPage = () => {
             )}
           </div>
         </>
+      ) : cart.length > 0 && (
+        <div className="mt-8 text-center">
+          <p className="text-pink-600 text-lg font-semibold">
+            You need to be logged in to proceed with checkout.
+          </p>
+          <p className="text-sm text-neutral-400 mt-2">
+            Please log in or create an account to finalize your order.
+          </p>
+        </div>
       )}
 
       {/* SPECIAL CARD MODAL */}

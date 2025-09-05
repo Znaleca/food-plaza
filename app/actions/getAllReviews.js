@@ -1,7 +1,6 @@
 'use server';
 
 import { createAdminClient } from '@/config/appwrite';
-import { redirect } from 'next/navigation';
 import { Query } from 'appwrite';
 
 const getAllReviews = async (page = 1, limit = 10) => {
@@ -20,20 +19,22 @@ const getAllReviews = async (page = 1, limit = 10) => {
 
     const allOrders = response.documents;
 
-    // Filter to only orders with at least one rated item
-    const reviewedOrders = allOrders.filter(order => {
-      return Array.isArray(order.rated) && order.rated.some((r) => r === true);
-    });
-
+    // 🔑 Instead of filtering them out, just return all and let the frontend decide
     return {
-      orders: reviewedOrders,
-      totalOrders: reviewedOrders.length,
+      orders: allOrders,
+      totalOrders: allOrders.length,
       currentPage: page,
-      totalPages: Math.ceil(reviewedOrders.length / limit),
+      totalPages: Math.ceil(allOrders.length / limit),
     };
   } catch (error) {
     console.error('Failed to fetch all reviews:', error);
-    redirect('/error');
+
+    return {
+      orders: [],
+      totalOrders: 0,
+      currentPage: page,
+      totalPages: 0,
+    };
   }
 };
 

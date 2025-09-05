@@ -105,15 +105,22 @@ const Header = () => {
           {/* Desktop Menu */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-center gap-6 text-sm font-medium text-white">
-              {isAuthenticated && !isAdmin && !isFoodstall && (
+            {!isAuthenticated && (
                 <>
                   <Link href="/" className="hover:text-pink-600 transition">Home</Link>
-                  <Link href="/customer/order-status" className="hover:text-pink-600 transition">My Orders</Link>
+                  <Link href="/about" className="hover:text-pink-600 transition">About Us</Link>
+                  <Link href="/customer/promos" className="hover:text-pink-600 transition">Promotions</Link>
+
                 </>
               )}
 
-              {isCustomer && (
+              {isCustomer &&(
+                <>
+                <Link href="/" className="hover:text-pink-600 transition">Home</Link>
+                <Link href="/customer/order-status" className="hover:text-pink-600 transition">My Orders</Link>
+                <Link href="/about" className="hover:text-pink-600 transition">About Us</Link>
                 <Link href="/customer/promos" className="hover:text-pink-600 transition">Promotions</Link>
+                </>
               )}
 
               {isAdmin && (
@@ -147,24 +154,34 @@ const Header = () => {
           <div className="hidden md:block ml-auto">
             <div className="flex items-center">
               {!isAuthenticated ? (
-                <div className="relative">
-                  <button
-                    onClick={toggleDropdown}
-                    className="mx-3 py-2 text-sm font-medium text-white hover:text-gray-500"
-                  >
-                    <FaBars size={20} />
-                  </button>
-                  {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-neutral-900 border border-neutral-700 z-10 transition-all duration-300 ease-in-out transform origin-top scale-y-100 opacity-100">
-                      <Link href="/login" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors">
-                        <FaSignInAlt className="mr-2 text-pink-500" /> Login
-                      </Link>
-                      <Link href="/register" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors">
-                        <FaUserPlus className="mr-2 text-pink-500" /> Register
-                      </Link>
-                    </div>
-                  )}
-                </div>
+                <>
+                  <Link href="/order/cart" className="relative mr-3 text-white hover:text-pink-600">
+                    <FaCartShopping className="inline mr-1" />
+                    {cartCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-xs font-bold rounded-full px-1.5">
+                        {cartCount}
+                      </span>
+                    )}
+                  </Link>
+                  <div className="relative">
+                    <button
+                      onClick={toggleDropdown}
+                      className="mx-3 py-2 text-sm font-medium text-white hover:text-gray-500"
+                    >
+                      <FaBars size={20} />
+                    </button>
+                    {isDropdownOpen && (
+                      <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-neutral-900 border border-neutral-700 z-10 transition-all duration-300 ease-in-out transform origin-top scale-y-100 opacity-100">
+                        <Link href="/login" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors">
+                          <FaSignInAlt className="mr-2 text-pink-500" /> Login
+                        </Link>
+                        <Link href="/register" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors">
+                          <FaUserPlus className="mr-2 text-pink-500" /> Register
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
                 <>
                   {!isAdmin && !isFoodstall && (
@@ -211,9 +228,21 @@ const Header = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 space-y-2 text-white bg-neutral-800 rounded-md p-4">
+            {!isAuthenticated &&(
+              <>
+                <Link href="/" className="flex items-center gap-2 hover:text-pink-600">
+                  <FaHome /> Home
+                </Link>
+                <Link href="/about" className="flex items-center gap-2 hover:text-pink-600">
+                  <FaHome /> About Us
+                </Link>
+                <Link href="/order/cart" className="flex items-center gap-2 hover:text-pink-600">
+                  <FaCartShopping /> Cart {cartCount > 0 && `(${cartCount})`}
+                </Link>
+              </>
+            )}
             {isAuthenticated && !isAdmin && !isFoodstall && (
               <>
-                
                 <Link href="/" className="flex items-center gap-2 hover:text-pink-600">
                   <FaHome /> Home
                 </Link>

@@ -1,21 +1,12 @@
 'use server';
 
 import { createAdminClient } from '@/config/appwrite';
-import { redirect } from 'next/navigation';
 import { Query } from 'appwrite';
-import checkAuth from './checkAuth';
 
 const getAllOrders = async (page = 1, limit = 10) => {
   try {
     const { databases } = await createAdminClient();
-    const { user } = await checkAuth();
 
-    if (!user) {
-      console.error("User not authenticated");
-      redirect('/login');
-    }
-
-    
     const response = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
@@ -34,7 +25,14 @@ const getAllOrders = async (page = 1, limit = 10) => {
     };
   } catch (error) {
     console.error('Failed to fetch all orders:', error);
-    redirect('/error');
+
+    // ✅ Don’t redirect, just return empty
+    return {
+      orders: [],
+      totalOrders: 0,
+      currentPage: page,
+      totalPages: 0,
+    };
   }
 };
 
