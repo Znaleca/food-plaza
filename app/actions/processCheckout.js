@@ -14,27 +14,28 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
     const { databases } = await createAdminClient();
     const { user } = await checkAuth();
 
-    if (!user) {
+    if (!user || !user.id) {
       throw new Error("You must be logged in to place an order.");
     }
 
-    const {
-      cleanedCart,
-      baseTotal,
-      serviceCharge,
-      discountAmount,
-      finalTotal,
-    } = await calculateTotals(cart, null, databases);
+    const userId = user.id;
 
-    const stringifiedItems = cleanedCart.map((item) => JSON.stringify(item));
+    const { cleanedCart, baseTotal, serviceCharge, discountAmount, finalTotal } =
+      await calculateTotals(cart, null, databases, voucherMap);
 
+    const stringifiedItems = cleanedCart.map(item => JSON.stringify(item));
+
+    // Build promo strings for display
     const promoStrings = Object.entries(voucherMap).map(([roomId, voucher]) => {
-      const roomName = voucher?.roomName || `Room ${roomId}`;
+      const itemWithRoomName = cleanedCart.find(item => item.room_id === roomId);
+      const roomName = itemWithRoomName?.room_name || `Room ${roomId}`;
       return `${roomName} - ${voucher?.title} (${voucher?.discount}% off)`;
     });
 
+    // Update redeemed users for each voucher (skip special discounts)
     for (const [, voucher] of Object.entries(voucherMap)) {
-      if (!voucher?.title) continue;
+      if (!voucher || voucher.isSpecial || !voucher.title) continue;
+
       const promoDocs = await databases.listDocuments(
         process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
         process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS,
@@ -43,22 +44,29 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
 
       if (promoDocs.total > 0) {
         const promo = promoDocs.documents[0];
+
+        // Ensure redeemed is always a string array
         const redeemedList = Array.isArray(promo.redeemed) ? [...promo.redeemed] : [];
 
-        if (!redeemedList.includes(user.id)) {
-          redeemedList.push(user.id);
+        if (!redeemedList.includes(userId)) {
+          redeemedList.push(userId);
+
           await databases.updateDocument(
             process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
             process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS,
             promo.$id,
-            { redeemed: redeemedList }
+            {
+              redeemed: redeemedList, // now always a string array
+              updated_at: new Date().toISOString()
+            }
           );
         }
       }
     }
 
+    // Build order payload
     const orderPayload = {
-      user_id: user.id,
+      user_id: userId,
       name: user.name || 'Unknown User',
       email: user.email || 'Unknown Email',
       phone: user.phone || 'No phone',
@@ -69,7 +77,6 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       promos: promoStrings,
       created_at: new Date().toISOString(),
     };
-
 
     const response = await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,

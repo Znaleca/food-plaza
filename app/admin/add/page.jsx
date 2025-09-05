@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import createStall from '@/app/actions/createStall';
 import getStallUser from '@/app/actions/getStallUser';
-import getAllStalls from '@/app/actions/getAllStalls'; // Import the new action
+import getAllStalls from '@/app/actions/getAllStalls';
 import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa6';
 
@@ -14,28 +14,30 @@ function AddStallPage() {
   const [state, formAction] = useFormState(createStall, {});
   const [foodstallUsers, setFoodstallUsers] = useState([]);
   const [stallNumber, setStallNumber] = useState('');
+  const [usedStalls, setUsedStalls] = useState(new Set());
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchFoodstallUsers() {
+    async function fetchData() {
       try {
         const [users, stalls] = await Promise.all([
           getStallUser(),
           getAllStalls(),
         ]);
 
-        // Get a list of user IDs who already own a stall
+        // Filter users without stalls
         const usersWithStalls = new Set(stalls.map(stall => stall.user_id));
-        
-        // Filter the users list to only show those who don't have a stall
         const filteredUsers = users.filter(user => !usersWithStalls.has(user.$id));
-        
         setFoodstallUsers(filteredUsers);
+
+        // Mark used stalls
+        const taken = new Set(stalls.map(stall => parseInt(stall.stallNumber, 10)));
+        setUsedStalls(taken);
       } catch (err) {
         console.error('Failed to fetch data:', err);
       }
     }
-    fetchFoodstallUsers();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -89,17 +91,33 @@ function AddStallPage() {
           </select>
         </div>
 
-        {/* stall number */}
+        {/* stall number cinema-style picker */}
         <div>
-          <label className="block font-semibold mb-2">Stall #</label>
-          <input
-            type="number"
-            name="stallNumber"
-            value={stallNumber}
-            onChange={(e) => setStallNumber(e.target.value)}
-            required
-            className="bg-neutral-800 border border-neutral-700 rounded-lg w-full py-3 px-6"
-          />
+          <label className="block font-semibold mb-4">Choose Stall #</label>
+          <div className="grid grid-cols-5 gap-4 justify-items-center">
+            {Array.from({ length: 15 }, (_, i) => i + 1).map((num) => {
+              const taken = usedStalls.has(num);
+              const selected = parseInt(stallNumber, 10) === num;
+              return (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => !taken && setStallNumber(num)}
+                  disabled={taken}
+                  className={`w-14 h-14 flex items-center justify-center rounded-lg font-bold transition-all
+                    ${taken 
+                      ? 'bg-neutral-700 text-gray-500 cursor-not-allowed' 
+                      : selected 
+                        ? 'bg-pink-600 text-white shadow-lg scale-110' 
+                        : 'bg-neutral-800 hover:bg-pink-700 text-white'}`}
+                >
+                  {num}
+                </button>
+              );
+            })}
+          </div>
+          {/* hidden input to pass stallNumber to form */}
+          <input type="hidden" name="stallNumber" value={stallNumber} required />
         </div>
 
         {/* stall name (auto-filled) */}

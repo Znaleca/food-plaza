@@ -148,25 +148,41 @@ const OrderCard = ({ order, setOrders }) => {
 
   const groupedItems = parseItemsGroupedByRoom();
 
-  const baseTotal = Object.values(groupedItems).reduce(
-    (acc, { items }) => acc + getRoomSubtotal(items),
-    0
-  );
+  const parsePromos = () => {
+    const roomPromos = {};
+    (order.promos || []).forEach(promoStr => {
+      const [roomName, details] = promoStr.split(' - ');
+      const match = details?.match(/(\d+)%/);
+      const discount = match ? parseInt(match[1]) : 0;
+      const promoTitleMatch = details?.match(/\((.*?)\)/);
+      const promoTitle = promoTitleMatch ? promoTitleMatch[1] : '';
 
-  const finalTotal = Object.entries(groupedItems).reduce((acc, [roomId, { roomName, items }]) => {
+      roomPromos[roomName] = {
+        label: promoStr,
+        discount,
+        promoTitle
+      };
+    });
+    return roomPromos;
+  };
+
+  const roomPromos = parsePromos();
+
+  let baseTotal = 0;
+  let finalTotal = 0;
+
+  Object.values(groupedItems).forEach(({ roomName, items }) => {
     const subtotal = getRoomSubtotal(items);
-    const promoEntry = (order.promos || []).find((p) => p.startsWith(roomName));
-    let discount = 0;
+    baseTotal += subtotal;
 
-    if (promoEntry) {
-      const match = promoEntry.match(/(\d+)%/);
-      if (match) discount = parseInt(match[1]);
+    let discounted = subtotal;
+    const promo = roomPromos[roomName];
+    if (promo) {
+      discounted = subtotal - (promo.discount / 100) * subtotal;
     }
-
-    const discounted = subtotal - (discount / 100) * subtotal;
-    return acc + discounted;
-  }, 0);
-
+    finalTotal += discounted;
+  });
+  
   return (
     <div className="px-4">
       <div className="bg-white text-black max-w-xl mx-auto rounded-lg shadow-lg p-6 font-mono border border-pink-600">
@@ -177,29 +193,19 @@ const OrderCard = ({ order, setOrders }) => {
         </div>
 
         <div className="text-sm mb-4">
-  <p className="mb-1">Customer: <strong>{order.name || 'Unknown'}</strong></p>
-  <p className="mb-1">Email: {order.email}</p>
-
-  <div className="mt-2">
-    Payment Status: {renderPaymentBadge(order.payment_status || "failed")}
-  </div>
-</div>
+          <p className="mb-1">Customer: <strong>{order.name || 'Unknown'}</strong></p>
+          <p className="mb-1">Email: {order.email}</p>
+          <div className="mt-2">
+            Payment Status: {renderPaymentBadge(order.payment_status || "failed")}
+          </div>
+        </div>
 
         <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
           {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => {
             const subtotal = getRoomSubtotal(items);
-            const promoEntry = (order.promos || []).find((p) => p.startsWith(roomName));
-            let discount = 0;
-            let promoTitle = '';
-
-            if (promoEntry) {
-              const parts = promoEntry.split(' - ');
-              const percentMatch = promoEntry.match(/(\d+)%/);
-              if (parts.length === 2 && percentMatch) {
-                promoTitle = parts[1].replace(/\((.*?)\)/, '').trim();
-                discount = parseInt(percentMatch[1]);
-              }
-            }
+            const promoEntry = roomPromos[roomName];
+            const discount = promoEntry?.discount || 0;
+            const promoTitle = promoEntry?.promoTitle || '';
 
             const discounted = subtotal - (discount / 100) * subtotal;
 
@@ -250,7 +256,7 @@ const OrderCard = ({ order, setOrders }) => {
 
                 <div className="mt-2 text-sm">
                   <p>Subtotal: ₱{subtotal.toFixed(2)}</p>
-                  {discount > 0 && <p className="text-green-500">Discount: {discount}% ({promoTitle})</p>}
+                  {discount > 0 && <p className="text-green-500">Stall Discount: {discount}% ({promoTitle})</p>}
                   <p className="font-semibold text-pink-500">Stall Total: ₱{discounted.toFixed(2)}</p>
                 </div>
               </div>
@@ -262,26 +268,18 @@ const OrderCard = ({ order, setOrders }) => {
           <p className="text-sm text-gray-500"> Base Total:</p>
           <p className="text-lg font-bold text-gray-800">₱{baseTotal.toFixed(2)}</p>
 
-          {order.promos?.length > 0 && (
+          {(Object.keys(roomPromos).length > 0) && (
             <div className="mt-4 text-sm text-left mx-auto max-w-xs text-gray-700">
               <p className="font-semibold text-center text-pink-500 mb-2">Applied Promos:</p>
               <ul className="space-y-1">
-                {order.promos.map((promo, idx) => {
-                  const [stallName, details] = promo.split(' - ');
-                  const discountMatch = details?.match(/(\d+)%/);
-                  const discount = discountMatch ? `${discountMatch[1]}%` : '';
-                  const titleMatch = details?.match(/\((.*?)\)/);
-                  const title = titleMatch ? titleMatch[1] : '';
-
-                  return (
-                    <li key={idx} className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-                      <span className="font-medium text-black">{stallName}</span>
-                      <span className="text-pink-600 font-semibold">
-                        {discount} {title && `(${title})`}
-                      </span>
-                    </li>
-                  );
-                })}
+                {Object.entries(roomPromos).map(([roomName, promo], idx) => (
+                  <li key={idx} className="flex justify-between border-b border-dashed border-gray-300 pb-1">
+                    <span className="font-medium text-black">{roomName}</span>
+                    <span className="text-pink-600 font-semibold">
+                      {promo.discount}% {promo.promoTitle && `(${promo.promoTitle})`}
+                    </span>
+                  </li>
+                ))}
               </ul>
             </div>
           )}

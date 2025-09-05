@@ -2,3 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Contract A4 Styling */
+.a4-paper {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 25mm;
+  font-family: "Times New Roman", Times, serif !important;
+  font-size: 11pt;
+  line-height: 1.6;
+  margin: auto;
+  background: white;
+  color: black;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+}
+
+/* Print-friendly adjustments */
+@media print {
+  body {
+    background: white !important;
+  }
+  .a4-paper {
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+    min-height: auto;
+    padding: 20mm;
+  }
+}

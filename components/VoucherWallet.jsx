@@ -17,6 +17,10 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
   useEffect(() => {
     const fetchData = async () => {
       const { user } = await checkAuth();
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       setUser(user);
 
       const claimedVouchers = await getAllClaimedVouchers(user);
@@ -43,7 +47,7 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
     };
 
     fetchData();
-  }, []);
+  }, [setUsedVoucherStates, usedVoucherStates]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -65,7 +69,7 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
     return (
       <div className="w-full max-w-3xl mx-auto mt-6 p-4 bg-neutral-900 shadow-sm rounded-lg">
         <h2 className="text-2xl font-medium text-pink-600 text-center mb-6">Voucher Wallet</h2>
-        <p className="text-center text-gray-400">No vouchers claimed yet.</p>
+        <p className="text-center text-gray-400">No vouchers claimed yet or all have been used.</p>
       </div>
     );
   }
@@ -175,7 +179,17 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
                           minOrders={voucher.min_orders || 0}
                           roomSubtotal={roomSubtotal}
                           onUsed={() => {
-                            setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: true }));
+                            setUsedVoucherStates((prev) => {
+                              // Reset all other vouchers for this room
+                              const newState = Object.fromEntries(
+                                Object.entries(prev).map(([id, used]) => [
+                                  id,
+                                  stallData[id]?.id === roomIdFilter ? false : used
+                                ])
+                              );
+                              newState[voucher.$id] = true;
+                              return newState;
+                            });
                             onVoucherUsed?.({
                               $id: voucher.$id,
                               discount: voucher.discount,

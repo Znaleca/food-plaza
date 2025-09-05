@@ -1,14 +1,14 @@
 'use client';
 
 import { toast } from 'react-toastify';
-import leaseStall from '@/app/actions/leaseStall';
+import leaseUpdateStall from '@/app/actions/leaseUpdateStall';
 
 const LeaseEditForm = ({ booking, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    const res = await leaseStall(booking.$id, formData);
+    const res = await leaseUpdateStall(booking.$id, formData);
     if (res.error) toast.error(res.error);
     if (res.success) {
       toast.success('Lease has been renewed! Awaiting approval.');

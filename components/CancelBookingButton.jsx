@@ -4,16 +4,16 @@ import cancelBooking from '@/app/actions/cancelBooking';
 
 const CancelBookingButton = ({ bookingId }) => {
   const handleCancelClick = async () => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    if (!confirm('Are you sure you want to cancel this lease?')) return;
 
     try {
       const result = await cancelBooking(bookingId);
       if (result.success) {
-        toast.success('Booking cancelled successfully!');
+        toast.success('Lease cancelled successfully!');
       }
     } catch (error) {
-      console.log('Failed to cancel booking', error);
-      toast.error('Failed to cancel booking');
+      console.log('Failed to cancel lease', error);
+      toast.error('Failed to cancel lease');
     }
   };
 

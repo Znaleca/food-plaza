@@ -1,25 +1,29 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAuth } from '@/context/authContext';
 import CancelBookingButton from './CancelBookingButton';
 import deleteBooking from '@/app/actions/deleteBooking';
-import { FaTrashAlt, FaRedoAlt } from 'react-icons/fa';
+import { FaTrashAlt, FaRedoAlt, FaFileContract, FaTimes } from 'react-icons/fa';
 import LeaseEditForm from './LeaseEditForm';
+import ContractPreview from './ContractPreview';
 
 const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
-  const { currentUser } = useAuth();
   const [showRenewForm, setShowRenewForm] = useState(false);
+  const [showContract, setShowContract] = useState(false);
 
   const room = booking?.room_id || { name: 'Unknown Stall', stallNumber: 'N/A', $id: '' };
   const stallName = room?.name || 'Unnamed Stall';
+  const tenantName = booking?.fname || 'Unnamed Tenant';
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Invalid Date';
     const date = new Date(dateString);
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     const timeOptions = { hour: 'numeric', minute: 'numeric', hour12: true };
-    return `${date.toLocaleDateString(undefined, options)} at ${date.toLocaleTimeString(undefined, timeOptions)}`;
+    return `${date.toLocaleDateString(undefined, options)} at ${date.toLocaleTimeString(
+      undefined,
+      timeOptions
+    )}`;
   };
 
   const getStatus = (status, checkOutDate) => {
@@ -74,15 +78,29 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
         Food Stall Lessee: {stallName} (Stall #{room.stallNumber || 'N/A'})
       </h3>
 
+      {/* Tenant Full Name */}
+      <p className="text-sm text-gray-300 mb-4">
+        <span className="font-semibold text-white">Tenant:</span> {tenantName}
+      </p>
+
       {/* Decorative Line */}
       <div className="w-16 h-0.5 bg-gray-600 mx-auto mb-6" />
 
       {/* Details */}
       <div className="text-sm space-y-2 font-light">
-        <p><span className="font-semibold">Lease ID:</span> {booking?.$id || 'N/A'}</p>
-        <p><span className="font-semibold">Start:</span> {formatDate(booking.check_in)}</p>
-        <p><span className="font-semibold">End:</span> {formatDate(booking.check_out)}</p>
-        <p><span className="font-semibold">Status:</span> <span className={statusColor}>{statusText}</span></p>
+        <p>
+          <span className="font-semibold">Lease ID:</span> {booking?.$id || 'N/A'}
+        </p>
+        <p>
+          <span className="font-semibold">Start:</span> {formatDate(booking.check_in)}
+        </p>
+        <p>
+          <span className="font-semibold">End:</span> {formatDate(booking.check_out)}
+        </p>
+        <p>
+          <span className="font-semibold">Status:</span>{' '}
+          <span className={statusColor}>{statusText}</span>
+        </p>
 
         {/* 📄 PDF Link */}
         {pdfLink && (
@@ -97,13 +115,17 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
       {/* Agreement Notice */}
       <div className="mt-6 text-xs text-gray-300 font-extralight text-left">
         <p>
-          As the management of <strong className="text-white">The Corner Food Plaza</strong>, we confirm that the food stall named <strong className="text-white">{stallName}</strong> is the official lessee of this leased space. All lessees must comply with our policies regarding cleanliness, behavior, waste disposal, and noise management. Non-compliance may result in immediate termination of the lease.
+          As the management of <strong className="text-white">The Corner Food Plaza</strong>, we
+          confirm that the food stall named <strong className="text-white">{stallName}</strong> is
+          leased by tenant <strong className="text-white">{tenantName}</strong>. All lessees must
+          comply with our policies regarding cleanliness, behavior, waste disposal, and noise
+          management. Non-compliance may result in immediate termination of the lease.
         </p>
       </div>
 
       {/* Actions */}
       {showActions && (
-        <div className="flex justify-center mt-6 space-x-4">
+        <div className="flex flex-wrap justify-center mt-6 space-x-4">
           {!isDeclined && statusText !== 'Expired' && (
             <CancelBookingButton bookingId={booking.$id} />
           )}
@@ -127,24 +149,52 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
               <span>Renew Lease</span>
             </button>
           )}
+
+          {/* Contract Preview Button */}
+          <button
+            onClick={() => setShowContract(true)}
+            className="flex items-center space-x-2 border border-pink-500 text-pink-500 px-4 py-2 rounded hover:bg-pink-600 hover:text-white transition-all"
+          >
+            <FaFileContract />
+            <span>View Contract</span>
+          </button>
         </div>
       )}
 
-{showRenewForm && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 p-4">
-    <div className="relative w-full max-w-lg rounded-xl shadow-xl">
+      {/* Renew Lease Modal */}
+      {showRenewForm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 p-4">
+          <div className="relative w-full max-w-lg rounded-xl shadow-xl">
+            <button
+              onClick={() => setShowRenewForm(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-2xl z-10"
+              aria-label="Close renewal form"
+            >
+              &times;
+            </button>
+            <LeaseEditForm booking={booking} onClose={() => setShowRenewForm(false)} />
+          </div>
+        </div>
+      )}
+
+{/* Contract Preview Modal */}
+{showContract && (
+  <div className="fixed inset-0 bg-black bg-opacity-80 z-50 p-6 overflow-y-auto">
+    <div className="flex flex-col items-center">
+      {/* Contract Content */}
+      <ContractPreview booking={booking} />
+
+      {/* Close Button (below) */}
       <button
-        onClick={() => setShowRenewForm(false)}
-        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-2xl z-10"
-        aria-label="Close renewal form"
+        onClick={() => setShowContract(false)}
+        className="mt-6 flex items-center gap-2 bg-gray-700 text-white px-6 py-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+        aria-label="Close contract preview"
       >
-        &times;
+        <FaTimes className="text-lg" />
       </button>
-      <LeaseEditForm booking={booking} onClose={() => setShowRenewForm(false)} />
     </div>
   </div>
 )}
-
     </div>
   );
 };

@@ -5,6 +5,7 @@ import Heading from "@/components/Heading";
 import Link from "next/link";
 import { FaChevronLeft } from "react-icons/fa6";
 import getSingleSpace from "@/app/actions/getSingleSpace";
+import getAllStalls from "@/app/actions/getAllStalls";
 import LeaseForm from "@/components/LeaseForm";
 import { toast } from "react-toastify";
 import updateStallNumber from "@/app/actions/updateStallNumber";
@@ -14,15 +15,24 @@ const LeaseSpace = ({ params }) => {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newStallNumber, setNewStallNumber] = useState('');
+  const [usedStalls, setUsedStalls] = useState(new Set());
 
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const data = await getSingleSpace(id);
+        const [data, stalls] = await Promise.all([
+          getSingleSpace(id),
+          getAllStalls(),
+        ]);
+
         if (data) {
           setRoom(data);
           setNewStallNumber(data.stallNumber.toString());
         }
+
+        // Mark taken stalls
+        const taken = new Set(stalls.map(stall => parseInt(stall.stallNumber, 10)));
+        setUsedStalls(taken);
       } catch (error) {
         console.error("Error fetching room data:", error);
       } finally {
@@ -77,7 +87,7 @@ const LeaseSpace = ({ params }) => {
   }
 
   return (
-    <div className="min-h-screen  text-white px-4 md:px-8 py-12 font-sans">
+    <div className="min-h-screen text-white px-4 md:px-8 py-12 font-sans">
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
         <Link
@@ -110,20 +120,34 @@ const LeaseSpace = ({ params }) => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Update Stall Number Form */}
+          {/* Update Stall Number Cinema Picker */}
           <div className="bg-neutral-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-neutral-800">
-            <h2 className="text-2xl font-bold mb-6 text-white"> Stall Number</h2>
+            <h2 className="text-2xl font-bold mb-6 text-white">Stall Number</h2>
             <form onSubmit={handleStallNumberChange} className="space-y-6">
-              <div>
-                <input
-                  id="stallNumber"
-                  type="text"
-                  value={newStallNumber}
-                  onChange={(e) => setNewStallNumber(e.target.value)}
-                  className="w-full bg-neutral-800 text-white border border-yellow-400 rounded-lg py-3 px-5 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all duration-300"
-                  required
-                />
+              <div className="grid grid-cols-5 gap-4 justify-items-center">
+                {Array.from({ length: 15 }, (_, i) => i + 1).map((num) => {
+                  const taken = usedStalls.has(num) && num !== room.stallNumber; // allow current stall
+                  const selected = parseInt(newStallNumber, 10) === num;
+                  return (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => !taken && setNewStallNumber(num.toString())}
+                      disabled={taken}
+                      className={`w-14 h-14 flex items-center justify-center rounded-lg font-bold transition-all
+                        ${taken
+                          ? 'bg-neutral-700 text-gray-500 cursor-not-allowed'
+                          : selected
+                            ? 'bg-pink-600 text-white shadow-lg scale-110'
+                            : 'bg-neutral-800 hover:bg-pink-700 text-white'}`}
+                    >
+                      {num}
+                    </button>
+                  );
+                })}
               </div>
+              <input type="hidden" value={newStallNumber} readOnly />
+
               <button
                 type="submit"
                 className="w-full py-3 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-lg font-bold text-white shadow-lg transform transition-all duration-300 hover:from-yellow-500 hover:to-pink-400 hover:scale-105"

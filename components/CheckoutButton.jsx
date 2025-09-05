@@ -22,6 +22,9 @@ const CheckoutButton = ({
   roomNames = {},
   onCheckoutSuccess,
   promos = [],
+  // NEW: special discount props
+  useSpecialCard = false,
+  specialDiscountPercent = 20,
 }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -73,6 +76,13 @@ const CheckoutButton = ({
         ])
       );
 
+      // NEW: include special discount in request
+      const specialDiscount = {
+        active: Boolean(useSpecialCard),
+        discount: Number(specialDiscountPercent) || 0,
+        title: 'PWD/Senior Discount',
+      };
+
       const response = await fetch('/api/xendit/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,6 +91,7 @@ const CheckoutButton = ({
           user,
           totalAmount: total,
           voucherMap,
+          specialDiscount,
         }),
       });
 
@@ -113,7 +124,12 @@ const CheckoutButton = ({
       .reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
   };
 
+  // NEW: apply special discount if active, else voucher
   const getDiscountedSubtotal = (roomId, subtotal) => {
+    if (useSpecialCard) {
+      const rate = (Number(specialDiscountPercent) || 0) / 100;
+      return subtotal - rate * subtotal;
+    }
     const voucher = activeVouchersPerRoom[roomId];
     const discount = voucher?.discount || 0;
     return subtotal - (discount / 100) * subtotal;
@@ -126,7 +142,7 @@ const CheckoutButton = ({
 
         <button
           onClick={handleCheckout}
-          disabled={loading || !phone || !hasSelectedItems} // ✅ disable when no items selected
+          disabled={loading || !phone || !hasSelectedItems}
           className={`w-full py-3 rounded-xl font-bold tracking-widest text-lg transition-all ${
             loading || !phone || !hasSelectedItems
               ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
@@ -191,13 +207,22 @@ const CheckoutButton = ({
                         <span className="font-normal text-left float-left">Subtotal:</span>
                         {formatCurrency(subtotal)}
                       </p>
-                      {voucher && (
+                      {useSpecialCard ? (
                         <p className="text-green-400">
                           <span className="font-normal text-left float-left">
-                            Discount ({voucher.discount}%):
+                            Discount ({specialDiscountPercent}% - Special):
                           </span>
-                          −{formatCurrency(subtotal - discountedSubtotal)} ({voucher.title})
+                          −{formatCurrency(subtotal - discountedSubtotal)} (PWD/Senior)
                         </p>
+                      ) : (
+                        voucher && (
+                          <p className="text-green-400">
+                            <span className="font-normal text-left float-left">
+                              Discount ({voucher.discount}%):
+                            </span>
+                            −{formatCurrency(subtotal - discountedSubtotal)} ({voucher.title})
+                          </p>
+                        )
                       )}
                       <p className="font-semibold text-pink-400">
                         <span className="font-normal text-left float-left">Stall Total:</span>
