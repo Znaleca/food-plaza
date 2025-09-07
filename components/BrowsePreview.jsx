@@ -5,7 +5,7 @@ import getAllSpaces from '@/app/actions/getAllSpaces';
 import getAllReviews from '@/app/actions/getAllReviews';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useRouter } from 'next/navigation';
-import SpaceCard from './SpaceCard'; 
+import SpaceCard from './SpaceCard';
 import FeaturedCard from './FeaturedCard';
 
 // Import GSAP and the ScrollTrigger plugin
@@ -79,11 +79,16 @@ export default function BrowsePreview() {
 
     // GSAP ScrollTrigger setup for desktop only
     let st;
-    if (window.innerWidth >= 1024 && containerRef.current && featuredRef.current && gridRef.current) {
+    if (
+      window.innerWidth >= 1024 &&
+      containerRef.current &&
+      featuredRef.current &&
+      gridRef.current
+    ) {
       st = ScrollTrigger.create({
         trigger: containerRef.current,
         pin: featuredRef.current,
-        start: "top top",
+        start: 'top top',
         end: () => `bottom bottom`,
         pinSpacing: false,
       });
@@ -101,23 +106,24 @@ export default function BrowsePreview() {
   }
 
   return (
-    <div className="w-full h-full px-4 sm:px-6 md:px-20" ref={containerRef}>
+    <div className="w-full h-full mt-20 px-4 sm:px-6 md:px-20" ref={containerRef}>
       <div className="w-full h-full flex flex-col lg:flex-row lg:gap-4 gap-6 relative">
         {/* Featured Section */}
-        <div
-          className="w-full h-[300px] sm:h-[400px] lg:h-screen lg:flex-none lg:w-1/2 lg:sticky lg:top-0 mb-6 lg:mb-0"
-          ref={featuredRef}
-        >
-          <FeaturedCard
-            imageSrc="/images/Featured.jpg"
-            buttonText="Order now"
-            href="/search"
-          />
-        </div>
-  
+<div
+  className="relative z-0 w-full h-auto lg:h-screen lg:flex-none lg:w-1/2 lg:sticky lg:top-0 mb-4 lg:mb-0"
+  ref={featuredRef}
+>
+  <FeaturedCard
+    imageSrc="/images/Featured.jpg"
+    buttonText="Order now"
+    href="/search"
+  />
+</div>
+
+
         {/* Grid Section */}
         <div
-          className="w-full lg:w-1/2 lg:flex-none lg:overflow-y-auto mt-60 lg:mt-0"
+          className="w-full lg:w-1/2 lg:flex-none lg:overflow-y-auto lg:mt-0"
           ref={gridRef}
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-2 sm:p-4">
@@ -140,5 +146,4 @@ export default function BrowsePreview() {
       </div>
     </div>
   );
-
 }

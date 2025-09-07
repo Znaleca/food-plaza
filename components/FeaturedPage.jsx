@@ -14,28 +14,28 @@ const FeaturedPage = () => {
   ];
 
   const cardVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0.6, ease: 'easeOut' } },
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
     exit: { opacity: 0, transition: { duration: 0.4, ease: 'easeIn' } },
   };
 
   return (
-    <div className="bg-neutral-900 py-16 sm:py-28 lg:py-40">
+    <div className="bg-neutral-900 py-12 sm:py-20 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         {/* Header */}
-        <header className="text-center mb-16 px-4">
-        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">
-          CATEGORIES
-        </h2>
-        <p className="mt-4 text-3xl sm:text-5xl font-extrabold leading-tight">
-          Find something that suites your crave
-        </p>
-      </header>
+        <header className="text-center mb-12 sm:mb-16 px-4">
+          <h2 className="text-base sm:text-lg text-pink-600 font-light tracking-widest">
+            CATEGORIES
+          </h2>
+          <p className="mt-3 text-2xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-white">
+            Find something that suits your crave
+          </p>
+        </header>
 
         {/* Category Grid */}
-        <div className="flex flex-col items-center gap-10 sm:gap-14">
+        <div className="flex flex-col items-center gap-8 sm:gap-12">
           {/* Top row (3 cards) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-12 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10 w-full">
             {categories.slice(0, 3).map((cat) => (
               <motion.div
                 key={cat.name}
@@ -48,28 +48,26 @@ const FeaturedPage = () => {
               >
                 <Link
                   href={`/search?category=${encodeURIComponent(cat.name)}&displayType=Menus`}
-                  className="block p-4 sm:p-5"
+                  className="flex flex-col items-center p-6 sm:p-8 text-center"
                 >
-                  <div className="flex items-center sm:space-x-8 flex-col sm:flex-row text-center sm:text-left">
-                    <div className="relative h-28 w-28 sm:h-44 sm:w-44 flex-shrink-0">
-                      <Image
-                        src={cat.image}
-                        alt={cat.name}
-                        fill
-                        className="object-contain transition-transform duration-300"
-                      />
-                    </div>
-                    <h3 className="mt-4 sm:mt-0 text-lg sm:text-2xl lg:text-3xl font-bold text-white group-hover:text-pink-400 transition-colors">
-                      {cat.name}
-                    </h3>
+                  <div className="relative h-24 w-24 sm:h-36 sm:w-36 mb-4">
+                    <Image
+                      src={cat.image}
+                      alt={cat.name}
+                      fill
+                      className="object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
                   </div>
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white group-hover:text-pink-400 transition-colors">
+                    {cat.name}
+                  </h3>
                 </Link>
               </motion.div>
             ))}
           </div>
 
           {/* Bottom row (2 cards) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-12 w-full max-w-2xl sm:max-w-4xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 w-full max-w-xl sm:max-w-4xl">
             {categories.slice(3).map((cat) => (
               <motion.div
                 key={cat.name}
@@ -82,21 +80,19 @@ const FeaturedPage = () => {
               >
                 <Link
                   href={`/search?category=${encodeURIComponent(cat.name)}&displayType=Menus`}
-                  className="block p-6 sm:p-10"
+                  className="flex flex-col items-center p-6 sm:p-8 text-center"
                 >
-                  <div className="flex items-center sm:space-x-8 flex-col sm:flex-row text-center sm:text-left">
-                    <div className="relative h-28 w-28 sm:h-44 sm:w-44 flex-shrink-0">
-                      <Image
-                        src={cat.image}
-                        alt={cat.name}
-                        fill
-                        className="object-contain transition-transform duration-300"
-                      />
-                    </div>
-                    <h3 className="mt-4 sm:mt-0 text-lg sm:text-2xl lg:text-3xl font-bold text-white group-hover:text-pink-400 transition-colors">
-                      {cat.name}
-                    </h3>
+                  <div className="relative h-24 w-24 sm:h-36 sm:w-36 mb-4">
+                    <Image
+                      src={cat.image}
+                      alt={cat.name}
+                      fill
+                      className="object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
                   </div>
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white group-hover:text-pink-400 transition-colors">
+                    {cat.name}
+                  </h3>
                 </Link>
               </motion.div>
             ))}
