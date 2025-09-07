@@ -102,7 +102,7 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            {(isAdmin || isFoodstall || !isAuthenticated) ? (
+            {(isAdmin || isFoodstall) ? (
               <div className="flex items-center cursor-default">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-widest">
