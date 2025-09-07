@@ -48,19 +48,19 @@ const FeaturesSection = () => {
   };
 
   return (
-    <section className="w-full min-h-screen bg-neutral-900 text-white py-20 flex flex-col items-center">
-      {/* Header */}
-      <header className="text-center mb-16 px-4">
-        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">
+<section className="w-full min-h-screen bg-neutral-900 text-white py-12 sm:py-20 flex flex-col items-center -mb-20 sm:-mb-80">
+{/* Header */}
+      <header className="text-center mb-12 sm:mb-16 px-4">
+        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">
           FEATURES
         </h2>
-        <p className="mt-4 text-3xl sm:text-5xl font-extrabold leading-tight">
+        <p className="mt-4 text-2xl sm:text-5xl font-extrabold leading-tight">
           Explore Food Plaza
         </p>
       </header>
 
       {/* Features Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-5xl w-full px-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 max-w-5xl w-full px-4">
         {features.map((feature) =>
           feature.href ? (
             <a
@@ -68,7 +68,7 @@ const FeaturesSection = () => {
               href={feature.href}
               className="group flex flex-col items-center text-center text-gray-200 hover:text-white transition-colors duration-300"
             >
-              <div className="w-28 h-28 rounded-full border-2 border-transparent bg-gradient-to-r from-pink-600 to-fuchsia-600 p-[2px] shadow-lg group-hover:scale-105 transition-transform duration-300">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-transparent bg-gradient-to-r from-pink-600 to-fuchsia-600 p-[2px] shadow-lg group-hover:scale-105 transition-transform duration-300">
                 <div className="w-full h-full rounded-full bg-neutral-900 flex items-center justify-center">
                   <Image
                     src={feature.img}
@@ -79,8 +79,8 @@ const FeaturesSection = () => {
                   />
                 </div>
               </div>
-              <span className="mt-4 font-semibold text-base sm:text-lg">{feature.title}</span>
-              <p className="text-sm text-gray-400 mt-1">{feature.desc}</p>
+              <span className="mt-3 sm:mt-4 font-semibold text-sm sm:text-lg">{feature.title}</span>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">{feature.desc}</p>
             </a>
           ) : (
             <button
@@ -88,7 +88,7 @@ const FeaturesSection = () => {
               onClick={() => handleScroll(feature.id, feature.target)}
               className="group flex flex-col items-center text-center text-gray-200 hover:text-white transition-colors duration-300"
             >
-              <div className="w-28 h-28 rounded-full border-2 border-transparent bg-gradient-to-r from-pink-600 to-fuchsia-600 p-[2px] shadow-lg group-hover:scale-105 transition-transform duration-300">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-transparent bg-gradient-to-r from-pink-600 to-fuchsia-600 p-[2px] shadow-lg group-hover:scale-105 transition-transform duration-300">
                 <div className="w-full h-full rounded-full bg-neutral-900 flex items-center justify-center">
                   <Image
                     src={feature.img}
@@ -99,8 +99,8 @@ const FeaturesSection = () => {
                   />
                 </div>
               </div>
-              <span className="mt-4 font-semibold text-base sm:text-lg">{feature.title}</span>
-              <p className="text-sm text-gray-400 mt-1">{feature.desc}</p>
+              <span className="mt-3 sm:mt-4 font-semibold text-sm sm:text-lg">{feature.title}</span>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">{feature.desc}</p>
             </button>
           )
         )}

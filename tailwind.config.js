@@ -18,6 +18,7 @@ module.exports = {
         'spin-slow': 'spin 8s linear infinite',
         'spin-slow-reverse': 'spin-reverse 8s linear infinite',
         'pulse-slow': 'pulse-slow 8s infinite ease-in-out',
+        'bounce-smooth': 'bounceSmooth 0.9s ease-out forwards',
       },
       keyframes: {
         spin: {
@@ -39,6 +40,12 @@ module.exports = {
         'pulse-slow': {
           '0%, 100%': { transform: 'scale(1)', opacity: '0.15' },
           '50%': { transform: 'scale(1.05)', opacity: '0.25' },
+        },
+        bounceSmooth: {
+          '0%': { transform: 'scale(0.8) translateY(20px)', opacity: '0' },
+          '60%': { transform: 'scale(1.15) translateY(-8px)', opacity: '1' },
+          '80%': { transform: 'scale(0.95) translateY(4px)' },
+          '100%': { transform: 'scale(1) translateY(0)' },
         },
       },
     },

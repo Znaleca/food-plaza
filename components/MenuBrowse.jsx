@@ -33,42 +33,38 @@ const MenuBrowse = () => {
   }, {});
 
   return (
-    <div className="w-full bg-neutral-900">
+    <div className="w-full">
       {Object.entries(groupedMenus).length > 0 ? (
         Object.entries(groupedMenus).map(([roomId, { roomName, menus }]) => (
-          <div key={roomId} className="mb-16">
-            <h3 className="text-white text-2xl font-semibold mb-6 px-4">
+          <div key={roomId} className="mb-8">
+            <h3 className="text-white text-2xl font-semibold mb-4 px-4">
               {roomName}
             </h3>
-            <div className="relative">
-              {/* Scrollable Container */}
-              <div
-                ref={scrollRef}
-                className="flex space-x-6 overflow-x-auto scrollbar-hide px-4"
-              >
-                {menus.map((menu) => (
-                  <Link
-                    key={menu.id}
-                    href={`/rooms/${menu.roomId}`}
-                    className="min-w-[200px] flex flex-col items-center text-white hover:text-yellow-300 transition-colors"
-                  >
-                    {menu.menuImage ? (
-                      <img
-                        src={`https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${menu.menuImage}/view?project=${projectId}`}
-                        alt={menu.menuName}
-                        className="w-32 h-32 object-cover rounded-full mb-3 shadow-md border-4 border-pink-600 transition-transform hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-full mb-3">
-                        <p className="text-gray-500 text-sm text-center">No Image</p>
-                      </div>
-                    )}
-                    <h4 className="text-md font-semibold text-center">
-                      {menu.menuName}
-                    </h4>
-                  </Link>
-                ))}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4">
+              {menus.map((menu) => (
+                <Link
+                  key={menu.id}
+                  href={`/rooms/${menu.roomId}`}
+                  className="bg-neutral-900 rounded-lg p-4 flex flex-col items-center justify-center text-white hover:bg-neutral-800 transition-colors shadow-lg"
+                >
+                  {menu.menuImage ? (
+                    <img
+                      src={`https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${menu.menuImage}/view?project=${projectId}`}
+                      alt={menu.menuName}
+                      className="w-32 h-32 object-cover rounded-lg mb-3"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 bg-gray-200 flex items-center justify-center rounded-lg mb-3">
+                      <p className="text-gray-500 text-sm text-center">No Image</p>
+                    </div>
+                  )}
+                  <h4 className="text-lg font-semibold text-center mt-2">
+                    {menu.menuName}
+                  </h4>
+                  {/* You can add a price here if available in your data */}
+                  <p className="text-gray-400 text-sm mt-1">Price: $X.XX</p>
+                </Link>
+              ))}
             </div>
           </div>
         ))

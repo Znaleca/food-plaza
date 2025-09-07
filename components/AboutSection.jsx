@@ -20,11 +20,11 @@ const coreValues = [
 const AboutSection = () => {
   const [visibleTeamIndexes, setVisibleTeamIndexes] = useState([]);
   const teamRefs = useRef([]);
-  const valuesRef = useRef(null);
-  const [valuesVisible, setValuesVisible] = useState(false);
+  const [visibleValueIndexes, setVisibleValueIndexes] = useState([]); 
+  const valuesRefs = useRef([]);
 
   useEffect(() => {
-    // Observer for team member animations
+    // --- Team Member Observer ---
     const teamObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -38,30 +38,32 @@ const AboutSection = () => {
       },
       { threshold: 0.3 }
     );
-
     teamRefs.current.forEach((el) => el && teamObserver.observe(el));
 
-    // Observer for core values animation
+    // --- Core Values Observer ---
     const valuesObserver = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setValuesVisible(true);
-          valuesObserver.unobserve(entry.target);
-        }
+      (entries) => {
+        entries.forEach((entry) => {
+          const index = Number(entry.target.dataset.index);
+          if (entry.isIntersecting) {
+            // Add the index of the visible item
+            setVisibleValueIndexes((prev) => [...new Set([...prev, index])]); 
+          } else {
+            // Remove the index of the non-visible item if you want the bounce to re-trigger on re-scroll
+            // If you only want it to bounce once and stay, remove this 'else' block
+            setVisibleValueIndexes((prev) => prev.filter((i) => i !== index));
+          }
+        });
       },
       { threshold: 0.5 }
     );
+    // Observe each core value card individually
+    valuesRefs.current.forEach((el) => el && valuesObserver.observe(el));
 
-    if (valuesRef.current) {
-      valuesObserver.observe(valuesRef.current);
-    }
-
-    // Cleanup function
+    // --- Cleanup ---
     return () => {
       teamRefs.current.forEach((el) => el && teamObserver.unobserve(el));
-      if (valuesRef.current) {
-        valuesObserver.unobserve(valuesRef.current);
-      }
+      valuesRefs.current.forEach((el) => el && valuesObserver.unobserve(el));
     };
   }, []);
 
@@ -97,6 +99,33 @@ const AboutSection = () => {
     );
   };
 
+  const renderCoreValue = (value, index) => {
+    const Icon = value.icon;
+    const isVisible = visibleValueIndexes.includes(index);
+    const delay = isVisible ? `${index * 200}ms` : '0ms';
+
+    return (
+      <div
+        key={value.title}
+        ref={(el) => (valuesRefs.current[index] = el)} // Attach ref and index
+        data-index={index}
+        // Removed opacity, scale, and translate classes from the parent div
+        className={`flex flex-col items-center p-8 rounded-3xl transition-all duration-700 ease-out border border-transparent
+                  bg-neutral-900 backdrop-blur-sm`}
+        style={{ transitionDelay: delay }}
+      >
+        <Icon
+          className={`text-6xl text-pink-500 mb-6 transform
+                    ${isVisible ? 'animate-bounce-smooth' : ''} // Only apply bounce when visible
+                    `}
+          // Removed transitionDelay from Icon as it's now handled by the parent
+        />
+        <h3 className="font-bold text-2xl text-indigo-600 mb-2">{value.title}</h3>
+        <p className="text-sm text-gray-400">{value.description}</p>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full min-h-screen bg-neutral-900 text-white p-8 font-sans relative overflow-hidden">
       
@@ -116,31 +145,9 @@ const AboutSection = () => {
       {/* Core Values Section */}
       <section className="mb-20 relative z-10">
         <div
-          ref={valuesRef}
           className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 max-w-6xl w-full text-center mx-auto"
         >
-          {coreValues.map((value, index) => {
-            const Icon = value.icon;
-            const delay = valuesVisible ? `${index * 150}ms` : '0ms';
-
-            return (
-              <div
-                key={value.title}
-                className={`flex flex-col items-center p-8 rounded-3xl transition-all duration-700 ease-out border border-transparent
-                  bg-neutral-900 backdrop-blur-sm
-                  ${
-                    valuesVisible
-                      ? 'opacity-100 scale-100 translate-y-0'
-                      : 'opacity-0 scale-90 translate-y-10'
-                  }`}
-                style={{ transitionDelay: delay }}
-              >
-                <Icon className="text-6xl text-pink-500 mb-6 animate-spin-slow-on-hover" />
-                <h3 className="font-bold text-2xl text-indigo-600 mb-2">{value.title}</h3>
-                <p className="text-sm text-gray-400">{value.description}</p>
-              </div>
-            );
-          })}
+          {coreValues.map((value, index) => renderCoreValue(value, index))}
         </div>
       </section>
 
