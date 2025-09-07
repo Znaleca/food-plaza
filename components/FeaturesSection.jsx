@@ -60,7 +60,7 @@ const FeaturesSection = () => {
       </header>
 
       {/* Features Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 max-w-5xl w-full px-4">
+      <div className="grid grid-cols-2 lg:mb-40 sm:mb-40 sm:grid-cols-4 gap-6 sm:gap-8 max-w-5xl w-full px-4">
         {features.map((feature) =>
           feature.href ? (
             <a
