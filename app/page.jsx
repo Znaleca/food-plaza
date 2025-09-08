@@ -76,9 +76,12 @@ const HomePage = () => {
 
       {/* Food Stall / Menu Section */}
       <section id="browse" className="py-12 bg-neutral-900">
-      <h1 className="text-4xl sm:text-4xl text-white text-white-600 text-center mt-20 font-extrabold -mb-20 tracking-widest">
-          BROWSE
-        </h1>
+      <h2 className="text-lg sm:text-xl lg:mt-32 md:mt-32 text-center text-pink-600 font-light tracking-widest">
+          Browse
+        </h2>
+        <p className="mt-4 text-2xl -mb-20 text-center sm:text-5xl font-extrabold leading-tight">
+          What's in the Food Plaza?
+        </p>
         <BrowsePreview />
       </section>
 
