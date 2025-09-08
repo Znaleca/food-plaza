@@ -110,20 +110,6 @@ const Header = () => {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 transform ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
-      {/* Spinning Keyframes for the logo */}
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        .animate-spin-slow {
-          animation: spin 8s linear infinite; /* Adjust duration as needed */
-        }
-      `}</style>
       <nav className="transition-all duration-300 h-20 bg-neutral-900 shadow-md">
         <div className="flex h-full items-center justify-between mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Logo */}
@@ -138,7 +124,7 @@ const Header = () => {
               </div>
             ) : (
               <Link href="/" className="flex items-center group transition-all duration-300">
-                <Image src={logo} alt="TheCorner" className="h-12 w-12 animate-spin-slow transition-transform duration-300 group-hover:scale-110" priority />
+                <Image src={logo} alt="TheCorner" className="h-12 w-12 transition-transform duration-300 group-hover:scale-110" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-wider transition-colors duration-300">
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-indigo-600 transition-colors duration-300 group-hover:from-pink-400 group-hover:to-indigo-500">THE</span>
                   <span className="text-white"> CORNER</span>
