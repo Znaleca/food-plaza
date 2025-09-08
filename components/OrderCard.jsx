@@ -28,8 +28,11 @@ const OrderCard = ({ order, setOrders }) => {
 
   const openRatingModal = (index) => {
     setSelectedItem(index);
-    setRating(0);
-    setComment('');
+    // Pre-populate rating and comment if the item has already been rated
+    const initialRating = order.rating?.[index] || 0;
+    const initialComment = order.comment?.[index] || '';
+    setRating(initialRating);
+    setComment(initialComment);
   };
 
   const closeRatingModal = () => {
@@ -227,28 +230,38 @@ const OrderCard = ({ order, setOrders }) => {
                         <div className="text-xs text-gray-500">Stall: {item.room_name || 'N/A'}</div>
                         <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.PENDING)}</div>
 
-                        {itemRated ? (
-                          <div className="mt-1 text-xs text-green-600">
-                            Rated:
-                            <div className="flex gap-1 mt-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <FontAwesomeIcon
-                                  key={star}
-                                  icon={solidStar}
-                                  className={itemRating >= star ? 'text-yellow-400' : 'text-gray-400'}
-                                />
-                              ))}
-                            </div>
-                            {itemComment && <p className="italic text-gray-600 mt-1">"{itemComment}"</p>}
+                        {item.status === MENU_STATUS.COMPLETED && (
+                          <div className="mt-2">
+                            {itemRated ? (
+                              <div className="text-xs text-green-600">
+                                Rated:
+                                <div className="flex gap-1 mt-1">
+                                  {[1, 2, 3, 4, 5].map((star) => (
+                                    <FontAwesomeIcon
+                                      key={star}
+                                      icon={solidStar}
+                                      className={itemRating >= star ? 'text-yellow-400' : 'text-gray-400'}
+                                    />
+                                  ))}
+                                </div>
+                                {itemComment && <p className="italic text-gray-600 mt-1">"{itemComment}"</p>}
+                                <button
+                                  onClick={() => openRatingModal(item.index)}
+                                  className="mt-2 text-xs text-pink-600 underline hover:text-pink-700"
+                                >
+                                  Edit Rating
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => openRatingModal(item.index)}
+                                className="mt-2 text-xs text-pink-600 underline hover:text-pink-700"
+                              >
+                                Rate Item
+                              </button>
+                            )}
                           </div>
-                        ) : item.status === MENU_STATUS.COMPLETED ? (
-                          <button
-                            onClick={() => openRatingModal(item.index)}
-                            className="mt-2 text-xs text-pink-600 underline hover:text-pink-700"
-                          >
-                            Rate Item
-                          </button>
-                        ) : null}
+                        )}
                       </li>
                     );
                   })}

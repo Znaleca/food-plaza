@@ -25,11 +25,11 @@ const SpacesImage = ({ imageUrls }) => {
   }, [isModalOpen]);
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full mx-0">
       {/* Image Display */}
       {imageUrls.length > 0 ? (
         <div
-          className="relative w-full h-96 rounded-xl overflow-hidden cursor-pointer group"
+          className="relative w-full h-80 sm:h-96 rounded-xl overflow-hidden cursor-pointer group"
           onClick={() => setIsModalOpen(true)}
         >
           <Image
@@ -42,11 +42,11 @@ const SpacesImage = ({ imageUrls }) => {
           />
           {/* Hover Overlay */}
           <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <span className="text-white font-semibold text-lg">Click to View</span>
+            <span className="text-white font-semibold text-sm sm:text-lg">Click to View</span>
           </div>
         </div>
       ) : (
-        <div className="w-full h-96 bg-neutral-800 flex items-center justify-center rounded-xl text-white text-lg">
+        <div className="w-full h-80 sm:h-96 bg-neutral-800 flex items-center justify-center rounded-xl text-white text-sm sm:text-lg">
           No Images Available
         </div>
       )}
@@ -54,16 +54,16 @@ const SpacesImage = ({ imageUrls }) => {
       {/* Modal View */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center p-0"
           onClick={closeModal}
         >
           <div
-            className="relative w-full max-w-4xl max-h-[90vh] rounded-lg overflow-hidden"
+            className="relative w-full h-full max-h-full rounded-lg overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={closeModal}
-              className="absolute top-3 right-3 text-white text-xl hover:text-pink-400 transition z-10"
+              className="absolute top-4 right-4 text-white text-xl hover:text-pink-400 transition z-10"
               aria-label="Close Modal"
             >
               <FaTimes />
@@ -71,10 +71,10 @@ const SpacesImage = ({ imageUrls }) => {
             <Image
               src={imageUrls[0]} // Always use the first image
               alt="Full view of image"
-              width={1200}
-              height={800}
+              fill
+              sizes="100vw"
               style={{ objectFit: "contain" }}
-              className="w-full h-auto max-h-[90vh] rounded-lg"
+              className="w-full h-auto max-h-full rounded-lg"
             />
           </div>
         </div>

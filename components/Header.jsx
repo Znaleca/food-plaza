@@ -118,7 +118,7 @@ const Header = () => {
               <div className="flex items-center cursor-default transition-all duration-300">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-wider">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-indigo-600">THE</span>
+                  <span className="bg-clip-text text-transparent bg-white">THE</span>
                   <span className="text-white"> CORNER</span>
                 </span>
               </div>
@@ -126,7 +126,7 @@ const Header = () => {
               <Link href="/" className="flex items-center group transition-all duration-300">
                 <Image src={logo} alt="TheCorner" className="h-12 w-12 transition-transform duration-300 group-hover:scale-110" priority />
                 <span className="ml-2 text-2xl font-extrabold text-white tracking-wider transition-colors duration-300">
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-indigo-600 transition-colors duration-300 group-hover:from-pink-400 group-hover:to-indigo-500">THE</span>
+                  <span className="bg-clip-text text-transparent bg-white transition-colors duration-300">THE</span>
                   <span className="text-white"> CORNER</span>
                 </span>
               </Link>
@@ -202,10 +202,10 @@ const Header = () => {
                     {isDropdownOpen && (
                       <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-neutral-900 border border-neutral-700 z-10 animate-fade-in-scale">
                         <Link href="/login" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors duration-300">
-                          <FaSignInAlt className="mr-2 text-pink-500" /> Login
+                          <FaSignInAlt className="mr-2 text-white" /> Login
                         </Link>
                         <Link href="/register" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors duration-300">
-                          <FaUserPlus className="mr-2 text-pink-500" /> Register
+                          <FaUserPlus className="mr-2 text-white" /> Register
                         </Link>
                       </div>
                     )}
@@ -237,13 +237,13 @@ const Header = () => {
                           Welcome, <span className="text-pink-500">{currentUser?.name || "User"}</span>
                         </div>
                         <Link href="/account" className="flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 transition-colors duration-300">
-                          <FaGear className="mr-2 text-pink-500" /> Account Settings
+                          <FaGear className="mr-2 text-white-500" /> Account Settings
                         </Link>
                         <button
                           onClick={handleLogout}
                           className="w-full text-left flex items-center px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-xl transition-colors duration-300"
                         >
-                          <FaSignOutAlt className="mr-2 text-red-500" /> Sign Out
+                          <FaSignOutAlt className="mr-2 text-white" /> Sign Out
                         </button>
                       </div>
                     )}
@@ -317,13 +317,13 @@ const Header = () => {
             ) : (
               <>
                 <Link href="/account" className="flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors duration-300">
-                  <FaGear className="text-pink-500" /> Account Settings
+                  <FaGear className="text-white" /> Account Settings
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="w-full text-left flex items-center gap-2 text-gray-300 hover:text-white hover:bg-neutral-800 px-4 py-2 rounded-md transition-colors duration-300"
                 >
-                  <FaSignOutAlt className="mr-2 text-red-500" /> Sign Out
+                  <FaSignOutAlt className="mr-2 text-white" /> Sign Out
                 </button>
               </>
             )}

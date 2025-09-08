@@ -104,17 +104,18 @@ const LoginPage = () => {
     </button>
 
     {/* Links */}
-    <div className="flex flex-col sm:flex-row justify-between text-sm text-neutral-400 gap-3 sm:gap-0 text-center mt-4">
-      <p>
-        Don't have an account?{' '}
-        <Link href="/register" className="text-pink-500 hover:underline">
-          Register
-        </Link>
-      </p>
-      <Link href="/forgot-pass" className="text-pink-500 hover:underline">
-        Forgot Password?
-      </Link>
-    </div>
+<div className="flex flex-col sm:flex-row justify-between items-center text-sm text-neutral-400 gap-3 mt-4">
+  <p>
+    Don't have an account?{' '}
+    <Link href="/register" className="text-pink-500 hover:underline">
+      Register
+    </Link>
+  </p>
+  <Link href="/forgot-pass" className="text-pink-500 hover:underline">
+    Forgot Password?
+  </Link>
+</div>
+
   </form>
 </div>
 

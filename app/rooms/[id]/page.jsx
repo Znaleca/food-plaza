@@ -135,63 +135,70 @@ function RoomSpace({ params }) {
   };
 
   return (
-    <div className="w-full min-h-screen bg-neutral-900 text-white px-8 pb-8">
-      <Link
-        href="/"
-        className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6"
-      >
-        <FaChevronLeft className="mr-2" />
-        <span className="font-medium text-lg">Back</span>
-      </Link>
+    <div className="w-full min-h-screen bg-neutral-900 text-white pb-8">
+      <div className="px-4 sm:px-8">
+        <Link
+          href="/"
+          className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6"
+        >
+          <FaChevronLeft className="mr-2" />
+          <span className="font-medium text-lg">Back</span>
+        </Link>
+      </div>
 
-      <div className="mt-12 sm:mt-16 text-center mb-8 px-4">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">
+      <div className="mt-6 sm:mt-12 text-center mb-8 px-4 sm:px-8">
+        <h2 className="text-sm sm:text-lg text-pink-600 font-light tracking-widest uppercase">
           Food Stall
         </h2>
-        <p className="mt-4 text-2xl sm:text-5xl mb-28 font-extrabold leading-tight">
+        <p className="mt-2 text-3xl sm:text-5xl font-extrabold leading-tight">
           {room.name}
         </p>
       </div>
-
-      <div className="bg-neutral-900 rounded-xl p-6">
+      
+      <div className="w-full">
         <SpacesImage imageUrls={imageUrls} />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12 mb-20">
+      </div>
+
+      <div className="px-4 sm:px-8">
+        <div className="flex flex-col sm:flex-row justify-center sm:justify-around items-center gap-6 mt-6 mb-12 sm:mb-20">
           <div className="flex flex-col items-center">
-            <span className="font-semibold text-lg mb-2">Stall #:</span>
-            <div className="w-20 h-20 rounded-full bg-pink-600 flex items-center justify-center shadow-lg">
-              <p className="text-xl font-bold">{room.stallNumber || 'N/A'}</p>
+            <span className="font-semibold text-base mb-2">Stall #:</span>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-pink-600 flex items-center justify-center shadow-lg">
+              <p className="text-lg sm:text-xl font-bold">{room.stallNumber || 'N/A'}</p>
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <span className="font-semibold text-lg">Type:</span>
-            <p className="text-neutral-300 mt-2">
+            <span className="font-semibold text-base">Type:</span>
+            <p className="text-neutral-300 mt-2 text-center text-sm sm:text-base">
               {room.type?.join(' • ') || 'N/A'}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="bg-pink-600 text-white p-6 rounded-lg -mt-9 shadow-lg text-center">
-        <p className="mt-2 italic text-lg">
+      <div className="bg-pink-600 text-white p-4 sm:p-6 rounded-lg -mt-6 sm:-mt-9 shadow-lg text-center mx-4 sm:mx-8">
+        <p className="mt-2 italic text-sm sm:text-lg">
           {room.description || 'Delicious food available here!'}
         </p>
       </div>
 
-      <BestSellers
-        topItems={topItems}
-        menuData={menuData}
-        room={room}
-        setSelectedMenu={setSelectedMenu}
-      />
+      <div className="px-4 sm:px-8">
+        <BestSellers
+          topItems={topItems}
+          menuData={menuData}
+          room={room}
+          setSelectedMenu={setSelectedMenu}
+        />
+      </div>
 
-      <div className="mt-20 bg-neutral-900 rounded-xl p-4">
+      <div className="mt-12 sm:mt-20 px-4 sm:px-8">
         {categories.map((cat) => {
           const items = menuData.filter((m) => m.type === cat);
           if (!items.length) return null;
           return (
-            <div key={cat} className="mb-10">
-              <h3 className="text-pink-500 font-semibold mb-4">{cat}</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-7">
+            <div key={cat} className="mb-8">
+              <h3 className="text-white font-semibold mb-4 text-lg">{cat}</h3>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {items.map((m) => (
                   <div
                     key={m.idx}
@@ -199,9 +206,9 @@ function RoomSpace({ params }) {
                       if (!m.isAvailable) return;
                       handleSelectMenu(m);
                     }}
-                    className={`relative border border-pink-600 rounded-md bg-neutral-800 p-3 flex flex-col items-center transition ${
+                    className={`relative border border-neutral-600 rounded-md bg-neutral-900 p-3 flex flex-col items-center text-center transition-all duration-300 ${
                       m.isAvailable
-                        ? 'cursor-pointer hover:shadow-xl hover:scale-105'
+                        ? 'cursor-pointer hover:border-white hover:shadow-xl hover:scale-105'
                         : 'grayscale opacity-60 cursor-not-allowed'
                     }`}
                   >
@@ -217,12 +224,7 @@ function RoomSpace({ params }) {
                         className="w-20 h-20 rounded-full object-cover mb-2 shadow-sm"
                       />
                     )}
-                    <h4 className="text-sm text-center">{m.name}</h4>
-                    {m.description && (
-                      <p className="text-xs italic text-neutral-400 text-center mb-1">
-                        {m.description}
-                      </p>
-                    )}
+                    <h4 className="text-sm font-medium">{m.name}</h4>
                   </div>
                 ))}
               </div>
@@ -231,7 +233,7 @@ function RoomSpace({ params }) {
         })}
       </div>
 
-      <div className="bg-neutral-900 rounded-xl p-6 mt-6">
+      <div className="px-4 sm:px-8 mt-6">
         <CustomerRatingCard roomName={room.name} />
       </div>
 

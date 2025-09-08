@@ -18,7 +18,7 @@ const SpaceCard = ({ room, priority = false, averageRating = 0, reviewCount = 0 
 
   return (
     <Link href={`/rooms/${room.$id}`} passHref>
-    <div className="bg-neutral-900 border border-pink-600 hover:border-pink-400 rounded-3xl overflow-hidden mb-4 transition-colors duration-300 w-full max-w-xs sm:max-w-sm cursor-pointer flex flex-col h-[340px] mx-auto">
+    <div className="bg-neutral-900 border border-pink-600 hover:border-pink-500 rounded-3xl overflow-hidden mb-4 transition-colors duration-300 w-full max-w-xs sm:max-w-sm cursor-pointer flex flex-col h-[340px] mx-auto">
       {/* Image */}
       <div className="relative w-full h-40 bg-gray-800">
         <Image
