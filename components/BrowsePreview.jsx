@@ -7,12 +7,9 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { useRouter } from 'next/navigation';
 import SpaceCard from './SpaceCard';
 import FeaturedCard from './FeaturedCard';
-
-// Import GSAP and the ScrollTrigger plugin
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-// Register the plugin
 gsap.registerPlugin(ScrollTrigger);
 
 export default function BrowsePreview() {
