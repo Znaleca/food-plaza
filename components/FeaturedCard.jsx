@@ -19,7 +19,7 @@ const FeaturedCard = ({
         {/* Main card container */}
         <div className="bg-neutral-900 border border-pink-600 rounded-3xl overflow-hidden hover:shadow-2xl transition-all duration-300 w-full h-full cursor-pointer flex flex-col">
           
-          {/* Image Container - stretches to fill available space */}
+          {/* Image Container - stretches */}
           <div className="relative w-full flex-grow">
             <img
               src={imageSrc}
@@ -28,9 +28,9 @@ const FeaturedCard = ({
             />
           </div>
 
-          {/* Fixed Height Card Content */}
-          <div className="p-6 text-left flex-none bg-neutral-900">
-            <p className="mt-10 mb-6 lg:text-3xl md:text-3xl sm:text-xl font-extrabold leading-tight text-white">
+          {/* Fixed Content - always visible */}
+          <div className="p-6 text-left flex-shrink-0 bg-neutral-900 min-h-[180px] flex flex-col justify-between">
+            <p className="mb-6 lg:text-3xl md:text-3xl sm:text-xl font-extrabold leading-tight text-white">
               CHECK OUT OUR MOST POPULAR PRODUCTS
             </p>
             <button
