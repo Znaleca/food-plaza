@@ -8,12 +8,6 @@ const FeaturedCard = ({
 }) => {
   return (
     <div className="flex flex-col w-auto items-center justify-center p-4 md:py-1 sm:py-1 lg:py-1 h-full">
-      {/* New Heading */}
-      <div className="text-center mb-3 lg:mb-1">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light mb-10 tracking-widest">
-          BROWSE
-        </h2>
-      </div>
 
       <a href={href} className="w-full h-full">
         {/* Main card container */}
