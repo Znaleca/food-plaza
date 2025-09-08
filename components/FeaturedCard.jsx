@@ -28,17 +28,17 @@ const FeaturedCard = ({
             />
           </div>
 
-          {/* Fixed Content - always visible */}
           <div className="p-6 text-left flex-shrink-0 bg-neutral-900 min-h-[180px] flex flex-col justify-between">
-            <p className="mb-6 lg:text-3xl md:text-3xl sm:text-xl font-extrabold leading-tight text-white">
-              CHECK OUT OUR MOST POPULAR PRODUCTS
-            </p>
-            <button
-              className="px-8 py-4 tracking-normal uppercase font-bold text-xs text-black rounded-full bg-white hover:bg-gray-200 shadow-lg transition-transform hover:scale-105"
-            >
-              {buttonText}
-            </button>
-          </div>
+  <p className="mb-6 lg:text-3xl md:text-3xl sm:text-xl font-extrabold leading-tight text-white">
+    CHECK OUT OUR MOST POPULAR PRODUCTS
+  </p>
+  <button
+    className="px-8 py-4 tracking-widest uppercase font-bold text-xs text-black rounded-full bg-white hover:bg-gray-200 shadow-lg transition-transform hover:scale-105 self-start"
+  >
+    {buttonText}
+  </button>
+</div>
+
         </div>
       </a>
     </div>
