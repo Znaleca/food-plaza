@@ -1,9 +1,5 @@
 'use client';
 
-// Removed Next.js imports that caused the compilation error.
-// import Image from 'next/image';
-// import Link from 'next/link';
-
 const FeaturedCard = ({
   title,
   imageSrc,
