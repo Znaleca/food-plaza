@@ -17,7 +17,7 @@ const FeaturedCard = ({
       <h2 className="text-lg sm:text-1xl text-pink-600 font-light mb-10 tracking-widest">
           BROWSE
         </h2>
-        <p className="mt-4 text-3xl sm:text-5xl font-extrabold leading-tight">
+        <p className="mt-4 text-3xl md:text-4xl lg:text-4xl sm:text-5xl font-extrabold leading-tight">
         CHECK OUT OUR MOST POPULAR PRODUCTS        </p>
       </div>
 

@@ -106,7 +106,7 @@ export default function BrowsePreview() {
   }
 
   return (
-    <div className="w-full h-full mt-20 px-4 sm:px-6 md:px-20" ref={containerRef}>
+    <div className="w-full md:mt-36 h-full mt-20 px-4 sm:px-6 md:px-20" ref={containerRef}>
       <div className="w-full h-full flex flex-col lg:flex-row lg:gap-4 gap-6 relative">
         {/* Featured Section */}
 <div
