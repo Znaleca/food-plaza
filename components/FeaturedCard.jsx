@@ -34,7 +34,7 @@ const FeaturedCard = ({
               CHECK OUT OUR MOST POPULAR PRODUCTS
             </p>
             <button
-              className="px-8 py-4 tracking-widest uppercase font-bold text-xs text-black rounded-full bg-white hover:bg-gray-200 shadow-lg transition-transform hover:scale-105"
+              className="px-8 py-4 tracking-normal uppercase font-bold text-xs text-black rounded-full bg-white hover:bg-gray-200 shadow-lg transition-transform hover:scale-105"
             >
               {buttonText}
             </button>
