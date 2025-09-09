@@ -43,7 +43,7 @@ const BestSellers = ({ topItems, menuData, room, setSelectedMenu }) => {
                   menuId: found.menuId, // Pass the unique ID
                 });
               }}
-              className={`relative border border-pink-600 rounded-xl bg-neutral-800 p-6 flex flex-col items-center transition-all ${
+              className={`relative border border-pink-600 rounded-xl bg-neutral-900 p-6 flex flex-col items-center transition-all ${
                 isAvailable
                   ? 'cursor-pointer hover:shadow-2xl hover:scale-105'
                   : 'grayscale opacity-60 cursor-not-allowed'

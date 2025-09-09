@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa';
 import getSingleSpace from '@/app/actions/getSingleSpace';
-import getAllOrders from '@/app/actions/getAllOrders';
+import getOrdersQuantity from '@/app/actions/getOrdersQuantity';
 import SpacesImage from '@/components/SpacesImage';
 import MenuPopUp from '@/components/MenuPopUp';
 import CustomerRatingCard from '@/components/CustomerRatingCard';
@@ -46,7 +46,7 @@ function RoomSpace({ params }) {
 
   const menuData =
     (room?.menuName || []).map((name, idx) => ({
-      menuId: `${id}_${idx}`, 
+      menuId: `${id}_${idx}`,
       name,
       price: room.menuPrice?.[idx] ?? 0,
       description: room.menuDescription?.[idx] ?? '',
@@ -62,33 +62,24 @@ function RoomSpace({ params }) {
   useEffect(() => {
     const fetchBestSellers = async () => {
       try {
-        const { orders } = await getAllOrders(1, 100);
-        const itemCount = {};
+        const allCounts = await getOrdersQuantity();
 
-        orders.forEach(order => {
-          const { items } = order;
-          items.forEach(itemStr => {
-            try {
-              const item = JSON.parse(itemStr);
-              if (item.room_id === id) {
-                const key = item.menuId || item.menu_id || item.menuName || item.menu_name;
-                const qty = Number(item.quantity) || 1;
-                itemCount[key] = (itemCount[key] || 0) + qty;
-              }
-            } catch {}
-          });
-        });
+        // only items for this room
+        const roomCounts = allCounts.filter((item) => item.roomId === id);
 
-        const sorted = Object.entries(itemCount)
-          .sort((a, b) => b[1] - a[1])
+        // sort top 3
+        const sorted = roomCounts
+          .sort((a, b) => b.count - a.count)
           .slice(0, 3)
-          .map(([key, count]) => {
-            const found = menuData.find((m) => m.menuId === key || m.name === key);
+          .map((item) => {
+            const found = menuData.find(
+              (m) => m.menuId === item.menuId || m.name === item.menuName
+            );
             if (!found) return null;
 
             return {
               name: found.name,
-              count,
+              count: item.count,
               image: found.image || null,
             };
           })
@@ -154,7 +145,7 @@ function RoomSpace({ params }) {
           {room.name}
         </p>
       </div>
-      
+
       <div className="w-full">
         <SpacesImage imageUrls={imageUrls} />
       </div>
