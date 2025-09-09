@@ -73,7 +73,6 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       status: ['order-placed'],
       items: stringifiedItems,
       total: [baseTotal, serviceCharge, -discountAmount, finalTotal],
-      spaces: spaceId || null,
       promos: promoStrings,
       created_at: new Date().toISOString(),
     };
