@@ -6,19 +6,16 @@ import getAllClaimedVouchers from '@/app/actions/getAllClaimedVoucher';
 import VouchersCard from '@/components/VouchersCard';
 import checkAuth from '@/app/actions/checkAuth';
 import getRoomByUserId from '@/app/actions/getRoomByUserId';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingSpinner from '@/components/LoadingSpinner'; // <-- import here
 
 const CustomerPromoPage = () => {
   const [promos, setPromos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const authRes = await checkAuth();
-        const { user, isAuthenticated } = authRes;
-        setIsAuthenticated(isAuthenticated);
+        const { user } = await checkAuth();
 
         const [allPromos, claimedVouchers] = await Promise.all([
           getAllPromos(),
@@ -26,11 +23,9 @@ const CustomerPromoPage = () => {
         ]);
 
         const claimedIds = claimedVouchers.map(v => v.$id);
-        const redeemedIds = isAuthenticated
-          ? allPromos
-              .filter(promo => Array.isArray(promo.redeemed) && promo.redeemed.includes(user.id))
-              .map(promo => promo.$id)
-          : [];
+        const redeemedIds = allPromos
+          .filter(promo => Array.isArray(promo.redeemed) && promo.redeemed.includes(user.id))
+          .map(promo => promo.$id);
 
         // Remove promos that are claimed OR redeemed
         const hiddenIds = new Set([...claimedIds, ...redeemedIds]);
@@ -83,7 +78,6 @@ const CustomerPromoPage = () => {
                 voucher={voucher}
                 stallName={voucher.stallName}
                 onClaim={() => handleClaimUpdate(voucher.$id)}
-                isAuthenticated={isAuthenticated}
               />
             ))
           ) : (

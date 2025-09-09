@@ -35,7 +35,7 @@ const SpaceCard = ({ room, priority = false, averageRating = 0, reviewCount = 0 
       <div className="flex flex-col flex-1 justify-between p-5 text-center">
         <div>
           <div className="w-12 h-0.5 bg-pink-600 group-hover:bg-pink-700 mx-auto mb-4 transition-colors duration-300" />
-          <h3 className="text-lg sm:text-xl md:text-xl font-extralight text-white uppercase tracking-wide mb-2">
+          <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white uppercase tracking-wide mb-2">
             {room.name}
           </h3>
           <div className="w-12 h-0.5 bg-gray-600 mx-auto mb-4" />

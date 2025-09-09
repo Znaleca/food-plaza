@@ -141,7 +141,6 @@ const Header = () => {
                   <Link href="/" className="hover:text-pink-600 transition-colors duration-300">Home</Link>
                   <Link href="/#browse" onClick={(e) => handleScrollToSection(e, 'browse')} className="hover:text-pink-600 transition-colors duration-300">Browse</Link>
                   <Link href="/#about-us" onClick={(e) => handleScrollToSection(e, 'about-us')} className="hover:text-pink-600 transition-colors duration-300">About Us</Link>
-                  <Link href="/customer/promos" className="hover:text-pink-600 transition-colors duration-300">Promotions</Link>
                 </>
               )}
               {isCustomer && (
