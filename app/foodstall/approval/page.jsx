@@ -144,13 +144,15 @@ const ApprovalPage = () => {
                     </p>
                   )}
 
-                  {/* ✅ Upload always visible */}
-                  <UploadContract
-                    bookingId={booking.$id}
-                    onUploaded={(fileId, fileType) =>
-                      handleContractUploaded(booking.$id, fileId, fileType)
-                    }
-                  />
+                  {/* ✅ Upload only visible if still pending */}
+                  {booking.status === 'pending' && (
+                    <UploadContract
+                      bookingId={booking.$id}
+                      onUploaded={(fileId, fileType) =>
+                        handleContractUploaded(booking.$id, fileId, fileType)
+                      }
+                    />
+                  )}
                 </div>
 
                 {/* ✅ Action Buttons below contract */}
