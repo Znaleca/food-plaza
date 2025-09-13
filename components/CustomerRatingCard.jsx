@@ -69,48 +69,50 @@ const CustomerRatingCard = ({ roomName }) => {
   const percentage = Math.round((averageRating / 5) * 100);
   const chartData = reviews.map((r, i) => ({ index: i + 1, rating: r.rating }));
 
-  const renderStarRating = (value, size = "sm") => (
+  const renderStarRating = (value, size = 'sm') => (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
         <FontAwesomeIcon
           key={star}
           icon={solidStar}
-          className={`${value >= star ? 'text-yellow-400' : 'text-neutral-600'} ${size === "lg" ? "text-xl" : "text-sm"}`}
+          className={`${
+            value >= star ? 'text-yellow-400' : 'text-neutral-600'
+          } ${size === 'lg' ? 'text-lg sm:text-xl' : 'text-xs sm:text-sm'}`}
         />
       ))}
     </div>
   );
 
   if (loading)
-    return <p className="text-sm text-neutral-400">Loading ratings...</p>;
+    return <p className="text-xs sm:text-sm text-neutral-400">Loading ratings...</p>;
   if (reviews.length === 0)
-    return <p className="text-sm text-neutral-500">No reviews yet.</p>;
+    return <p className="text-xs sm:text-sm text-neutral-500">No reviews yet.</p>;
 
   return (
-    <div className="mt-10 bg-gradient-to-b from-neutral-900 to-neutral-950 text-white p-8 rounded-2xl border border-neutral-800 shadow-xl hover:shadow-2xl transition-all duration-300">
+    <div className="mt-6 sm:mt-10 bg-gradient-to-b from-neutral-900 to-neutral-950 text-white p-4 sm:p-8 rounded-xl sm:rounded-2xl border border-neutral-800 shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
         <div>
           <div className="flex items-center gap-2">
-            {renderStarRating(averageRating, "lg")}
-            <span className="text-lg font-semibold text-pink-400">
+            {renderStarRating(averageRating, 'lg')}
+            <span className="text-base sm:text-lg font-semibold text-pink-400">
               {averageRating.toFixed(1)}/5
             </span>
           </div>
-          <p className="text-xs text-neutral-400 mt-1">
+          <p className="text-[10px] sm:text-xs text-neutral-400 mt-1">
             Based on {reviews.length} reviews • {percentage}% positive
           </p>
         </div>
         <button
           onClick={() => setExpanded((prev) => !prev)}
-          className="px-3 py-1 text-sm rounded-lg border border-pink-500 text-pink-400 hover:bg-pink-500/10 transition"
+          className="px-3 py-1 text-xs sm:text-sm rounded-lg border border-pink-500 text-pink-400 hover:bg-pink-500/10 transition w-full sm:w-auto"
         >
           {expanded ? 'Hide Reviews' : 'View Reviews'}
         </button>
       </div>
 
       {/* Mini Chart */}
-      <div className="h-32 mb-6">
+      <div className="h-24 sm:h-32 mb-4 sm:mb-6">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
@@ -145,42 +147,42 @@ const CustomerRatingCard = ({ roomName }) => {
         {expanded && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
+            animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="space-y-4"
+            className="space-y-3 sm:space-y-4"
           >
             {reviews.map((review, idx) => (
               <div
                 key={idx}
-                className="bg-neutral-800/60 border border-neutral-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-neutral-800/60 border border-neutral-700 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   {review.item.menuImage ? (
                     <img
                       src={review.item.menuImage}
                       alt={review.item.menuName}
-                      className="w-16 h-16 object-cover rounded-lg shadow"
+                      className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg shadow"
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-neutral-700 rounded-lg flex items-center justify-center text-neutral-400 text-xs">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-neutral-700 rounded-lg flex items-center justify-center text-neutral-400 text-[10px] sm:text-xs">
                       No Image
                     </div>
                   )}
                   <div className="flex-1">
-                    <h4 className="font-semibold text-pink-400">
+                    <h4 className="font-semibold text-pink-400 text-sm sm:text-base">
                       {review.item.menuName}
                     </h4>
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-[10px] sm:text-xs text-neutral-500">
                       {review.user} ({review.email})
                     </p>
                     <div className="mt-1">{renderStarRating(review.rating)}</div>
                     {review.comment && (
-                      <p className="italic text-neutral-300 mt-2">
+                      <p className="italic text-neutral-300 mt-1 sm:mt-2 text-sm">
                         “{review.comment}”
                       </p>
                     )}
-                    <p className="text-sm text-neutral-400 mt-2">
+                    <p className="text-xs sm:text-sm text-neutral-400 mt-1">
                       ₱
                       {(
                         Number(review.item.menuPrice) *
@@ -188,7 +190,7 @@ const CustomerRatingCard = ({ roomName }) => {
                       ).toFixed(2)}{' '}
                       • Qty: {review.item.quantity || 1}
                     </p>
-                    <p className="text-[10px] text-neutral-500 mt-1">
+                    <p className="text-[9px] sm:text-[10px] text-neutral-500 mt-1">
                       Order ID: {review.orderId}
                     </p>
                   </div>
