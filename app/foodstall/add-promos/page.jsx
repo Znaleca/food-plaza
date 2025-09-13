@@ -10,12 +10,20 @@ const AddPromosPage = () => {
   const [state, formAction] = useFormState(createPromos, { success: false, error: null });
   const router = useRouter();
 
-  // Defaults (today and tomorrow)
-  const today = new Date().toISOString().split('T')[0];
-  const [validFrom, setValidFrom] = useState(today);
-  const [validTo, setValidTo] = useState(
-    new Date(Date.now() + 86400000).toISOString().split('T')[0]
-  );
+  // Get Philippine local date string (YYYY-MM-DD)
+  const getPHDate = (date = new Date()) => {
+    const phString = date.toLocaleString('en-US', { timeZone: 'Asia/Manila' });
+    const phDate = new Date(phString);
+
+    const year = phDate.getFullYear();
+    const month = String(phDate.getMonth() + 1).padStart(2, '0');
+    const day = String(phDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Defaults: today & tomorrow (PH time)
+  const [validFrom, setValidFrom] = useState(getPHDate());
+  const [validTo, setValidTo] = useState(getPHDate(new Date(Date.now() + 86400000)));
 
   useEffect(() => {
     if (state.error) toast.error(state.error);
@@ -25,14 +33,14 @@ const AddPromosPage = () => {
     }
   }, [state, router]);
 
-  // Ensure valid_to is always after valid_from
+  // Ensure valid_to is always AFTER valid_from
   const handleValidFromChange = (e) => {
     const newFrom = e.target.value;
     setValidFrom(newFrom);
 
     const newFromDate = new Date(newFrom);
     const minToDate = new Date(newFromDate.getTime() + 86400000);
-    const minToString = minToDate.toISOString().split('T')[0];
+    const minToString = getPHDate(minToDate);
 
     if (new Date(validTo) <= newFromDate) {
       setValidTo(minToString);
@@ -128,7 +136,7 @@ const AddPromosPage = () => {
               <input
                 type="date"
                 name="valid_from"
-                min={today}
+                min={getPHDate()}
                 value={validFrom}
                 onChange={handleValidFromChange}
                 required
@@ -140,7 +148,7 @@ const AddPromosPage = () => {
               <input
                 type="date"
                 name="valid_to"
-                min={new Date(new Date(validFrom).getTime() + 86400000).toISOString().split('T')[0]}
+                min={getPHDate(new Date(new Date(validFrom).getTime() + 86400000))}
                 value={validTo}
                 onChange={(e) => setValidTo(e.target.value)}
                 required

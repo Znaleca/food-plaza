@@ -69,25 +69,25 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
     : null;
 
   return (
-    <div className="bg-neutral-900 border border-pink-600 rounded-xl p-6 text-center text-white hover:bg-neutral-950 transition-all duration-300">
+    <div className="bg-neutral-900 border border-pink-600 rounded-xl p-4 sm:p-6 text-center text-white hover:bg-neutral-950 transition-all duration-300">
       {/* Decorative Line */}
-      <div className="w-16 h-0.5 bg-pink-600 mx-auto mb-4" />
+      <div className="w-12 sm:w-16 h-0.5 bg-pink-600 mx-auto mb-3 sm:mb-4" />
 
       {/* Title */}
-      <h3 className="text-base font-bold tracking-widest uppercase mb-2">
+      <h3 className="text-sm sm:text-base font-bold tracking-widest uppercase mb-2">
         Food Stall Lessee: {stallName} (Stall #{room.stallNumber || 'N/A'})
       </h3>
 
       {/* Tenant Full Name */}
-      <p className="text-sm text-gray-300 mb-4">
+      <p className="text-xs sm:text-sm text-gray-300 mb-4">
         <span className="font-semibold text-white">Tenant:</span> {tenantName}
       </p>
 
       {/* Decorative Line */}
-      <div className="w-16 h-0.5 bg-gray-600 mx-auto mb-6" />
+      <div className="w-12 sm:w-16 h-0.5 bg-gray-600 mx-auto mb-4 sm:mb-6" />
 
       {/* Details */}
-      <div className="text-sm space-y-2 font-light">
+      <div className="text-xs sm:text-sm space-y-2 font-light text-left sm:text-center">
         <p>
           <span className="font-semibold">Lease ID:</span> {booking?.$id || 'N/A'}
         </p>
@@ -104,7 +104,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
 
         {/* 📄 PDF Link */}
         {pdfLink && (
-          <p className="pt-2 text-yellow-400 text-sm underline">
+          <p className="pt-2 text-yellow-400 text-xs sm:text-sm underline">
             <a href={pdfLink} target="_blank" rel="noopener noreferrer">
               📄 View Lease Document (PDF)
             </a>
@@ -113,7 +113,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
       </div>
 
       {/* Agreement Notice */}
-      <div className="mt-6 text-xs text-gray-300 font-extralight text-left">
+      <div className="mt-4 sm:mt-6 text-[11px] sm:text-xs text-gray-300 font-extralight text-left">
         <p>
           As the management of <strong className="text-white">The Corner Food Plaza</strong>, we
           confirm that the food stall named <strong className="text-white">{stallName}</strong> is
@@ -125,15 +125,14 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
 
       {/* Actions */}
       {showActions && (
-        <div className="flex flex-wrap justify-center mt-6 space-x-4">
-          {!isDeclined && statusText !== 'Expired' && (
-            <CancelBookingButton bookingId={booking.$id} />
-          )}
+        <div className="flex flex-col sm:flex-row flex-wrap justify-center mt-6 gap-3 sm:gap-4">
+          {/* Always show Cancel Button */}
+          <CancelBookingButton bookingId={booking.$id} />
 
           {isDeclined && (
             <button
               onClick={handleDelete}
-              className="flex items-center space-x-2 border border-red-600 text-red-600 px-4 py-2 rounded hover:bg-red-600 hover:text-white transition-all"
+              className="flex items-center justify-center space-x-2 border border-red-600 text-red-600 px-3 sm:px-4 py-2 rounded text-xs sm:text-sm hover:bg-red-600 hover:text-white transition-all"
             >
               <FaTrashAlt />
               <span>Delete Lease</span>
@@ -143,7 +142,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
           {statusText === 'Expired' && (
             <button
               onClick={() => setShowRenewForm(true)}
-              className="flex items-center space-x-2 border border-yellow-400 text-yellow-400 px-4 py-2 rounded hover:bg-yellow-600 hover:text-white transition-all"
+              className="flex items-center justify-center space-x-2 border border-yellow-400 text-yellow-400 px-3 sm:px-4 py-2 rounded text-xs sm:text-sm hover:bg-yellow-600 hover:text-white transition-all"
             >
               <FaRedoAlt />
               <span>Renew Lease</span>
@@ -153,7 +152,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
           {/* Contract Preview Button */}
           <button
             onClick={() => setShowContract(true)}
-            className="flex items-center space-x-2 border border-pink-500 text-pink-500 px-4 py-2 rounded hover:bg-pink-600 hover:text-white transition-all"
+            className="flex items-center justify-center space-x-2 border border-pink-500 text-pink-500 px-3 sm:px-4 py-2 rounded text-xs sm:text-sm hover:bg-pink-600 hover:text-white transition-all"
           >
             <FaFileContract />
             <span>View Contract</span>
@@ -164,10 +163,10 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
       {/* Renew Lease Modal */}
       {showRenewForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 p-4">
-          <div className="relative w-full max-w-lg rounded-xl shadow-xl">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl shadow-xl">
             <button
               onClick={() => setShowRenewForm(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors text-2xl z-10"
+              className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors text-2xl z-10"
               aria-label="Close renewal form"
             >
               &times;
@@ -177,24 +176,25 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
         </div>
       )}
 
-{/* Contract Preview Modal */}
-{showContract && (
-  <div className="fixed inset-0 bg-black bg-opacity-80 z-50 p-6 overflow-y-auto">
-    <div className="flex flex-col items-center">
-      {/* Contract Content */}
-      <ContractPreview booking={booking} />
+      {/* Contract Preview Modal */}
+      {showContract && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 z-50 p-4 overflow-y-auto">
+          <div className="flex flex-col items-center max-w-2xl mx-auto w-full">
+            {/* Contract Content */}
+            <ContractPreview booking={booking} />
 
-      {/* Close Button (below) */}
-      <button
-        onClick={() => setShowContract(false)}
-        className="mt-6 flex items-center gap-2 bg-gray-700 text-white px-6 py-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
-        aria-label="Close contract preview"
-      >
-        <FaTimes className="text-lg" />
-      </button>
-    </div>
-  </div>
-)}
+            {/* Close Button */}
+            <button
+              onClick={() => setShowContract(false)}
+              className="mt-6 flex items-center gap-2 bg-gray-700 text-white px-5 sm:px-6 py-2 rounded-full text-sm hover:bg-red-600 transition-colors shadow-lg"
+              aria-label="Close contract preview"
+            >
+              <FaTimes className="text-lg" />
+              <span>Close</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

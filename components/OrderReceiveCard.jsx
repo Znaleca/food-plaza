@@ -101,7 +101,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
               body: JSON.stringify({
                 phone: order.phone,
                 name: order.name || "Customer",
-                message: `Hi ${order.name || "Customer"}, your order from ${roomName} is now being prepared. 🍳 Please wait while we get it ready!`,
+                message: `Hi ${order.name || "Customer"}, your order from ${roomName} is now being prepared. Please wait until it is ready for pickup.`
               }),
             });
           } else if (newStatus === ORDER_STATUS.READY) {
@@ -111,7 +111,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
               body: JSON.stringify({
                 phone: order.phone,
                 name: order.name || "Customer",
-                message: `Hi ${order.name || "Customer"}! ✅ Your order from ${roomName} is READY for pickup. 🚀 Please proceed to the counter. Thank you!`,
+                message: `Hi ${order.name || "Customer"}, your order from ${roomName} is now ready for pickup. Please proceed to the counter. Thank you for choosing us.`
               }),
             });
           }
@@ -300,35 +300,49 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-neutral-800 p-6 rounded-lg w-full max-w-md">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Update Table Number
-            </h3>
-            <input
-              type="number"
-              value={newTableNumber}
-              onChange={(e) => setNewTableNumber(e.target.value)}
-              className="border border-neutral-600 px-3 py-1 rounded-md text-sm w-full bg-neutral-900 text-white"
-              placeholder="Enter new table number"
-            />
-            <div className="flex justify-end gap-4 mt-4">
-              <button
-                onClick={closeModal}
-                className="text-xs px-4 py-1.5 rounded border border-neutral-400 text-neutral-400 hover:bg-neutral-600 hover:text-white transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveTable}
-                className="text-xs px-4 py-1.5 rounded border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white transition"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="bg-neutral-800 p-6 rounded-lg w-full max-w-md">
+      <h3 className="text-lg font-semibold text-white mb-4">
+        Select a Table
+      </h3>
+
+      {/* Table grid like cinema seats */}
+      <div className="grid grid-cols-5 gap-3 justify-center">
+        {Array.from({ length: 30 }, (_, i) => i + 1).map((num) => (
+          <button
+            key={num}
+            onClick={() => setNewTableNumber(num)}
+            className={`w-12 h-12 flex items-center justify-center rounded-md border 
+              ${
+                newTableNumber === num
+                  ? "bg-pink-500 text-white border-pink-500"
+                  : "bg-neutral-900 text-neutral-300 border-neutral-600 hover:bg-neutral-700"
+              }`}
+          >
+            {num}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex justify-end gap-4 mt-6">
+        <button
+          onClick={closeModal}
+          className="text-xs px-4 py-1.5 rounded border border-neutral-400 text-neutral-400 hover:bg-neutral-600 hover:text-white transition"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSaveTable}
+          disabled={!newTableNumber}
+          className="text-xs px-4 py-1.5 rounded border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white transition disabled:opacity-50"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

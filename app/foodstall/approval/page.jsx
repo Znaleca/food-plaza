@@ -26,7 +26,6 @@ const ApprovalPage = () => {
         setMyRoomIds(roomIds);
 
         const allBookings = await getAllReservations();
-
         const myBookings = allBookings.filter((booking) =>
           roomIds.includes(booking.room_id?.$id || booking.room_id)
         );
@@ -44,10 +43,11 @@ const ApprovalPage = () => {
     const response = await approveBooking(bookingId);
     if (response.success) {
       toast.success('Lease approved!');
-      const updated = bookings.map((b) =>
-        b.$id === bookingId ? { ...b, status: 'approved' } : b
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.$id === bookingId ? { ...b, status: 'approved' } : b
+        )
       );
-      setBookings(updated);
     } else {
       toast.error(response.error);
     }
@@ -57,20 +57,22 @@ const ApprovalPage = () => {
     const response = await declineBooking(bookingId);
     if (response.success) {
       toast.success('Lease declined!');
-      const updated = bookings.map((b) =>
-        b.$id === bookingId ? { ...b, status: 'declined' } : b
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.$id === bookingId ? { ...b, status: 'declined' } : b
+        )
       );
-      setBookings(updated);
     } else {
       toast.error(response.error);
     }
   };
 
   const handleContractUploaded = (bookingId, fileId, fileType) => {
-    const updated = bookings.map((b) =>
-      b.$id === bookingId ? { ...b, pdf_attachment: fileId, file_type: fileType } : b
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.$id === bookingId ? { ...b, pdf_attachment: fileId, file_type: fileType } : b
+      )
     );
-    setBookings(updated);
   };
 
   const isExpired = (checkOut) => {
@@ -79,18 +81,22 @@ const ApprovalPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white p-6">
-      <div className="text-center mb-12 px-4">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">
+    <div className="min-h-screen bg-neutral-900 text-white p-4 sm:p-6">
+      {/* Header */}
+      <div className="text-center space-y-2 sm:space-y-4">
+        <h2 className="text-base sm:text-lg text-pink-600 font-light tracking-widest">
           MY STALL
         </h2>
-        <p className="mt-4 text-xl sm:text-5xl font-bold">Lease</p>
+        <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold">
+          Lease
+        </p>
       </div>
 
-      <div className="space-y-6">
+      {/* Booking List */}
+      <div className="space-y-10 mt-10 sm:mt-12">
         {bookings.length === 0 ? (
-          <p className="text-gray-400 text-center">
-            No Lease for your food stall
+          <p className="text-gray-400 text-center text-sm sm:text-base">
+            No lease found for your food stall
           </p>
         ) : (
           bookings.map((booking) => {
@@ -100,20 +106,20 @@ const ApprovalPage = () => {
             return (
               <div
                 key={booking.$id}
-                className="bg-neutral-800 p-6 rounded-xl shadow-lg border border-neutral-700"
+                className="space-y-5 border-b border-neutral-800 pb-10"
               >
                 {/* Reservation Ticket */}
                 <ReservationTicket booking={booking} showActions={false} />
 
-                {/* ✅ Contract Section */}
-                <div className="mt-4 space-y-3">
+                {/* Contract Section */}
+                <div className="space-y-3">
                   {booking.pdf_attachment ? (
                     <>
                       <button
                         onClick={() =>
                           setOpenPreview(isOpen ? null : booking.$id)
                         }
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-700 text-sm font-medium text-white shadow-md hover:bg-pink-600 transition"
+                        className="flex w-full sm:w-auto items-center justify-center gap-2 px-4 py-2 rounded-lg bg-neutral-800 text-sm font-medium text-white shadow-md hover:bg-pink-600 transition"
                       >
                         {isOpen ? (
                           <>
@@ -129,7 +135,7 @@ const ApprovalPage = () => {
                       </button>
 
                       {isOpen && (
-                        <div className="mt-3 border border-neutral-600 rounded-lg p-3 bg-neutral-900 shadow-inner">
+                        <div className="rounded-lg p-3 bg-neutral-900 shadow-inner">
                           <PreviewFile
                             bookingId={booking.$id}
                             fileId={booking.pdf_attachment}
@@ -140,11 +146,12 @@ const ApprovalPage = () => {
                     </>
                   ) : (
                     <p className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-900/30 border border-yellow-700 px-3 py-2 rounded-md">
-                      <FaTriangleExclamation /> You need to upload the contract before approving.
+                      <FaTriangleExclamation /> You must upload the contract
+                      before approving.
                     </p>
                   )}
 
-                  {/* ✅ Upload only visible if still pending */}
+                  {/* Upload Contract (only when pending) */}
                   {booking.status === 'pending' && (
                     <UploadContract
                       bookingId={booking.$id}
@@ -155,9 +162,9 @@ const ApprovalPage = () => {
                   )}
                 </div>
 
-                {/* ✅ Action Buttons below contract */}
+                {/* Action Buttons */}
                 {booking.status === 'pending' && !expired && (
-                  <div className="flex flex-col sm:flex-row sm:space-x-4 mt-6 justify-end">
+                  <div className="flex flex-col sm:flex-row sm:space-x-4 gap-3 justify-end">
                     <button
                       onClick={() => handleApprove(booking.$id)}
                       disabled={!booking.pdf_attachment}
@@ -165,7 +172,7 @@ const ApprovalPage = () => {
                         ${
                           booking.pdf_attachment
                             ? 'bg-pink-600 text-white hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500'
-                            : 'bg-neutral-600 text-gray-400 cursor-not-allowed'
+                            : 'bg-neutral-700 text-gray-400 cursor-not-allowed'
                         }`}
                     >
                       Approve
@@ -173,7 +180,7 @@ const ApprovalPage = () => {
 
                     <button
                       onClick={() => handleDecline(booking.$id)}
-                      className="bg-neutral-700 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500 hover:text-white mt-2 sm:mt-0"
+                      className="bg-neutral-800 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500"
                     >
                       Decline
                     </button>

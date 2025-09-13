@@ -85,21 +85,25 @@ const TableViewPage = () => {
   };
 
   return (
-    <div className="bg-neutral-900 min-h-screen text-white p-6">
-      {/* New Header Section */}
-      <div className="text-center mb-10">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">Food Plaza</h2>
-        <p className="mt-4 text-2xl sm:text-5xl font-extrabold text-white leading-tight">Table View</p>
+    <div className="bg-neutral-900 min-h-screen text-white p-4 sm:p-6">
+      {/* Header */}
+      <div className="text-center mb-6 sm:mb-10">
+        <h2 className="text-sm sm:text-lg text-pink-600 font-light tracking-widest uppercase">
+          Food Plaza
+        </h2>
+        <p className="mt-2 sm:mt-4 text-xl sm:text-5xl font-extrabold text-white leading-tight">
+          Table View
+        </p>
       </div>
 
       {/* Table Grid */}
-      <div className="max-w-6xl mx-auto bg-neutral-800 border border-neutral-700 rounded-xl p-8 shadow-lg">
+      <div className="max-w-6xl mx-auto bg-neutral-800 border border-neutral-700 rounded-xl p-4 sm:p-8 shadow-lg">
         {loading ? (
           <p className="text-neutral-400 text-center">Loading...</p>
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
         ) : (
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4">
             {Array.from({ length: totalTables }, (_, i) => {
               const tableNumber = i + 1;
 
@@ -107,7 +111,7 @@ const TableViewPage = () => {
                 <div
                   key={tableNumber}
                   onClick={() => handleClick(tableNumber)}
-                  className={`cursor-pointer flex flex-col items-center justify-center rounded-xl shadow-md p-3 aspect-square transition-transform duration-200 border-2
+                  className={`cursor-pointer flex flex-col items-center justify-center rounded-lg sm:rounded-xl shadow-md p-2 sm:p-3 aspect-square transition-transform duration-200 border
                     ${
                       isOccupied(tableNumber)
                         ? 'bg-pink-100 border-pink-600 hover:bg-pink-200 text-pink-900'
@@ -116,8 +120,8 @@ const TableViewPage = () => {
                     hover:scale-105
                   `}
                 >
-                  <div className="text-lg font-bold">{`T${tableNumber}`}</div>
-                  <div className="mt-2 text-2xl">
+                  <div className="text-sm sm:text-lg font-bold">{`T${tableNumber}`}</div>
+                  <div className="mt-1 sm:mt-2 text-xl sm:text-2xl">
                     {isOccupied(tableNumber) ? (
                       <FaUserCheck className="text-pink-600" />
                     ) : (
@@ -133,21 +137,21 @@ const TableViewPage = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center">
-          <div className="bg-neutral-800 rounded-xl shadow-lg p-6 max-w-sm w-full text-center space-y-4 text-white">
-            <h2 className="text-lg font-bold text-pink-500">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center px-4">
+          <div className="bg-neutral-800 rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 w-full max-w-sm text-center space-y-4 text-white">
+            <h2 className="text-base sm:text-lg font-bold text-pink-500">
               Remove Table Assignment?
             </h2>
-            <p className="text-sm text-neutral-300">
+            <p className="text-xs sm:text-sm text-neutral-300">
               Are you sure you want to remove table <strong>T{selectedTable}</strong> from the order?
             </p>
             <div className="mt-2 text-neutral-300">
               {usersInfo.length > 1 ? (
-                <p className="font-semibold">Multiple users assigned to this table:</p>
+                <p className="font-semibold text-sm">Multiple users assigned:</p>
               ) : (
-                <p className="font-semibold">{usersInfo[0]?.user}</p>
+                <p className="font-semibold text-sm">{usersInfo[0]?.user}</p>
               )}
-              <ul className="text-sm text-neutral-400 space-y-1">
+              <ul className="text-xs sm:text-sm text-neutral-400 space-y-1 mt-2">
                 {usersInfo.map((user, index) => (
                   <li key={index}>
                     {user.user} - {user.email}
@@ -155,16 +159,16 @@ const TableViewPage = () => {
                 ))}
               </ul>
             </div>
-            <div className="flex justify-center gap-4 mt-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-neutral-700 rounded-lg hover:bg-neutral-600 transition"
+                className="px-3 py-2 text-sm bg-neutral-700 rounded-lg hover:bg-neutral-600 transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmRemove}
-                className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
+                className="px-3 py-2 text-sm bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition"
               >
                 Yes, Remove
               </button>
