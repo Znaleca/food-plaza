@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { FaChevronLeft } from 'react-icons/fa6';
+import { CiCirclePlus, CiCircleMinus } from "react-icons/ci";
 
 import { getDocumentById } from '@/app/actions/getSpace';
 import updateSpace from '@/app/actions/updateSpace';
@@ -18,6 +19,9 @@ const foodTypes = [
 
 const menuTypeOptions = ['Meals', 'Dessert', 'Snacks', 'Add-Ons', 'Drinks'];
 
+const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
+const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
+
 export default function EditSpacePage({ params }) {
   const router = useRouter();
   const { id } = params;
@@ -28,41 +32,48 @@ export default function EditSpacePage({ params }) {
   const [newImages, setNewImages] = useState([]);
   const [otherCategory, setOtherCategory] = useState("");
   const [customCategories, setCustomCategories] = useState([]);
-  const fileInputRef = useRef(null); // <-- declare ref here
+  const fileInputRef = useRef(null);
 
-
-
-  // Load stall data
   useEffect(() => {
     const fetchStall = async () => {
-      const data = await getDocumentById(id);
-      if (!data) return toast.error('Food Stall not found.');
+      try {
+        const data = await getDocumentById(id);
+        if (!data) {
+          toast.error('Food Stall not found.');
+          router.push('/rooms/my');
+          return;
+        }
 
-      setStall(data);
-      setSelectedTypes(data.type || []);
+        setStall(data);
+        setSelectedTypes(data.type || []);
 
-      setMenuItems((data.menuName || []).map((name, index) => {
-        const hasSizes = !!(data.menuSmall?.[index] || data.menuMedium?.[index] || data.menuLarge?.[index]);
-        return {
-          name,
-          price: data.menuPrice?.[index] || '',
-          description: data.menuDescription?.[index] || '',
-          menuType: data.menuType?.[index] || '',
-          smallFee: data.menuSmall?.[index] || '',
-          mediumFee: data.menuMedium?.[index] || '',
-          largeFee: data.menuLarge?.[index] || '',
-          smallChecked: !!data.menuSmall?.[index],
-          mediumChecked: !!data.menuMedium?.[index],
-          largeChecked: !!data.menuLarge?.[index],
-          menuImage: null,
-          existingImage: data.menuImages?.[index] || null,
-          useSizes: hasSizes // New toggle state
-        };
-      }));
+        const initialMenuItems = (data.menuName || []).map((name, index) => {
+          const hasSizes = !!(data.menuSmall?.[index] || data.menuMedium?.[index] || data.menuLarge?.[index]);
+          return {
+            name,
+            price: data.menuPrice?.[index] || '',
+            description: data.menuDescription?.[index] || '',
+            menuType: data.menuType?.[index] || '',
+            smallFee: data.menuSmall?.[index] || '',
+            mediumFee: data.menuMedium?.[index] || '',
+            largeFee: data.menuLarge?.[index] || '',
+            smallChecked: !!data.menuSmall?.[index],
+            mediumChecked: !!data.menuMedium?.[index],
+            largeChecked: !!data.menuLarge?.[index],
+            menuImage: null,
+            existingImage: data.menuImages?.[index] || null,
+            useSizes: hasSizes
+          };
+        });
+        setMenuItems(initialMenuItems);
+      } catch (err) {
+        console.error("Failed to fetch stall data:", err);
+        toast.error("Failed to load stall data.");
+      }
     };
 
     fetchStall();
-  }, [id]);
+  }, [id, router]);
 
   const handleTypeChange = (e) => {
     const value = e.target.value;
@@ -112,7 +123,6 @@ export default function EditSpacePage({ params }) {
     setMenuItems(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
@@ -123,7 +133,7 @@ export default function EditSpacePage({ params }) {
     formData.append('stallNumber', e.target.stallNumber.value);
     formData.append('selectedTypes', JSON.stringify(selectedTypes));
 
-    menuItems.forEach(item => {
+    menuItems.forEach((item, index) => {
       formData.append('menuNames[]', item.name);
       formData.append('menuPrices[]', item.useSizes ? '' : item.price);
       formData.append('menuDescriptions[]', item.description);
@@ -148,290 +158,356 @@ export default function EditSpacePage({ params }) {
   };
 
   if (!stall) {
-    return <div className="text-center mt-10 text-white">Loading...</div>;
+    return (
+      <div className="bg-neutral-900 min-h-screen text-white p-6 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl">Loading stall data...</p>
+        </div>
+      </div>
+    );
   }
+  
+  // Logic for the label text of the stall image button
+  const stallImageButtonText = newImages.length > 0 || (stall.images && stall.images.length > 0) ? "Change Image" : "Choose File";
 
   return (
-    <div className="bg-neutral-900 min-h-screen text-white p-6">
-      {/* Back Link */}
-      <Link href="/rooms/my" className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6">
-        <FaChevronLeft className="mr-2" />
-        <span className="font-medium text-lg">Back</span>
-      </Link>
+    <div className="bg-neutral-900 min-h-screen text-white py-6 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Back Link */}
+        <Link href="/rooms/my" className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6">
+          <FaChevronLeft className="mr-2 text-lg" />
+          <span className="font-medium text-lg">Back to My Stalls</span>
+        </Link>
 
-      {/* Page Header */}
-      <div className="text-center mb-8 px-4">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">Edit Stall</h2>
-        <p className="mt-4 text-2xl sm:text-5xl font-extrabold text-white leading-tight">Edit Food Stall</p>
-      </div>
+        {/* Page Header */}
+        <header className="text-center mb-10">
+          <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">Details</h2>
+          <p className="mt-2 text-3xl sm:text-5xl font-extrabold text-white leading-tight">Edit Food Stall</p>
+        </header>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-6xl mx-auto">
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto">
 
-        {/* Stall Name */}
-        <div>
-          <label className="block font-semibold mb-2">Food Stall Name</label>
-          <input
-            type="text"
-            name="name"
-            defaultValue={stall.name}
-            required
-            className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6"
-          />
-        </div>
-
-    
-        <div>
-  <label className="block font-semibold mb-2">Select Category</label>
-  <div className="grid grid-cols-4 gap-4">
-    {foodTypes.concat(customCategories).map(type => (
-      <label key={type} className="flex items-center space-x-2 text-sm">
-        <input
-          type="checkbox"
-          value={type}
-          checked={selectedTypes.includes(type)}
-          onChange={handleTypeChange}
-          className="accent-pink-500"
-        />
-        <span>{type}</span>
-      </label>
-    ))}
-
-    {/* Add custom category input */}
-    <div className="flex items-center space-x-2 text-sm col-span-4">
-      <span>Other:</span>
-      <input
-        type="text"
-        placeholder="Enter custom category"
-        value={otherCategory}
-        onChange={(e) => setOtherCategory(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && otherCategory.trim() !== "") {
-            const newCategory = otherCategory.trim();
-            if (!customCategories.includes(newCategory) && !foodTypes.includes(newCategory)) {
-              setCustomCategories(prev => [...prev, newCategory]);
-              setSelectedTypes(prev => [...prev, newCategory]);
-            }
-            setOtherCategory("");
-            e.preventDefault();
-          }
-        }}
-        className="border text-black rounded px-2 py-1 text-sm w-44"
-      />
-    </div>
-  </div>
-</div>
-
-
-        {/* Stall Description */}
-        <div>
-          <label className="block font-semibold mb-2">Description</label>
-          <textarea
-            name="description"
-            defaultValue={stall.description}
-            required
-            className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full h-32 py-3 px-6"
-          />
-        </div>
-
-        <div>
-          <label className="block font-semibold mb-4 text-lg">Menu</label>
-
-          {menuItems.map((item, index) => (
-            <div
-              key={index}
-              className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-4 mb-6 shadow-md"
-            >
-              {/* Name */}
+          {/* Stall Name & Number */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="name" className="block font-semibold mb-2">Food Stall Name</label>
               <input
                 type="text"
-                placeholder="Item Name"
+                id="name"
+                name="name"
+                defaultValue={stall.name}
                 required
-                value={item.name}
-                onChange={e => handleMenuChange(index, 'name', e.target.value)}
-                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 w-full"
+                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-4 focus:ring-pink-500 focus:border-pink-500 transition-colors duration-300"
               />
-
-              {/* Description */}
-              <textarea
-                placeholder="Description"
-                value={item.description}
-                onChange={e => handleMenuChange(index, 'description', e.target.value)}
-                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 w-full"
+            </div>
+            <div>
+              <label htmlFor="stallNumber" className="block font-semibold mb-2">Stall #</label>
+              <input
+                type="number"
+                id="stallNumber"
+                name="stallNumber"
+                defaultValue={stall.stallNumber}
+                readOnly
+                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-4 cursor-not-allowed opacity-75"
               />
+            </div>
+          </div>
 
-              {/* Menu Type */}
-              <select
-                value={item.menuType}
-                onChange={e => handleMenuChange(index, 'menuType', e.target.value)}
-                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 w-full md:w-40"
-              >
-                <option value="">Select Type</option>
-                {menuTypeOptions.map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+          {/* Stall Description */}
+          <div>
+            <label htmlFor="description" className="block font-semibold mb-2">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              defaultValue={stall.description}
+              required
+              rows="4"
+              className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-4 resize-none focus:ring-pink-500 focus:border-pink-500 transition-colors duration-300"
+            />
+          </div>
 
-              {/* Toggle for size or one price */}
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2">
+          {/* Categories */}
+          <div>
+            <label className="block font-semibold mb-3">Select Categories</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {foodTypes.concat(customCategories).map(type => (
+                <label key={type} className="flex items-center space-x-2 text-sm text-neutral-300">
                   <input
-                    type="radio"
-                    name={`sizeOption-${index}`}
-                    checked={!item.useSizes}
-                    onChange={() => handleMenuChange(index, 'useSizes', false)}
-                    className="accent-pink-500"
+                    type="checkbox"
+                    value={type}
+                    checked={selectedTypes.includes(type)}
+                    onChange={handleTypeChange}
+                    className="accent-pink-500 w-4 h-4"
                   />
-                  One-Sized Price
+                  <span>{type}</span>
                 </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name={`sizeOption-${index}`}
-                    checked={item.useSizes}
-                    onChange={() => handleMenuChange(index, 'useSizes', true)}
-                    className="accent-pink-500"
+              ))}
+            </div>
+
+            {/* Add custom category input */}
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-sm font-medium text-neutral-300">Add a custom category:</span>
+              <input
+                type="text"
+                placeholder="e.g., Filipino Cuisine"
+                value={otherCategory}
+                onChange={(e) => setOtherCategory(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && otherCategory.trim() !== "") {
+                    const newCategory = otherCategory.trim();
+                    if (!customCategories.includes(newCategory) && !foodTypes.includes(newCategory)) {
+                      setCustomCategories(prev => [...prev, newCategory]);
+                      setSelectedTypes(prev => [...prev, newCategory]);
+                    }
+                    setOtherCategory("");
+                    e.preventDefault();
+                  }
+                }}
+                className="border text-neutral-200 bg-neutral-800 rounded px-3 py-2 text-sm w-full sm:w-60 focus:ring-pink-500 focus:border-pink-500"
+              />
+            </div>
+          </div>
+
+          {/* Menu Items Section */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-xl sm:text-2xl text-pink-600">Menu</h3>
+            </div>
+
+            <div className="space-y-6">
+              {menuItems.map((item, index) => (
+                <div key={index} className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 sm:p-6 space-y-4">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                    <h4 className="text-lg font-semibold text-white">Item {index + 1}</h4>
+                    <button
+                      type="button"
+                      onClick={() => removeMenuItem(index)}
+                      className="text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
+                    >
+                      <CiCircleMinus className="w-5 h-5" /> Remove Item
+                    </button>
+                  </div>
+
+                  {/* Name and Type */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      placeholder="Item Name"
+                      required
+                      value={item.name}
+                      onChange={e => handleMenuChange(index, 'name', e.target.value)}
+                      className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-3 px-4 w-full"
+                    />
+                    <select
+                      value={item.menuType}
+                      onChange={e => handleMenuChange(index, 'menuType', e.target.value)}
+                      className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-3 px-4 w-full"
+                    >
+                      <option value="">Select Type</option>
+                      {menuTypeOptions.map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Description */}
+                  <textarea
+                    placeholder="Description"
+                    value={item.description}
+                    onChange={e => handleMenuChange(index, 'description', e.target.value)}
+                    rows="2"
+                    className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-3 px-4 w-full resize-none"
                   />
-                  Size Options
-                </label>
-              </div>
 
-              {/* One-Sized Price */}
-              {!item.useSizes && (
-                <input
-                  type="number"
-                  placeholder="₱ Price"
-                  value={item.price}
-                  onChange={e => handleMenuChange(index, 'price', e.target.value)}
-                  className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6 w-32"
-                />
-              )}
-
-              {/* Size Options */}
-              {item.useSizes && (
-                <div className="flex flex-wrap gap-6">
-                  {['small', 'medium', 'large'].map(size => (
-                    <div key={size} className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={item[`${size}Checked`]}
-                        onChange={e => handleMenuChange(index, `${size}Checked`, e.target.checked)}
-                        className="accent-pink-500"
-                      />
-                      <span className="text-xs capitalize">{size}</span>
+                  {/* Price Options */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name={`sizeOption-${index}`}
+                          checked={!item.useSizes}
+                          onChange={() => handleMenuChange(index, 'useSizes', false)}
+                          className="accent-pink-500"
+                        />
+                        <span className="text-sm">One-Sized Price</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name={`sizeOption-${index}`}
+                          checked={item.useSizes}
+                          onChange={() => handleMenuChange(index, 'useSizes', true)}
+                          className="accent-pink-500"
+                        />
+                        <span className="text-sm">Size Options</span>
+                      </label>
+                    </div>
+                    
+                    {/* Price Input based on selection */}
+                    {!item.useSizes ? (
                       <input
                         type="number"
-                        placeholder="Price"
-                        value={item[`${size}Fee`]}
-                        disabled={!item[`${size}Checked`]}
-                        onChange={e => handleMenuChange(index, `${size}Fee`, e.target.value)}
-                        className="bg-neutral-800 border border-neutral-700 rounded-lg py-2 px-3 w-20 text-xs"
+                        placeholder="₱ Price"
+                        value={item.price}
+                        onChange={e => handleMenuChange(index, 'price', e.target.value)}
+                        className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-2 px-3 w-full sm:w-32"
                       />
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ) : (
+                      <div className="flex flex-wrap gap-4">
+                        {['small', 'medium', 'large'].map(size => (
+                          <div key={size} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={item[`${size}Checked`]}
+                              onChange={e => handleMenuChange(index, `${size}Checked`, e.target.checked)}
+                              className="accent-pink-500"
+                            />
+                            <span className="text-xs capitalize text-neutral-400">{size}</span>
+                            <input
+                              type="number"
+                              placeholder="Price"
+                              value={item[`${size}Fee`]}
+                              disabled={!item[`${size}Checked`]}
+                              onChange={e => handleMenuChange(index, `${size}Fee`, e.target.value)}
+                              className="bg-neutral-900 border border-neutral-700 rounded-lg py-2 px-3 w-20 text-xs disabled:opacity-50"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-              {/* Image & Remove */}
-              <div className="flex flex-wrap gap-4 items-center">
+                  {/* Image Preview and Upload */}
+                  <div className="flex flex-col items-start gap-4 mt-4">
+                    <span className="text-sm font-medium">Menu Item Image</span>
+                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                      {/* Image Preview */}
+                      <div className="relative w-36 h-36 rounded-lg overflow-hidden border border-neutral-700 flex-shrink-0">
+                        {(item.menuImage || item.existingImage) ? (
+                          <img
+                            src={item.menuImage ? URL.createObjectURL(item.menuImage) : `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${item.existingImage}/view?project=${PROJECT_ID}`}
+                            alt={`Menu item ${index} preview`}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center w-full h-full bg-neutral-900 text-neutral-500 text-center text-xs p-2">
+                            No Image
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-2 w-full">
+                        {/* Hidden native file input */}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id={`menuImage-${index}`}
+                          onChange={e => handleMenuImageChange(index, e.target.files[0])}
+                          className="hidden"
+                        />
+                        {/* Custom button label */}
+                        <label
+                          htmlFor={`menuImage-${index}`}
+                          className="cursor-pointer bg-neutral-700 text-white rounded-lg py-3 px-4 text-center hover:bg-neutral-600 transition-colors duration-300 w-full"
+                        >
+                          {item.menuImage ? "Change New Image" : (item.existingImage ? "Change Image" : "Choose Image")}
+                        </label>
+                        {item.menuImage && (
+                          <button
+                            type="button"
+                            onClick={() => handleMenuImageChange(index, null)}
+                            className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-300"
+                          >
+                            Undo Change
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Add Menu Item Button - Moved outside the loop */}
+            <div className="flex justify-end items-center mt-6">
+              <button
+                type="button"
+                onClick={addMenuItem}
+                className="flex items-center gap-1 text-pink-500 hover:text-pink-400 font-semibold"
+              >
+                <CiCirclePlus className="w-6 h-6" /> Add New Item
+              </button>
+            </div>
+          </div>
+
+          {/* Stall Image/Logo Upload Section */}
+          <div>
+            <label className="block font-semibold mb-3">Food Stall Image/Logo</label>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              {/* Image Preview Container */}
+              <div className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden border border-neutral-700 flex-shrink-0">
+                {(newImages.length > 0) ? (
+                  <img
+                    src={URL.createObjectURL(newImages[0])}
+                    alt="New Stall Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (stall.images && stall.images.length > 0) ? (
+                  <img
+                    src={`https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${stall.images[0]}/view?project=${PROJECT_ID}`}
+                    alt="Existing Stall Image"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full bg-neutral-800 text-neutral-500 text-center p-2">
+                    No Stall Image
+                  </div>
+                )}
+              </div>
+              
+              {/* Upload controls */}
+              <div className="flex-1 flex flex-col gap-2 w-full sm:w-auto">
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={e => handleMenuImageChange(index, e.target.files[0])}
-                  className="bg-neutral-800 text-white border border-neutral-700 rounded-lg py-3 px-6"
+                  id="stallImage"
+                  onChange={e => setNewImages(e.target.files.length > 0 ? [e.target.files[0]] : [])}
+                  className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={() => removeMenuItem(index)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                <label
+                  htmlFor="stallImage"
+                  className="cursor-pointer bg-neutral-700 text-white rounded-lg py-3 px-4 text-center hover:bg-neutral-600 transition-colors duration-300 w-full"
                 >
-                  Remove
-                </button>
+                  {stallImageButtonText}
+                </label>
+                {newImages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewImages([]);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-300"
+                  >
+                    Remove New Image
+                  </button>
+                )}
               </div>
             </div>
-          ))}
-
-          {/* Add Menu Item */}
+          </div>
+          
+          {/* Submit */}
           <button
-            type="button"
-            onClick={addMenuItem}
-            className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg mt-2"
+            type="submit"
+            className="w-full py-4 bg-pink-600 hover:bg-pink-700 rounded-lg font-bold text-white text-lg tracking-widest transition-colors duration-300"
           >
-            + Add Menu Item
+            Update Food Stall
           </button>
-        </div>
-
-       {/* Stall Number */}
-<div>
-  <label className="block font-semibold mb-2">Stall #</label>
-  <input
-    type="number"
-    name="stallNumber"
-    defaultValue={stall.stallNumber}
-    readOnly
-    className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6 cursor-not-allowed opacity-75"
-  />
-</div>
-
-
-
-        {/* Upload Images */}
-{/* Stall Image/Logo Upload */}
-<div>
-  <label className="block font-semibold mb-2">Upload Food Stall Image/Logo</label>
-
-  {/* Hidden native file input */}
-  <input
-    ref={fileInputRef}
-    type="file"
-    accept="image/*"
-    id="stallImage"
-    onChange={e => {
-      const file = e.target.files[0];
-      setNewImages(file ? [file] : []);
-    }}
-    className="hidden"
-  />
-
-  {/* Custom button instead of default file input */}
-  <label
-    htmlFor="stallImage"
-    className="cursor-pointer bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-6 block text-center hover:bg-neutral-700"
-  >
-    {newImages.length > 0 ? "Change Image" : "Choose File"}
-  </label>
-
-  {newImages.length > 0 && (
-    <div className="mt-4 relative w-48 h-48">
-      <img
-        src={URL.createObjectURL(newImages[0])}
-        alt="Stall preview"
-        className="w-full h-full object-cover rounded-lg"
-      />
-      <button
-        type="button"
-        onClick={() => {
-          setNewImages([]);
-          if (fileInputRef.current) fileInputRef.current.value = ''; // reset
-        }}
-        className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center font-bold"
-        aria-label="Remove image"
-      >
-        &times;
-      </button>
-    </div>
-  )}
-</div>
-
-
-        {/* Submit */}
-        <button
-          type="submit"
-          className="w-full py-4 bg-pink-600 hover:bg-pink-700 rounded-lg font-bold text-white text-xl tracking-widest"
-        >
-          Update Food Stall
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
