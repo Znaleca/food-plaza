@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useFormState } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
@@ -10,9 +10,12 @@ const AddPromosPage = () => {
   const [state, formAction] = useFormState(createPromos, { success: false, error: null });
   const router = useRouter();
 
-  // Get today's date and tomorrow's date in YYYY-MM-DD
+  // Dates
   const today = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]; // +1 day
+  const [validFrom, setValidFrom] = useState(today);
+  const [validTo, setValidTo] = useState(
+    new Date(Date.now() + 86400000).toISOString().split('T')[0]
+  );
 
   useEffect(() => {
     if (state.error) toast.error(state.error);
@@ -22,12 +25,23 @@ const AddPromosPage = () => {
     }
   }, [state, router]);
 
+  // Whenever valid_from changes, ensure valid_to is always ahead
+  const handleValidFromChange = (e) => {
+    const newFrom = e.target.value;
+    setValidFrom(newFrom);
+
+    const newFromDate = new Date(newFrom);
+    const minToDate = new Date(newFromDate.getTime() + 86400000); // +1 day
+    const minToString = minToDate.toISOString().split('T')[0];
+
+    if (new Date(validTo) <= newFromDate) {
+      setValidTo(minToString);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-
-    // Force valid_from to be today no matter what
-    formData.set('valid_from', today);
 
     // Ensure claimed_users is always an empty array initially
     formData.append('claimed_users', JSON.stringify([]));
@@ -87,7 +101,7 @@ const AddPromosPage = () => {
             </div>
           </div>
 
-          {/* NEW: Minimum Orders Field */}
+          {/* Minimum Orders Field */}
           <div>
             <label className="block text-sm font-semibold mb-2">Minimum Orders</label>
             <input
@@ -101,25 +115,29 @@ const AddPromosPage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Valid From - always today, disabled */}
+            {/* Valid From */}
             <div>
               <label className="block text-sm font-semibold mb-2">Valid From</label>
               <input
                 type="date"
                 name="valid_from"
-                value={today}
-                disabled
-                className="bg-neutral-700 text-white border border-neutral-600 rounded-lg w-full py-3 px-4 cursor-not-allowed"
+                min={today}
+                value={validFrom}
+                onChange={handleValidFromChange}
+                required
+                className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
               />
             </div>
 
-            {/* Valid To - must be after today */}
+            {/* Valid To */}
             <div>
               <label className="block text-sm font-semibold mb-2">Valid To</label>
               <input
                 type="date"
                 name="valid_to"
-                min={tomorrow}
+                min={new Date(new Date(validFrom).getTime() + 86400000).toISOString().split('T')[0]}
+                value={validTo}
+                onChange={(e) => setValidTo(e.target.value)}
                 required
                 className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
               />
