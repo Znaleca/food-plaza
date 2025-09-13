@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaPercent, FaStore, FaCalendarAlt, FaMoneyBillWave } from 'react-icons/fa';
+import { 
+  FaPercent, 
+  FaStore, 
+  FaCalendarAlt, 
+  FaMoneyBillWave, 
+  FaInfoCircle 
+} from 'react-icons/fa';
 import DeletePromosButton from './DeletePromosButton';
 
 const PromosCard = ({ promo, stallName }) => {
@@ -62,21 +68,32 @@ const PromosCard = ({ promo, stallName }) => {
                 <strong className="text-white font-medium">Stall:</strong> {stallName || 'Unknown Stall'}
               </span>
             </div>
+
+            <div className="flex items-center gap-2 text-gray-400">
+              <FaCalendarAlt className="text-green-400" />
+              <span>
+                <strong className="text-white font-medium">Valid From:</strong> {formatDate(promo.valid_from)}
+              </span>
+            </div>
+
             <div className="flex items-center gap-2 text-gray-400">
               <FaCalendarAlt className="text-white" />
               <span>
                 <strong className="text-white font-medium">Valid Until:</strong> {formatDate(promo.valid_to)}
               </span>
             </div>
+
             {promo.min_orders && (
               <div className="flex items-center gap-2 text-gray-400">
-                <FaMoneyBillWave className="text-white" />
+                <FaMoneyBillWave className="text-yellow-400" />
                 <span>
                   <strong className="text-white font-medium">Min. Order:</strong> ₱{promo.min_orders}
                 </span>
               </div>
             )}
+
             <div className="flex items-center gap-2 text-gray-400">
+              <FaInfoCircle className="text-pink-400" />
               <span>
                 <strong className="text-white font-medium">Quantity:</strong> {promo.quantity || 'N/A'}
               </span>

@@ -32,39 +32,37 @@ const VouchersCard = ({ voucher, stallName, onClaim }) => {
     });
   };
 
-  // Date logic
   const now = new Date();
-  const startDate = new Date(voucher.valid_from).setHours(0, 0, 0, 0);
-  const endDate = new Date(voucher.valid_to).setHours(23, 59, 59, 999);
-  const isActive = now >= startDate && now <= endDate;
-  const isUpcoming = now < startDate;
 
-  // Calculate remaining vouchers and sold-out status
+  // Voucher timing states
+  const startDate = voucher.valid_from ? new Date(voucher.valid_from) : null;
+  const endDate = voucher.valid_to ? new Date(voucher.valid_to) : null;
+
+  const isComingSoon = startDate && now < startDate;
+  const isActive = startDate && endDate && now >= startDate && now <= endDate;
+  const isExpired = endDate && now > endDate;
+
+  // Calculate remaining vouchers
   const claimedUsersCount = voucher.claimed_users?.length || 0;
   const totalQuantity = voucher.quantity || 0;
   const remainingVouchers = totalQuantity - claimedUsersCount;
   const isSoldOut = remainingVouchers <= 0;
   const claimedPercentage = totalQuantity > 0 ? (claimedUsersCount / totalQuantity) * 100 : 0;
 
-  // Hide completely if expired or already claimed
-  if ((!isActive && !isUpcoming) || claimed) return null;
+  // Don't show if expired or already claimed
+  if (isExpired || claimed) return null;
 
   return (
     <div
       className={`relative w-full max-w-xs sm:max-w-md mx-auto h-auto min-h-64 bg-neutral-900 text-white rounded-2xl shadow-xl border-2 border-pink-600 overflow-hidden transition-all duration-300
-      ${(isSoldOut || isUpcoming) ? 'opacity-60' : 'hover:scale-105 hover:shadow-2xl'}`}
+      ${isSoldOut || isComingSoon ? 'opacity-70' : 'hover:scale-105 hover:shadow-2xl'}`}
     >
-      {/* Overlay for sold-out state */}
-      {isSoldOut && (
+      {/* Overlay for sold-out or coming soon */}
+      {(isSoldOut || isComingSoon) && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-50 text-white rounded-2xl">
-          <p className="text-xl sm:text-2xl font-extrabold tracking-wide uppercase">Sold Out</p>
-        </div>
-      )}
-
-      {/* Overlay for upcoming vouchers */}
-      {isUpcoming && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-50 text-white rounded-2xl">
-          <p className="text-xl sm:text-2xl font-extrabold tracking-wide uppercase">Coming Soon</p>
+          <p className="text-xl sm:text-2xl font-extrabold tracking-wide uppercase">
+            {isComingSoon ? 'Coming Soon' : 'Sold Out'}
+          </p>
         </div>
       )}
 
@@ -94,12 +92,24 @@ const VouchersCard = ({ voucher, stallName, onClaim }) => {
               <strong className="text-white font-medium">Stall:</strong> {stallName}
             </span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <FaCalendarAlt className="text-white" />
-            <span>
-              <strong className="text-white font-medium">Valid:</strong> {formatDate(voucher.valid_from)} - {formatDate(voucher.valid_to)}
-            </span>
-          </div>
+          {voucher.valid_from && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <FaCalendarAlt className="text-white" />
+              <span>
+                <strong className="text-white font-medium">Valid From:</strong>{' '}
+                {formatDate(voucher.valid_from)}
+              </span>
+            </div>
+          )}
+          {voucher.valid_to && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <FaCalendarAlt className="text-white" />
+              <span>
+                <strong className="text-white font-medium">Valid Until:</strong>{' '}
+                {formatDate(voucher.valid_to)}
+              </span>
+            </div>
+          )}
           {voucher.min_orders && (
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <FaMoneyBillWave className="text-white" />
@@ -110,12 +120,14 @@ const VouchersCard = ({ voucher, stallName, onClaim }) => {
           )}
         </div>
 
-        {/* Bottom Section: Progress and Action */}
+        {/* Bottom Section */}
         {isActive && !isSoldOut && (
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-semibold">
               <span className="text-yellow-500">{remainingVouchers} left</span>
-              <span className="text-gray-400">{claimedUsersCount} / {totalQuantity} claimed</span>
+              <span className="text-gray-400">
+                {claimedUsersCount} / {totalQuantity} claimed
+              </span>
             </div>
             <div className="w-full bg-neutral-800 rounded-full h-2">
               <div
@@ -128,15 +140,15 @@ const VouchersCard = ({ voucher, stallName, onClaim }) => {
 
         <div className="pt-4">
           {isActive && !isSoldOut ? (
-            <VoucherClaimingButton 
-              voucherId={voucher.$id} 
-              onClaim={handleClaim} 
+            <VoucherClaimingButton
+              voucherId={voucher.$id}
+              onClaim={handleClaim}
               claimedUsersCount={claimedUsersCount}
               quantity={totalQuantity}
             />
           ) : (
             <button className="bg-neutral-800 text-gray-500 px-4 py-2 rounded-lg font-semibold w-full cursor-not-allowed text-sm">
-              {isUpcoming ? 'Coming Soon' : 'Sold Out'}
+              {isComingSoon ? 'Coming Soon' : 'Unavailable'}
             </button>
           )}
         </div>

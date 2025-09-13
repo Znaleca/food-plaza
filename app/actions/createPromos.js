@@ -14,14 +14,16 @@ async function createPromos(previousState, formData) {
       return { error: 'You must be logged in to create a promo' };
     }
 
-    // Force valid_from = today (no bypassing UI)
-    const today = new Date().toISOString().split('T')[0];
-    const validFrom = today;
+    // Use user-provided valid_from (default handled in client)
+    const validFrom = formData.get('valid_from');
+    if (!validFrom) {
+      return { error: 'Start date is required' };
+    }
 
     // Ensure valid_to is always after valid_from
     const validTo = formData.get('valid_to');
     if (!validTo || new Date(validTo) <= new Date(validFrom)) {
-      return { error: 'Expiration date must be after today' };
+      return { error: 'Expiration date must be after the start date' };
     }
 
     const discount = parseFloat(formData.get('discount') || '0');

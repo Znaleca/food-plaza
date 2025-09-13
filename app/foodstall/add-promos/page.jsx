@@ -10,7 +10,7 @@ const AddPromosPage = () => {
   const [state, formAction] = useFormState(createPromos, { success: false, error: null });
   const router = useRouter();
 
-  // Dates
+  // Defaults (today and tomorrow)
   const today = new Date().toISOString().split('T')[0];
   const [validFrom, setValidFrom] = useState(today);
   const [validTo, setValidTo] = useState(
@@ -25,13 +25,13 @@ const AddPromosPage = () => {
     }
   }, [state, router]);
 
-  // Whenever valid_from changes, ensure valid_to is always ahead
+  // Ensure valid_to is always after valid_from
   const handleValidFromChange = (e) => {
     const newFrom = e.target.value;
     setValidFrom(newFrom);
 
     const newFromDate = new Date(newFrom);
-    const minToDate = new Date(newFromDate.getTime() + 86400000); // +1 day
+    const minToDate = new Date(newFromDate.getTime() + 86400000);
     const minToString = minToDate.toISOString().split('T')[0];
 
     if (new Date(validTo) <= newFromDate) {
@@ -43,7 +43,7 @@ const AddPromosPage = () => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
-    // Ensure claimed_users is always an empty array initially
+    // Ensure claimed_users is always empty array initially
     formData.append('claimed_users', JSON.stringify([]));
 
     formAction(formData);
@@ -52,12 +52,17 @@ const AddPromosPage = () => {
   return (
     <div className="bg-neutral-900 min-h-screen text-white p-6">
       <div className="text-center mb-10">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">Create Promo</h2>
-        <p className="mt-4 text-2xl sm:text-5xl font-extrabold text-white leading-tight">Add Deals</p>
+        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">
+          Create Promo
+        </h2>
+        <p className="mt-4 text-2xl sm:text-5xl font-extrabold text-white leading-tight">
+          Add Deals
+        </p>
       </div>
 
       <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 w-full max-w-3xl mx-auto shadow-lg">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title */}
           <div>
             <label className="block text-sm font-semibold mb-2">Title</label>
             <input
@@ -68,6 +73,7 @@ const AddPromosPage = () => {
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="block text-sm font-semibold mb-2">Description</label>
             <textarea
@@ -77,6 +83,7 @@ const AddPromosPage = () => {
             />
           </div>
 
+          {/* Discount + Quantity */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold mb-2">Discount (%)</label>
@@ -101,7 +108,7 @@ const AddPromosPage = () => {
             </div>
           </div>
 
-          {/* Minimum Orders Field */}
+          {/* Minimum Orders */}
           <div>
             <label className="block text-sm font-semibold mb-2">Minimum Orders</label>
             <input
@@ -114,8 +121,8 @@ const AddPromosPage = () => {
             />
           </div>
 
+          {/* Valid From / Valid Until */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Valid From */}
             <div>
               <label className="block text-sm font-semibold mb-2">Valid From</label>
               <input
@@ -128,10 +135,8 @@ const AddPromosPage = () => {
                 className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
               />
             </div>
-
-            {/* Valid To */}
             <div>
-              <label className="block text-sm font-semibold mb-2">Valid To</label>
+              <label className="block text-sm font-semibold mb-2">Valid Until</label>
               <input
                 type="date"
                 name="valid_to"
@@ -144,6 +149,7 @@ const AddPromosPage = () => {
             </div>
           </div>
 
+          {/* Submit */}
           <div className="flex justify-center pt-4">
             <button
               type="submit"
