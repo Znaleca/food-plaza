@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/authContext';
 import updateNews from '@/app/actions/newsUpdate';
 import { createSessionClient } from '@/config/appwrite';
+import { Query } from 'node-appwrite';
 import { FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 
 const NewsNotif = () => {
@@ -25,8 +26,15 @@ const NewsNotif = () => {
           return;
         }
 
-        const response = await databases.getDocument(databaseId, collectionId, 'news');
-        setNews(response.news?.trim() ? response.news : 'No news available.');
+        // ✅ Get latest document instead of fixed "news" id
+        const response = await databases.listDocuments(
+          databaseId,
+          collectionId,
+          [Query.orderDesc('$createdAt'), Query.limit(1)]
+        );
+
+        const latest = response.documents[0];
+        setNews(latest?.news?.trim() ? latest.news : 'No news available.');
       } catch (error) {
         console.error('Failed to fetch news:', error);
       }
@@ -38,7 +46,7 @@ const NewsNotif = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await updateNews(news);
+      await updateNews(news); // this will delete old docs + create a new one
       setEditMode(false);
     } catch (error) {
       alert('Failed to update news.');
@@ -60,12 +68,15 @@ const NewsNotif = () => {
           <h2 className="text-base sm:text-xl font-bold truncate">Announcement</h2>
           <p className="text-xs sm:text-sm text-gray-300 truncate">Stay informed with real-time updates</p>
         </div>
-        <button onClick={() => setVisible(false)} className="ml-2 flex-shrink-0 hover:text-pink-500 transition">
+        <button
+          onClick={() => setVisible(false)}
+          className="ml-2 flex-shrink-0 hover:text-pink-500 transition"
+        >
           <FaTimes size={20} />
         </button>
       </div>
 
-      {/* Body - scrollable */}
+      {/* Body */}
       <div className="px-4 py-4 sm:px-6 sm:py-5 text-gray-100 max-h-[70vh] overflow-y-auto text-sm sm:text-base">
         {editMode ? (
           <textarea

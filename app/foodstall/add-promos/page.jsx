@@ -10,6 +10,10 @@ const AddPromosPage = () => {
   const [state, formAction] = useFormState(createPromos, { success: false, error: null });
   const router = useRouter();
 
+  // Get today's date and tomorrow's date in YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0]; // +1 day
+
   useEffect(() => {
     if (state.error) toast.error(state.error);
     if (state.success) {
@@ -21,7 +25,13 @@ const AddPromosPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+
+    // Force valid_from to be today no matter what
+    formData.set('valid_from', today);
+
+    // Ensure claimed_users is always an empty array initially
     formData.append('claimed_users', JSON.stringify([]));
+
     formAction(formData);
   };
 
@@ -76,7 +86,7 @@ const AddPromosPage = () => {
               />
             </div>
           </div>
-          
+
           {/* NEW: Minimum Orders Field */}
           <div>
             <label className="block text-sm font-semibold mb-2">Minimum Orders</label>
@@ -84,27 +94,32 @@ const AddPromosPage = () => {
               type="number"
               name="min_orders"
               min="1"
-              defaultValue="1" // A default value is helpful for user experience
+              defaultValue="1"
               required
               className="bg-neutral-900 border border-neutral-700 text-white rounded-lg w-full py-3 px-4"
             />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Valid From - always today, disabled */}
             <div>
               <label className="block text-sm font-semibold mb-2">Valid From</label>
               <input
                 type="date"
                 name="valid_from"
-                required
-                className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
+                value={today}
+                disabled
+                className="bg-neutral-700 text-white border border-neutral-600 rounded-lg w-full py-3 px-4 cursor-not-allowed"
               />
             </div>
+
+            {/* Valid To - must be after today */}
             <div>
               <label className="block text-sm font-semibold mb-2">Valid To</label>
               <input
                 type="date"
                 name="valid_to"
+                min={tomorrow}
                 required
                 className="bg-white text-black border border-neutral-700 rounded-lg w-full py-3 px-4"
               />

@@ -86,7 +86,7 @@ const VouchersCard = ({ voucher, stallName, onClaim }) => {
           <div className="flex items-center gap-2 text-sm text-gray-400">
             <FaCalendarAlt className="text-white" />
             <span>
-              <strong className="text-white font-medium">Valid To:</strong> {formatDate(voucher.valid_to)}
+              <strong className="text-white font-medium">Valid Until:</strong> {formatDate(voucher.valid_to)}
             </span>
           </div>
           {voucher.min_orders && (

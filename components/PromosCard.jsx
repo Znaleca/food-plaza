@@ -65,7 +65,7 @@ const PromosCard = ({ promo, stallName }) => {
             <div className="flex items-center gap-2 text-gray-400">
               <FaCalendarAlt className="text-white" />
               <span>
-                <strong className="text-white font-medium">Valid To:</strong> {formatDate(promo.valid_to)}
+                <strong className="text-white font-medium">Valid Until:</strong> {formatDate(promo.valid_to)}
               </span>
             </div>
             {promo.min_orders && (

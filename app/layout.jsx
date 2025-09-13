@@ -24,19 +24,24 @@ export default function RootLayout({ children }) {
     <AuthWrapper>
       <html lang="en">
         {/* Use the Poppins font class on the body */}
-        <body className={`${poppins.className} min-h-screen bg-neutral-900 text-white`}>
+        <body className={`${poppins.className} bg-neutral-900 text-white`}>
           <ClientLayoutWrapper>
-            <Header />
+            {/* The main container for the sticky footer layout */}
+            <div className="flex flex-col min-h-screen">
+              <Header />
 
-            <div className="pt-20"> 
-              <section className="w-full py-8">
-                <NewsNotif />
-              </section>
+              {/* This `div` acts as the flexible content area */}
+              <div className="flex-grow pt-20"> 
+                <section className="w-full py-8">
+                  <NewsNotif />
+                </section>
 
-              <main className="w-full">{children}</main>
+                <main className="w-full">{children}</main>
+              </div>
+
+              <Footer />
             </div>
-
-            <Footer />
+            
             <ToastContainer />
           </ClientLayoutWrapper>
         </body>
