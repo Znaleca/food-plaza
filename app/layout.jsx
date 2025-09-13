@@ -30,18 +30,16 @@ export default function RootLayout({ children }) {
             <div className="flex flex-col min-h-screen">
               <Header />
 
-              {/* This `div` acts as the flexible content area */}
-              <div className="flex-grow pt-20"> 
-                <section className="w-full py-8">
-                  <NewsNotif />
-                </section>
-
+              {/* Flexible content area */}
+              <div className="flex-grow pt-20">
                 <main className="w-full">{children}</main>
               </div>
 
               <Footer />
             </div>
-            
+
+            {/* Keep notifications and toasts outside of the flex container */}
+            <NewsNotif />
             <ToastContainer />
           </ClientLayoutWrapper>
         </body>
