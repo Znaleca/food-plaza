@@ -516,7 +516,7 @@ const OrderCartPage = () => {
       >
         <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-6">
-          <Dialog.Panel className="w-full max-w-4xl bg-neutral-900 rounded-2xl p-10 shadow-2xl border-2 border-pink-600">
+          <Dialog.Panel className="w-full max-w-4xl ">
             <SpecialDiscount
               initialData={specialDiscountData}
               onSubmissionSuccess={handleSubmissionSuccess}
