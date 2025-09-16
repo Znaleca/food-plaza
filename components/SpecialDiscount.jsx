@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { FaIdCard, FaUser, FaHashtag, FaUpload, FaCamera } from 'react-icons/fa';
+import { FaIdCard, FaUser, FaHashtag, FaUpload, FaCamera, FaTimesCircle } from 'react-icons/fa';
 import Tesseract from 'tesseract.js';
 import createSpecialDiscount from '@/app/actions/createSpecialDiscount';
 import updateSpecialDiscount from '@/app/actions/updateSpecialDiscount';
@@ -75,6 +75,15 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
       toast.error('Camera access denied');
     }
   };
+  
+  const stopScanner = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setScanning(false);
+  };
+  
 
   const captureAndExtract = async () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -90,7 +99,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
     const dataUrl = canvas.toDataURL('image/png');
     setPreview(dataUrl);
   
-    // ✅ Convert canvas image to File and inject into hidden file input
+    // Convert canvas image to File and inject into hidden file input
     const response = await fetch(dataUrl);
     const blob = await response.blob();
     const file = new File([blob], 'scanned-id.png', { type: 'image/png' });
@@ -108,7 +117,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   
-    // 🔹 Extract Name (all caps, at least 2 words)
+    // Extract Name (all caps, at least 2 words)
     let nameLine = lines.find(l =>
       /^[A-Z\s\.]+$/.test(l) && l.split(/\s+/).length >= 2
     );
@@ -116,7 +125,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
       setFullName(nameLine);
     }
   
-    // 🔹 Extract ID Numbers
+    // Extract ID Numbers
     const seniorMatch = text.match(/\b\d{9}\b/);
     const pwdMatch = text.match(/\d{2}-\d{4}-\d{3}-\d{5}/);
   
@@ -135,10 +144,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
       }
     }
   
-    if (video.srcObject) {
-      video.srcObject.getTracks().forEach(track => track.stop());
-    }
-    setScanning(false);
+    stopScanner(); // Stop the scanner after capture and extraction
   };
   
 
@@ -213,7 +219,10 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
             <div className="flex gap-4">
               <button
                 type="button"
-                onClick={() => setMode('upload')}
+                onClick={() => {
+                  setMode('upload');
+                  stopScanner();
+                }}
                 className={`px-4 py-2 rounded-md ${mode === 'upload' ? 'bg-pink-600' : 'bg-neutral-700'}`}
               >
                 <FaUpload className="inline mr-2" /> Upload
@@ -250,19 +259,28 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                     onClick={startScanner}
                     className="bg-pink-600 px-4 py-2 rounded-md"
                   >
-                    Start Scanner
+                    <FaCamera className="inline mr-2" /> Start Scanner
                   </button>
                 ) : (
                   <div className="flex flex-col items-center">
                     <video ref={videoRef} autoPlay playsInline className="w-64 h-40 bg-black rounded-md mb-2" />
                     <canvas ref={canvasRef} className="hidden"></canvas>
-                    <button
-                      type="button"
-                      onClick={captureAndExtract}
-                      className="bg-white text-black px-4 py-2 rounded-md"
-                    >
-                      Capture & Extract
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={captureAndExtract}
+                        className="bg-white text-black px-4 py-2 rounded-md"
+                      >
+                        <FaCamera className="inline mr-2" /> Capture & Extract
+                      </button>
+                      <button
+                        type="button"
+                        onClick={stopScanner}
+                        className="bg-neutral-700 text-white px-4 py-2 rounded-md"
+                      >
+                        <FaTimesCircle className="inline mr-2" /> Stop Scanner
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
