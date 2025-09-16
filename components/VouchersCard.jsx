@@ -110,11 +110,12 @@ const VouchersCard = ({ voucher, stallName, onClaim }) => {
               </span>
             </div>
           )}
-          {voucher.min_orders && (
+          {voucher.min_orders !== undefined && (
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <FaMoneyBillWave className="text-white" />
               <span>
-                <strong className="text-white font-medium">Min. Order:</strong> ₱{voucher.min_orders}
+                <strong className="text-white font-medium">Min. Order:</strong>{' '}
+                {voucher.min_orders === 0 ? 'No Minimum Spend' : `₱${voucher.min_orders}`}
               </span>
             </div>
           )}

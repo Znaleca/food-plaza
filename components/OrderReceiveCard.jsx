@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import updateTableNumber from "@/app/actions/updateTableNumber";
 import updateOrderStatus from "@/app/actions/updateOrderStatus";
+import ManageTable from "./ManageTable";
+import ViewReceipt from "./ViewReceipt"; // Import the new component
 
 const ORDER_STATUS = {
   PENDING: "pending",
@@ -37,7 +39,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   const [updating, setUpdating] = useState(false);
   const [saveToast, setSaveToast] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTableNumber, setNewTableNumber] = useState(editingTable);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const paymentStatus = order.payment_status || PAYMENT_STATUS.FAILED;
 
@@ -58,7 +60,6 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   }, [paymentStatus, order]);
 
   const openModal = () => {
-    setNewTableNumber(editingTable);
     setIsModalOpen(true);
   };
 
@@ -66,7 +67,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     setIsModalOpen(false);
   };
 
-  const handleSaveTable = async () => {
+  const handleSaveTable = async (newTableNumber) => {
     try {
       setUpdating(true);
       await updateTableNumber(order.$id, newTableNumber);
@@ -220,12 +221,25 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
           </p>
           <div className="mt-1">{renderPaymentBadge()}</div>
         </div>
-        <button
-          onClick={openModal}
-          className="text-xs px-4 py-1.5 rounded border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white transition self-start"
-        >
-          Change Table #
-        </button>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 flex-wrap">
+          <p className="text-sm text-neutral-300">
+            Current Table: <span className="font-semibold text-pink-400">{editingTable || "Not Set"}</span>
+          </p>
+          <div className="flex flex-row gap-4">
+            <button
+              onClick={openModal}
+              className="text-xs px-4 py-1.5 rounded border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white transition self-start"
+            >
+              {editingTable ? "Change Table #" : "Set Table #"}
+            </button>
+            <button
+              onClick={() => setShowReceipt(true)}
+              className="text-xs px-4 py-1.5 rounded border border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white transition self-start"
+            >
+              View Customer Receipt
+            </button>
+          </div>
+        </div>
         {saveToast && (
           <div className="text-xs text-green-400 bg-green-800 px-2 py-0.5 rounded">
             Table saved
@@ -254,10 +268,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
             </div>
 
             <p className="font-medium text-white">{item.menuName}</p>
-            <p className="text-sm text-neutral-300">
-              ₱{(item.menuPrice * (item.quantity || 1)).toFixed(2)}
-            </p>
-            <p className="text-sm text-neutral-400">Qty: {item.quantity || 1}</p>
+            <p className="text-sm text-neutral-400">Quantity: {item.quantity || 1}</p>
           </div>
         ))}
       </div>
@@ -293,56 +304,20 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
         })}
       </div>
 
-      <div className="text-right pt-4 border-t border-neutral-700">
-        <p className="text-lg font-semibold text-pink-400 mt-2">
-          Total: ₱{totalAmount.toFixed(2)}
-        </p>
-      </div>
+      <ManageTable
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        initialTable={editingTable}
+        onSave={handleSaveTable}
+        isUpdating={updating}
+      />
 
-      {isModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div className="bg-neutral-800 p-6 rounded-lg w-full max-w-md">
-      <h3 className="text-lg font-semibold text-white mb-4">
-        Select a Table
-      </h3>
-
-      {/* Table grid like cinema seats */}
-      <div className="grid grid-cols-5 gap-3 justify-center">
-        {Array.from({ length: 30 }, (_, i) => i + 1).map((num) => (
-          <button
-            key={num}
-            onClick={() => setNewTableNumber(num)}
-            className={`w-12 h-12 flex items-center justify-center rounded-md border 
-              ${
-                newTableNumber === num
-                  ? "bg-pink-500 text-white border-pink-500"
-                  : "bg-neutral-900 text-neutral-300 border-neutral-600 hover:bg-neutral-700"
-              }`}
-          >
-            {num}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex justify-end gap-4 mt-6">
-        <button
-          onClick={closeModal}
-          className="text-xs px-4 py-1.5 rounded border border-neutral-400 text-neutral-400 hover:bg-neutral-600 hover:text-white transition"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSaveTable}
-          disabled={!newTableNumber}
-          className="text-xs px-4 py-1.5 rounded border border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white transition disabled:opacity-50"
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+      {showReceipt && (
+        <ViewReceipt
+          order={order}
+          onClose={() => setShowReceipt(false)}
+        />
+      )}
     </div>
   );
 };

@@ -10,6 +10,9 @@ const AddPromosPage = () => {
   const [state, formAction] = useFormState(createPromos, { success: false, error: null });
   const router = useRouter();
 
+  // Minimum spend state
+  const [hasMinimum, setHasMinimum] = useState(true);
+
   // Get Philippine local date string (YYYY-MM-DD)
   const getPHDate = (date = new Date()) => {
     const phString = date.toLocaleString('en-US', { timeZone: 'Asia/Manila' });
@@ -50,6 +53,11 @@ const AddPromosPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+
+    // If no minimum spend, force min_orders = 0
+    if (!hasMinimum) {
+      formData.set('min_orders', 0);
+    }
 
     // Ensure claimed_users is always empty array initially
     formData.append('claimed_users', JSON.stringify([]));
@@ -119,14 +127,49 @@ const AddPromosPage = () => {
           {/* Minimum Orders */}
           <div>
             <label className="block text-sm font-semibold mb-2">Minimum Orders</label>
-            <input
-              type="number"
-              name="min_orders"
-              min="1"
-              defaultValue="1"
-              required
-              className="bg-neutral-900 border border-neutral-700 text-white rounded-lg w-full py-3 px-4"
-            />
+
+            {/* Radio Choices */}
+            <div className="flex gap-6 mb-3">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="min_choice"
+                  value="yes"
+                  checked={hasMinimum}
+                  onChange={() => setHasMinimum(true)}
+                  className="accent-pink-600"
+                />
+                Has Minimum Spend
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="min_choice"
+                  value="no"
+                  checked={!hasMinimum}
+                  onChange={() => setHasMinimum(false)}
+                  className="accent-pink-600"
+                />
+                No Minimum Spend
+              </label>
+            </div>
+
+            {/* Input only shows if "Has Minimum Spend" */}
+            {hasMinimum ? (
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 font-medium">₱</span>
+                <input
+                  type="number"
+                  name="min_orders"
+                  min="1"
+                  required
+                  placeholder="e.g. 100"
+                  className="bg-neutral-900 border border-neutral-700 text-white rounded-lg w-full py-3 px-4 pl-8 focus:outline-none focus:border-pink-500 transition-colors"
+                />
+              </div>
+            ) : (
+              <input type="hidden" name="min_orders" value="0" />
+            )}
           </div>
 
           {/* Valid From / Valid Until */}

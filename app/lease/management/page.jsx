@@ -16,7 +16,7 @@ const links = [
     label: "Lease Status",
   },
   {
-    href: "/calendarView",
+    href: "/lease-calendar",
     icon: <FaCalendarAlt className="text-3xl" />,
     label: "Calendar",
   },

@@ -6,7 +6,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import getAllReservations from '@/app/actions/getAllReservations';
 
-const ReservationsCalendarPage = () => {
+const CalendarView = () => {
   const [reservations, setReservations] = useState([]);
   const [currentDate, setCurrentDate] = useState(moment());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -260,4 +260,4 @@ const ReservationsCalendarPage = () => {
   );
 };
 
-export default ReservationsCalendarPage;
+export default CalendarView;

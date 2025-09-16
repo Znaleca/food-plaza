@@ -14,6 +14,7 @@ function AddStallPage() {
   const [state, formAction] = useFormState(createStall, {});
   const [foodstallUsers, setFoodstallUsers] = useState([]);
   const [stallNumber, setStallNumber] = useState('');
+  const [stallName, setStallName] = useState('');
   const [usedStalls, setUsedStalls] = useState(new Set());
   const router = useRouter();
 
@@ -48,6 +49,11 @@ function AddStallPage() {
     }
   }, [state, router]);
 
+  // Update stall name whenever stallNumber changes
+  useEffect(() => {
+    setStallName(stallNumber ? `Food Stall ${stallNumber}` : '');
+  }, [stallNumber]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -76,8 +82,9 @@ function AddStallPage() {
       <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
         {/* dropdown for selecting foodstall user */}
         <div>
-          <label className="block font-semibold mb-2">Select Foodstall User</label>
+          <label htmlFor="user_id" className="block font-semibold mb-2">Select Foodstall User</label>
           <select
+            id="user_id"
             name="user_id"
             required
             className="bg-neutral-800 border border-neutral-700 rounded-lg w-full py-3 px-6"
@@ -126,10 +133,10 @@ function AddStallPage() {
           <input
             type="text"
             name="name"
-            value={stallNumber ? `Food Stall ${stallNumber}` : ''}
-            readOnly
+            value={stallName}
+            onChange={(e) => setStallName(e.target.value)}
             required
-            className="bg-neutral-700 border border-neutral-600 rounded-lg w-full py-3 px-6 text-gray-300"
+            className="bg-neutral-800 border border-neutral-700 rounded-lg w-full py-3 px-6 text-white"
           />
         </div>
 

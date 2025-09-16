@@ -21,7 +21,8 @@ const PAYMENT_STATUS = {
   FAILED: "failed",
 };
 
-const OrderCard = ({ order, setOrders }) => {
+// Add the isReadOnly prop with a default value of false
+const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -230,7 +231,8 @@ const OrderCard = ({ order, setOrders }) => {
                         <div className="text-xs text-gray-500">Stall: {item.room_name || 'N/A'}</div>
                         <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.PENDING)}</div>
 
-                        {item.status === MENU_STATUS.COMPLETED && (
+                        {/* Conditionally hide the rating buttons if in read-only mode */}
+                        {!isReadOnly && item.status === MENU_STATUS.COMPLETED && (
                           <div className="mt-2">
                             {itemRated ? (
                               <div className="text-xs text-green-600">
@@ -304,7 +306,8 @@ const OrderCard = ({ order, setOrders }) => {
         </div>
       </div>
 
-      {selectedItem !== null && (
+      {/* Conditionally hide the rating modal based on the prop */}
+      {!isReadOnly && selectedItem !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" aria-modal="true" role="dialog">
           <div className="bg-neutral-800 p-6 rounded-lg w-full max-w-md shadow-lg text-white">
             <h3 className="text-lg font-bold text-center mb-4 text-pink-500">Rate This Menu Item</h3>

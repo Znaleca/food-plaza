@@ -83,11 +83,13 @@ const PromosCard = ({ promo, stallName }) => {
               </span>
             </div>
 
-            {promo.min_orders && (
+            {/* Min Orders → "No Minimum Spend" if 0 */}
+            {promo.min_orders !== undefined && (
               <div className="flex items-center gap-2 text-gray-400">
                 <FaMoneyBillWave className="text-yellow-400" />
                 <span>
-                  <strong className="text-white font-medium">Min. Order:</strong> ₱{promo.min_orders}
+                  <strong className="text-white font-medium">Min. Spend:</strong>{" "}
+                  {promo.min_orders === 0 ? "No Minimum Spend" : `₱${promo.min_orders}`}
                 </span>
               </div>
             )}

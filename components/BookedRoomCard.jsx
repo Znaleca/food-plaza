@@ -102,13 +102,17 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
           <span className={statusColor}>{statusText}</span>
         </p>
 
-        {/* 📄 PDF Link */}
+        {/* 📄 View Lease Document (PDF) Button-style Link */}
         {pdfLink && (
-          <p className="pt-2 text-yellow-400 text-xs sm:text-sm underline">
-            <a href={pdfLink} target="_blank" rel="noopener noreferrer">
-              📄 View Lease Document (PDF)
-            </a>
-          </p>
+          <a
+            href={pdfLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex items-center justify-center space-x-2 border border-yellow-400 text-yellow-400 px-3 sm:px-4 py-2 rounded text-xs sm:text-sm hover:bg-yellow-600 hover:text-white transition-all"
+          >
+            <FaFileContract />
+            <span>View Lease Document (PDF)</span>
+          </a>
         )}
       </div>
 
@@ -149,14 +153,16 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
             </button>
           )}
 
-          {/* Contract Preview Button */}
-          <button
-            onClick={() => setShowContract(true)}
-            className="flex items-center justify-center space-x-2 border border-pink-500 text-pink-500 px-3 sm:px-4 py-2 rounded text-xs sm:text-sm hover:bg-pink-600 hover:text-white transition-all"
-          >
-            <FaFileContract />
-            <span>View Contract</span>
-          </button>
+          {/* Conditional "View Contract" Button - Only show if no PDF link exists */}
+          {!pdfLink && (
+            <button
+              onClick={() => setShowContract(true)}
+              className="flex items-center justify-center space-x-2 border border-pink-500 text-pink-500 px-3 sm:px-4 py-2 rounded text-xs sm:text-sm hover:bg-pink-600 hover:text-white transition-all"
+            >
+              <FaFileContract />
+              <span>View Contract</span>
+            </button>
+          )}
         </div>
       )}
 
