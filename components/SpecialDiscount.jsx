@@ -57,7 +57,9 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   useEffect(() => {
     const getDevices = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } // Request back camera first
+        });
         setIsAccessGranted(true);
         stream.getTracks().forEach((track) => track.stop());
 
@@ -104,7 +106,13 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { deviceId: { exact: currentDeviceId } }
+          video: {
+            deviceId: { exact: currentDeviceId },
+            width: { ideal: 1280 }, // Request ideal width
+            height: { ideal: 720 }, // Request ideal height
+            aspectRatio: 16 / 9,   // Enforce landscape aspect ratio
+            facingMode: 'environment'
+          }
         });
 
         if (videoRef.current) {
@@ -146,14 +154,11 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
     let nextDevice;
     if (isCurrentBackCam) {
-      // Find the first front-facing camera
       nextDevice = devices.find((d) => /front|user/i.test(d.label));
-      // Fallback to the first non-back camera if no front label is found
       if (!nextDevice) {
         nextDevice = devices.find((d) => !/back|rear|environment/i.test(d.label));
       }
     } else {
-      // Find the back-facing camera
       nextDevice = devices.find((d) => /back|rear|environment/i.test(d.label));
     }
 
