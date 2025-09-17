@@ -508,15 +508,14 @@ const OrderCartPage = () => {
         </div>
       )}
 
-      {/* SPECIAL CARD MODAL */}
-      <Dialog
+<Dialog
         open={openSpecialDiscount}
         onClose={() => setOpenSpecialDiscount(false)}
         className="relative z-50"
       >
         <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-6">
-          <Dialog.Panel className="w-full max-w-4xl ">
+          <Dialog.Panel className="w-full max-w-4xl bg-neutral-900 text-white rounded-lg shadow-xl border border-pink-600 overflow-y-auto max-h-[90vh]">
             <SpecialDiscount
               initialData={specialDiscountData}
               onSubmissionSuccess={handleSubmissionSuccess}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { FaIdCard, FaUser, FaHashtag, FaUpload, FaCamera, FaTimesCircle } from 'react-icons/fa';
+import { FaIdCard, FaUser, FaHashtag, FaUpload, FaCamera, FaTimesCircle, FaSyncAlt } from 'react-icons/fa';
 import Tesseract from 'tesseract.js';
 import createSpecialDiscount from '@/app/actions/createSpecialDiscount';
 import updateSpecialDiscount from '@/app/actions/updateSpecialDiscount';
@@ -20,6 +20,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
   // Scanner
   const [scanning, setScanning] = useState(false);
+  const [facingMode, setFacingMode] = useState('user'); // 'user' for front, 'environment' for rear
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -52,27 +53,33 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
     let value = e.target.value;
 
     if (type === 'pwd') {
-      value = value.replace(/[^0-9]/g, ''); // only digits
-      value = value.slice(0, 14); // max 14 digits
-      if (value.length > 2) value = value.slice(0, 2) + '-' + value.slice(2);
-      if (value.length > 7) value = value.slice(0, 7) + '-' + value.slice(7);
-      if (value.length > 11) value = value.slice(0, 11) + '-' + value.slice(11);
+      value = value.replace(/[^0-9-]/g, ''); // only digits and hyphens
+      setIdNumber(value);
     } else if (type === 'senior-citizen') {
       value = value.replace(/\D/g, '').slice(0, 9);
+      setIdNumber(value);
+    } else {
+      setIdNumber(value);
     }
-
-    setIdNumber(value);
   };
 
   const startScanner = async () => {
     setScanning(true);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const constraints = {
+        video: {
+          facingMode: facingMode
+        }
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      toast.error('Camera access denied');
+      console.error('Camera access error:', err);
+      toast.error('Camera access denied. Please check your permissions.');
+      setScanning(false);
     }
   };
   
@@ -99,7 +106,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
     const dataUrl = canvas.toDataURL('image/png');
     setPreview(dataUrl);
   
-    // Convert canvas image to File and inject into hidden file input
     const response = await fetch(dataUrl);
     const blob = await response.blob();
     const file = new File([blob], 'scanned-id.png', { type: 'image/png' });
@@ -110,14 +116,12 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
       fileInput.files = dataTransfer.files;
     }
   
-    // OCR with Tesseract.js
     toast.info('Extracting text from ID...');
     const { data: { text } } = await Tesseract.recognize(dataUrl, 'eng');
     console.log('OCR Result:', text);
   
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   
-    // Extract Name (all caps, at least 2 words)
     let nameLine = lines.find(l =>
       /^[A-Z\s\.]+$/.test(l) && l.split(/\s+/).length >= 2
     );
@@ -125,26 +129,27 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
       setFullName(nameLine);
     }
   
-    // Extract ID Numbers
     const seniorMatch = text.match(/\b\d{9}\b/);
     const pwdMatch = text.match(/\d{2}-\d{4}-\d{3}-\d{5}/);
   
     if (type === 'pwd' && pwdMatch) {
-      const cleaned = pwdMatch[0].replace(/-/g, '');
-      setIdNumber(cleaned);
+      setIdNumber(pwdMatch[0]);
     } else if (type === 'senior-citizen' && seniorMatch) {
       setIdNumber(seniorMatch[0]);
     } else {
       const idMatch = lines.find(l => /\d+/.test(l));
       if (idMatch) {
         let extracted = idMatch.replace(/\D/g, '');
-        if (type === 'pwd' && extracted.length > 14) extracted = extracted.slice(0, 14);
-        if (type === 'senior-citizen' && extracted.length > 9) extracted = extracted.slice(0, 9);
+        if (type === 'pwd' && extracted.length > 14) {
+          extracted = extracted.slice(0, 2) + '-' + extracted.slice(2, 6) + '-' + extracted.slice(6, 9) + '-' + extracted.slice(9, 14);
+        } else if (type === 'senior-citizen' && extracted.length > 9) {
+          extracted = extracted.slice(0, 9);
+        }
         setIdNumber(extracted);
       }
     }
   
-    stopScanner(); // Stop the scanner after capture and extraction
+    stopScanner();
   };
   
 
@@ -174,8 +179,8 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   };
 
   return (
-    <div className="relative w-full max-w-2xl h-auto mx-auto bg-neutral-900 text-white rounded-lg shadow-xl border border-pink-600 overflow-hidden">
-      <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[85vh]">
+    <div className="relative w-full">
+      <form onSubmit={handleSubmit} className="flex flex-col">
         {/* Header */}
         <div className="flex flex-col items-center p-4 text-center border-b border-neutral-700">
           <div className="flex items-center justify-center w-12 h-12 mb-2 bg-pink-600 rounded-full">
@@ -190,7 +195,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
         </div>
 
         {/* Form */}
-        <div className="flex flex-col flex-grow p-4 space-y-4 overflow-y-auto">
+        <div className="flex flex-col p-4 space-y-4">
           {/* Type */}
           <div>
             <label className="block text-xs text-gray-400 mb-1">Type</label>
@@ -212,27 +217,29 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
           {/* Upload/Scanner Section */}
           <div>
-            {/* Hidden file input for scanner injection */}
             <input type="file" name="image_card" accept="image/*" className="hidden" />
 
             <label className="block text-xs text-gray-400 mb-1">Verification Method</label>
-            <div className="flex gap-4">
+            <div className="flex gap-2 sm:gap-4">
               <button
                 type="button"
                 onClick={() => {
                   setMode('upload');
                   stopScanner();
                 }}
-                className={`px-4 py-2 rounded-md ${mode === 'upload' ? 'bg-pink-600' : 'bg-neutral-700'}`}
+                className={`px-3 py-2 rounded-md flex-1 text-xs sm:text-base ${mode === 'upload' ? 'bg-pink-600' : 'bg-neutral-700'}`}
               >
-                <FaUpload className="inline mr-2" /> Upload
+                <FaUpload className="inline mr-1 sm:mr-2" /> <span className="hidden sm:inline">Upload</span>
               </button>
               <button
                 type="button"
-                onClick={() => setMode('scanner')}
-                className={`px-4 py-2 rounded-md ${mode === 'scanner' ? 'bg-pink-600' : 'bg-neutral-700'}`}
+                onClick={() => {
+                  setMode('scanner');
+                  setFacingMode('environment'); // Default to rear camera for scanning IDs
+                }}
+                className={`px-3 py-2 rounded-md flex-1 text-xs sm:text-base ${mode === 'scanner' ? 'bg-pink-600' : 'bg-neutral-700'}`}
               >
-                <FaCamera className="inline mr-2" /> Scanner
+                <FaCamera className="inline mr-1 sm:mr-2" /> <span className="hidden sm:inline">Scanner</span>
               </button>
             </div>
 
@@ -257,28 +264,35 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                   <button
                     type="button"
                     onClick={startScanner}
-                    className="bg-pink-600 px-4 py-2 rounded-md"
+                    className="w-full bg-pink-600 px-4 py-2 rounded-md"
                   >
                     <FaCamera className="inline mr-2" /> Start Scanner
                   </button>
                 ) : (
-                  <div className="flex flex-col items-center">
-                    <video ref={videoRef} autoPlay playsInline className="w-64 h-40 bg-black rounded-md mb-2" />
+                  <div className="flex flex-col items-center w-full">
+                    <video ref={videoRef} autoPlay playsInline className="w-full max-w-sm h-auto bg-black rounded-md mb-2 aspect-video" />
                     <canvas ref={canvasRef} className="hidden"></canvas>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full justify-center flex-wrap">
                       <button
                         type="button"
                         onClick={captureAndExtract}
-                        className="bg-white text-black px-4 py-2 rounded-md"
+                        className="bg-white text-black px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
                       >
-                        <FaCamera className="inline mr-2" /> Capture & Extract
+                        <FaCamera className="inline mr-1" /> Capture
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFacingMode(facingMode === 'user' ? 'environment' : 'user')}
+                        className="bg-neutral-700 text-white px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
+                      >
+                        <FaSyncAlt className="inline mr-1" /> Switch
                       </button>
                       <button
                         type="button"
                         onClick={stopScanner}
-                        className="bg-neutral-700 text-white px-4 py-2 rounded-md"
+                        className="bg-neutral-700 text-white px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
                       >
-                        <FaTimesCircle className="inline mr-2" /> Stop Scanner
+                        <FaTimesCircle className="inline mr-1" /> Stop
                       </button>
                     </div>
                   </div>
@@ -289,7 +303,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
             {/* Preview */}
             {preview && (
               <div className="flex justify-center mt-3">
-                <img src={preview} alt="Preview" className="w-32 h-20 object-cover rounded-md border" />
+                <img src={preview} alt="Preview" className="w-full max-w-sm h-auto object-cover rounded-md border aspect-video" />
               </div>
             )}
           </div>
@@ -323,7 +337,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                 onChange={handleIdChange}
                 required
                 placeholder={type === 'pwd'
-                  ? '14 digit only'
+                  ? 'XX-XXXX-XXX-XXXXX'
                   : type === 'senior-citizen'
                   ? '9 digits only'
                   : 'Select type first'}
