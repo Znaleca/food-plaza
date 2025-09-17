@@ -49,7 +49,7 @@ export default async function createSpecialDiscount(formData) {
       ID.unique(),
       {
         fname: formData.get('fname'),
-        id_number: parseInt(formData.get('id_number'), 10),
+        id_number: formData.get('id_number'), // Now saves as a string to preserve dashes
         type: formData.get('type'), // "pwd" or "senior-citizen"
         discount,
         image_card: imageId, // file id

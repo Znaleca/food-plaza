@@ -14,7 +14,7 @@ export default async function updateSpecialDiscount(formData) {
     const id = formData.get('id');
     const type = formData.get('type');
     const fname = formData.get('fname');
-    const id_number = parseInt(formData.get('id_number'), 10);
+    const id_number = formData.get('id_number'); // Now retrieves as a string
     const image_card = formData.get('image_card');
 
     let newImageId = null;

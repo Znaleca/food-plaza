@@ -226,10 +226,22 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
-    let nameLine = lines.find(
-      (l) => /^[A-Z\s\.]+$/.test(l) && l.split(/\s+/).length >= 2
-    );
-    if (nameLine) setFullName(nameLine);
+    // Look for a line that matches the format: Firstname M. Lastname
+    const nameRegex = /^[A-Z]+\s+[A-Z]\.\s+[A-Z\s]+$/;
+    const nameLine = lines.find(l => nameRegex.test(l.trim()));
+    
+    if (nameLine) {
+        setFullName(nameLine.trim());
+    } else {
+      // Fallback: look for a line with at least two words and all capital letters
+      const fallbackName = lines.find(l => 
+        l.split(/\s+/).length >= 2 && l === l.toUpperCase()
+      );
+      if (fallbackName) {
+        setFullName(fallbackName.trim());
+      }
+    }
+
 
     const seniorMatch = text.match(/\b\d{9}\b/);
     const pwdMatch = text.match(/\d{2}-\d{4}-\d{3}-\d{5}/);
@@ -394,16 +406,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                       </button>
                     ) : (
                       <div className="flex flex-col items-center w-full">
-                        {/* * MODIFICATION STARTS HERE
-                         * This div acts as a container to control the video's aspect ratio.
-                         * The overflow-hidden class ensures the video is clipped to the container's shape.
-                         */}
                         <div className="relative w-full max-w-sm rounded-md overflow-hidden aspect-video">
-                          {/* * MODIFICATION STARTS HERE
-                           * We use absolute positioning to make the video fill the parent container.
-                           * The `object-cover` class is crucial to make the video fill the entire space 
-                           * without stretching, cropping the image as needed.
-                           */}
                           <video
                             ref={videoRef}
                             autoPlay
@@ -414,7 +417,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
                         <canvas ref={canvasRef} className="hidden"></canvas>
 
-                        {/* Show current camera */}
                         <p className="text-xs text-gray-400 text-center mb-2">
                           Using: {currentLabel}
                         </p>
@@ -448,7 +450,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                           </button>
                         </div>
 
-                        {/* No other camera hint */}
                         {devices.length < 2 && (
                           <p className="text-xs text-gray-400 mt-1">
                             No other camera available
@@ -461,7 +462,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
               </div>
             )}
 
-            {/* Preview */}
             {preview && (
               <div className="flex justify-center mt-3">
                 <img
@@ -473,7 +473,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
             )}
           </div>
 
-          {/* Full Name */}
           <div>
             <label className="block text-xs text-gray-400 mb-1">Full Name</label>
             <div className="flex items-center border border-neutral-700 rounded-md bg-neutral-800">
@@ -484,13 +483,12 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                placeholder="John D. Doe"
+                placeholder="JOHN D. DOE"
                 className="flex-1 px-3 py-2 bg-transparent text-sm"
               />
             </div>
           </div>
 
-          {/* ID Number */}
           <div>
             <label className="block text-xs text-gray-400 mb-1">ID Number</label>
             <div className="flex items-center border border-neutral-700 rounded-md bg-neutral-800">
@@ -514,7 +512,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
           </div>
         </div>
 
-        {/* Submit */}
         <div className="p-4 border-t border-neutral-700">
           <button
             type="submit"
