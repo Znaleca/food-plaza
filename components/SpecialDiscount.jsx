@@ -57,9 +57,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   useEffect(() => {
     const getDevices = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } // Request back camera first
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         setIsAccessGranted(true);
         stream.getTracks().forEach((track) => track.stop());
 
@@ -106,13 +104,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
         }
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            deviceId: { exact: currentDeviceId },
-            width: { ideal: 1280 }, // Request ideal width
-            height: { ideal: 720 }, // Request ideal height
-            aspectRatio: 16 / 9,   // Enforce landscape aspect ratio
-            facingMode: 'environment'
-          }
+          video: { deviceId: { exact: currentDeviceId } }
         });
 
         if (videoRef.current) {
@@ -154,11 +146,14 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
     let nextDevice;
     if (isCurrentBackCam) {
+      // Find the first front-facing camera
       nextDevice = devices.find((d) => /front|user/i.test(d.label));
+      // Fallback to the first non-back camera if no front label is found
       if (!nextDevice) {
         nextDevice = devices.find((d) => !/back|rear|environment/i.test(d.label));
       }
     } else {
+      // Find the back-facing camera
       nextDevice = devices.find((d) => /back|rear|environment/i.test(d.label));
     }
 
@@ -399,12 +394,24 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                       </button>
                     ) : (
                       <div className="flex flex-col items-center w-full">
-                        <video
-                          ref={videoRef}
-                          autoPlay
-                          playsInline
-                          className="w-full max-w-sm h-auto bg-black rounded-md mb-2 aspect-video"
-                        />
+                        {/* * MODIFICATION STARTS HERE
+                         * This div acts as a container to control the video's aspect ratio.
+                         * The overflow-hidden class ensures the video is clipped to the container's shape.
+                         */}
+                        <div className="relative w-full max-w-sm rounded-md overflow-hidden aspect-video">
+                          {/* * MODIFICATION STARTS HERE
+                           * We use absolute positioning to make the video fill the parent container.
+                           * The `object-cover` class is crucial to make the video fill the entire space 
+                           * without stretching, cropping the image as needed.
+                           */}
+                          <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            className="absolute top-0 left-0 w-full h-full object-cover"
+                          />
+                        </div>
+
                         <canvas ref={canvasRef} className="hidden"></canvas>
 
                         {/* Show current camera */}
