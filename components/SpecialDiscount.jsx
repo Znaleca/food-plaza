@@ -9,7 +9,8 @@ import {
   FaUpload,
   FaCamera,
   FaTimesCircle,
-  FaSyncAlt
+  FaSyncAlt,
+  FaExclamationCircle
 } from 'react-icons/fa';
 import Tesseract from 'tesseract.js';
 import createSpecialDiscount from '@/app/actions/createSpecialDiscount';
@@ -31,6 +32,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   const [devices, setDevices] = useState([]);
   const [currentDeviceId, setCurrentDeviceId] = useState(null);
   const [currentLabel, setCurrentLabel] = useState('');
+  const [isAccessGranted, setIsAccessGranted] = useState(false); // New state for camera permission
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -51,10 +53,17 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
     }
   }, [initialData]);
 
-  // Get cameras (prefer back camera if available)
+  // Request camera permission and get devices
   useEffect(() => {
     const getDevices = async () => {
       try {
+        // Request permission by trying to get a video stream
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setIsAccessGranted(true);
+        // Stop the stream immediately to turn off the camera light
+        stream.getTracks().forEach((track) => track.stop());
+
+        // Now that we have permission, enumerate devices
         const allDevices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = allDevices.filter((d) => d.kind === 'videoinput');
         setDevices(videoDevices);
@@ -74,8 +83,13 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
           );
         }
       } catch (err) {
-        console.error('Error fetching devices:', err);
-        toast.error('Unable to access cameras');
+        console.error('Error fetching devices or permission denied:', err);
+        setIsAccessGranted(false);
+        if (err.name === 'NotAllowedError') {
+          toast.error('Camera access was denied. Please enable it in your browser settings.');
+        } else {
+          toast.error('Unable to access cameras.');
+        }
       }
     };
 
@@ -111,7 +125,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
         );
       } catch (err) {
         console.error('Camera error:', err);
-        toast.error('Camera access denied');
+        toast.error('Camera access denied or device not found');
         setScanning(false);
       }
     };
@@ -347,65 +361,78 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
             {/* Scanner Mode */}
             {mode === 'scanner' && (
               <div className="flex flex-col items-center mt-2">
-                {!scanning ? (
-                  <button
-                    type="button"
-                    onClick={startScanner}
-                    className="w-full bg-pink-600 px-4 py-2 rounded-md"
-                  >
-                    <FaCamera className="inline mr-2" /> Start Scanner
-                  </button>
-                ) : (
-                  <div className="flex flex-col items-center w-full">
-                    <video
-                      ref={videoRef}
-                      autoPlay
-                      playsInline
-                      className="w-full max-w-sm h-auto bg-black rounded-md mb-2 aspect-video"
-                    />
-                    <canvas ref={canvasRef} className="hidden"></canvas>
-
-                    {/* Show current camera */}
-                    <p className="text-xs text-gray-400 text-center mb-2">
-                      Using: {currentLabel}
+                {!isAccessGranted ? (
+                  <div className="text-center text-gray-400 p-4">
+                    <FaExclamationCircle className="inline text-2xl text-red-500 mb-2" />
+                    <p>
+                      Camera access is required for scanning.
+                      <br />
+                      Please grant permission in your browser settings.
                     </p>
-
-                    <div className="flex gap-2 w-full justify-center flex-wrap">
-                      <button
-                        type="button"
-                        onClick={captureAndExtract}
-                        className="bg-white text-black px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
-                      >
-                        <FaCamera className="inline mr-1" /> Capture
-                      </button>
-                      <button
-                        type="button"
-                        onClick={switchCamera}
-                        disabled={devices.length < 2}
-                        className={`px-3 py-2 rounded-md text-sm flex-1 sm:flex-none ${
-                          devices.length < 2
-                            ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                            : 'bg-neutral-700 text-white'
-                        }`}
-                      >
-                        <FaSyncAlt className="inline mr-1" /> Switch
-                      </button>
-                      <button
-                        type="button"
-                        onClick={stopScanner}
-                        className="bg-neutral-700 text-white px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
-                      >
-                        <FaTimesCircle className="inline mr-1" /> Stop
-                      </button>
-                    </div>
-
-                    {/* No other camera hint */}
-                    {devices.length < 2 && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        No other camera available
-                      </p>
-                    )}
                   </div>
+                ) : (
+                  <>
+                    {!scanning ? (
+                      <button
+                        type="button"
+                        onClick={startScanner}
+                        className="w-full bg-pink-600 px-4 py-2 rounded-md"
+                      >
+                        <FaCamera className="inline mr-2" /> Start Scanner
+                      </button>
+                    ) : (
+                      <div className="flex flex-col items-center w-full">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          className="w-full max-w-sm h-auto bg-black rounded-md mb-2 aspect-video"
+                        />
+                        <canvas ref={canvasRef} className="hidden"></canvas>
+
+                        {/* Show current camera */}
+                        <p className="text-xs text-gray-400 text-center mb-2">
+                          Using: {currentLabel}
+                        </p>
+
+                        <div className="flex gap-2 w-full justify-center flex-wrap">
+                          <button
+                            type="button"
+                            onClick={captureAndExtract}
+                            className="bg-white text-black px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
+                          >
+                            <FaCamera className="inline mr-1" /> Capture
+                          </button>
+                          <button
+                            type="button"
+                            onClick={switchCamera}
+                            disabled={devices.length < 2}
+                            className={`px-3 py-2 rounded-md text-sm flex-1 sm:flex-none ${
+                              devices.length < 2
+                                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                                : 'bg-neutral-700 text-white'
+                            }`}
+                          >
+                            <FaSyncAlt className="inline mr-1" /> Switch
+                          </button>
+                          <button
+                            type="button"
+                            onClick={stopScanner}
+                            className="bg-neutral-700 text-white px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
+                          >
+                            <FaTimesCircle className="inline mr-1" /> Stop
+                          </button>
+                        </div>
+
+                        {/* No other camera hint */}
+                        {devices.length < 2 && (
+                          <p className="text-xs text-gray-400 mt-1">
+                            No other camera available
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
