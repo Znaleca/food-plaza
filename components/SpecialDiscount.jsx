@@ -32,7 +32,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   const [devices, setDevices] = useState([]);
   const [currentDeviceId, setCurrentDeviceId] = useState(null);
   const [currentLabel, setCurrentLabel] = useState('');
-  const [isAccessGranted, setIsAccessGranted] = useState(false); // New state for camera permission
+  const [isAccessGranted, setIsAccessGranted] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -57,13 +57,10 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   useEffect(() => {
     const getDevices = async () => {
       try {
-        // Request permission by trying to get a video stream
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         setIsAccessGranted(true);
-        // Stop the stream immediately to turn off the camera light
         stream.getTracks().forEach((track) => track.stop());
 
-        // Now that we have permission, enumerate devices
         const allDevices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = allDevices.filter((d) => d.kind === 'videoinput');
         setDevices(videoDevices);
@@ -114,7 +111,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
           videoRef.current.srcObject = stream;
         }
 
-        // Update label
         const device = devices.find((d) => d.deviceId === currentDeviceId);
         setCurrentLabel(
           /back|rear|environment/i.test(device?.label || '')
@@ -145,16 +141,32 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
       return;
     }
 
-    const currentIndex = devices.findIndex((d) => d.deviceId === currentDeviceId);
-    const nextIndex = (currentIndex + 1) % devices.length;
-    setCurrentDeviceId(devices[nextIndex].deviceId);
-    setCurrentLabel(
-      /back|rear|environment/i.test(devices[nextIndex].label || '')
-        ? 'Back Camera'
-        : /front|user/i.test(devices[nextIndex].label || '')
-        ? 'Front Camera'
-        : devices[nextIndex].label || 'Camera'
-    );
+    const currentDevice = devices.find((d) => d.deviceId === currentDeviceId);
+    const isCurrentBackCam = /back|rear|environment/i.test(currentDevice?.label || '');
+
+    let nextDevice;
+    if (isCurrentBackCam) {
+      // Find the first front-facing camera
+      nextDevice = devices.find((d) => /front|user/i.test(d.label));
+      // Fallback to the first non-back camera if no front label is found
+      if (!nextDevice) {
+        nextDevice = devices.find((d) => !/back|rear|environment/i.test(d.label));
+      }
+    } else {
+      // Find the back-facing camera
+      nextDevice = devices.find((d) => /back|rear|environment/i.test(d.label));
+    }
+
+    if (nextDevice) {
+      setCurrentDeviceId(nextDevice.deviceId);
+      setCurrentLabel(
+        /back|rear|environment/i.test(nextDevice.label || '')
+          ? 'Back Camera'
+          : /front|user/i.test(nextDevice.label || '')
+          ? 'Front Camera'
+          : nextDevice.label || 'Camera'
+      );
+    }
   };
 
   const handleFileChange = (e) => {
