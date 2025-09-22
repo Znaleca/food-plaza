@@ -44,7 +44,7 @@ const FeaturedPage = () => {
                 whileInView="visible"
                 exit="exit"
                 viewport={{ once: false, amount: 0.3 }}
-                className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-neutral-800 bg-neutral-900 transition-all duration-300 hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20"
+                className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-stone-800 bg-stone-900 transition-all duration-300 hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20"
               >
                 <Link
                   href={`/search?category=${encodeURIComponent(cat.name)}&displayType=Menus`}
@@ -76,7 +76,7 @@ const FeaturedPage = () => {
                 whileInView="visible"
                 exit="exit"
                 viewport={{ once: false, amount: 0.3 }}
-                className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-neutral-800 bg-neutral-900 transition-all duration-300 hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20"
+                className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-stone-800 bg-stone-900 transition-all duration-300 hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20"
               >
                 <Link
                   href={`/search?category=${encodeURIComponent(cat.name)}&displayType=Menus`}
