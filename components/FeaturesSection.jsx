@@ -48,7 +48,7 @@ const FeaturesSection = () => {
   };
 
   return (
-<section className="w-full min-h-screen bg-neutral-900 text-white py-12 sm:py-20 flex flex-col items-center -mb-20 sm:-mb-80">
+<section className="w-full min-h-screen bg-stone-900 text-white py-12 sm:py-20 flex flex-col items-center -mb-20 sm:-mb-80">
 {/* Header */}
       <header className="text-center mb-12 mt-20 sm:mb-16 px-4">
         <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">

@@ -20,7 +20,7 @@ const FeaturedPage = () => {
   };
 
   return (
-    <div className="bg-neutral-900 py-12 sm:py-20 lg:py-32">
+    <div className="bg-stone-900 py-12 sm:py-20 lg:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         {/* Header */}
         <header className="text-center mb-12 sm:mb-16 px-4">
