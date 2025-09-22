@@ -12,7 +12,6 @@ import {
   FaSyncAlt,
   FaExclamationCircle
 } from 'react-icons/fa';
-import Tesseract from 'tesseract.js';
 import createSpecialDiscount from '@/app/actions/createSpecialDiscount';
 import updateSpecialDiscount from '@/app/actions/updateSpecialDiscount';
 
@@ -146,14 +145,8 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
     let nextDevice;
     if (isCurrentBackCam) {
-      // Find the first front-facing camera
-      nextDevice = devices.find((d) => /front|user/i.test(d.label));
-      // Fallback to the first non-back camera if no front label is found
-      if (!nextDevice) {
-        nextDevice = devices.find((d) => !/back|rear|environment/i.test(d.label));
-      }
+      nextDevice = devices.find((d) => /front|user/i.test(d.label)) || devices.find((d) => !/back|rear|environment/i.test(d.label));
     } else {
-      // Find the back-facing camera
       nextDevice = devices.find((d) => /back|rear|environment/i.test(d.label));
     }
 
@@ -176,14 +169,21 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   };
 
   const handleIdChange = (e) => {
-    let value = e.target.value;
+    let value = e.target.value.replace(/\D/g, ''); // remove non-digits
+  
     if (type === 'pwd') {
-      value = value.replace(/[^0-9-]/g, '');
+      // Format: XX-XXXX-XXX-XXXXX
+      if (value.length > 2) value = value.slice(0, 2) + '-' + value.slice(2);
+      if (value.length > 7) value = value.slice(0, 7) + '-' + value.slice(7);
+      if (value.length > 11) value = value.slice(0, 11) + '-' + value.slice(11);
+      if (value.length > 17) value = value.slice(0, 17); // max length
     } else if (type === 'senior-citizen') {
-      value = value.replace(/\D/g, '').slice(0, 9);
+      value = value.slice(0, 9); // max 9 digits only
     }
+  
     setIdNumber(value);
   };
+  
 
   const startScanner = () => setScanning(true);
 
@@ -195,7 +195,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
     setScanning(false);
   };
 
-  const captureAndExtract = async () => {
+  const captureImage = async () => {
     if (!videoRef.current || !canvasRef.current) return;
 
     const video = videoRef.current;
@@ -216,58 +216,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
       const dt = new DataTransfer();
       dt.items.add(file);
       fileInput.files = dt.files;
-    }
-
-    toast.info('Extracting text from ID...');
-    const {
-      data: { text }
-    } = await Tesseract.recognize(dataUrl, 'eng');
-    console.log('OCR Result:', text);
-
-    const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-
-    // Look for a line that matches the format: Firstname M. Lastname
-    const nameRegex = /^[A-Z]+\s+[A-Z]\.\s+[A-Z\s]+$/;
-    const nameLine = lines.find(l => nameRegex.test(l.trim()));
-    
-    if (nameLine) {
-        setFullName(nameLine.trim());
-    } else {
-      // Fallback: look for a line with at least two words and all capital letters
-      const fallbackName = lines.find(l => 
-        l.split(/\s+/).length >= 2 && l === l.toUpperCase()
-      );
-      if (fallbackName) {
-        setFullName(fallbackName.trim());
-      }
-    }
-
-
-    const seniorMatch = text.match(/\b\d{9}\b/);
-    const pwdMatch = text.match(/\d{2}-\d{4}-\d{3}-\d{5}/);
-
-    if (type === 'pwd' && pwdMatch) {
-      setIdNumber(pwdMatch[0]);
-    } else if (type === 'senior-citizen' && seniorMatch) {
-      setIdNumber(seniorMatch[0]);
-    } else {
-      const idMatch = lines.find((l) => /\d+/.test(l));
-      if (idMatch) {
-        let extracted = idMatch.replace(/\D/g, '');
-        if (type === 'pwd' && extracted.length > 14) {
-          extracted =
-            extracted.slice(0, 2) +
-            '-' +
-            extracted.slice(2, 6) +
-            '-' +
-            extracted.slice(6, 9) +
-            '-' +
-            extracted.slice(9, 14);
-        } else if (type === 'senior-citizen' && extracted.length > 9) {
-          extracted = extracted.slice(0, 9);
-        }
-        setIdNumber(extracted);
-      }
     }
 
     stopScanner();
@@ -364,7 +312,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                 }`}
               >
                 <FaCamera className="inline mr-1 sm:mr-2" />{' '}
-                <span className="hidden sm:inline">Scanner</span>
+                <span className="hidden sm:inline">Camera</span>
               </button>
             </div>
 
@@ -402,7 +350,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                         onClick={startScanner}
                         className="w-full bg-pink-600 px-4 py-2 rounded-md"
                       >
-                        <FaCamera className="inline mr-2" /> Start Scanner
+                        <FaCamera className="inline mr-2" /> Start Camera
                       </button>
                     ) : (
                       <div className="flex flex-col items-center w-full">
@@ -424,7 +372,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                         <div className="flex gap-2 w-full justify-center flex-wrap">
                           <button
                             type="button"
-                            onClick={captureAndExtract}
+                            onClick={captureImage}
                             className="bg-white text-black px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
                           >
                             <FaCamera className="inline mr-1" /> Capture
@@ -473,6 +421,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
             )}
           </div>
 
+          {/* Full Name */}
           <div>
             <label className="block text-xs text-gray-400 mb-1">Full Name</label>
             <div className="flex items-center border border-neutral-700 rounded-md bg-neutral-800">
@@ -489,6 +438,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
             </div>
           </div>
 
+          {/* ID Number */}
           <div>
             <label className="block text-xs text-gray-400 mb-1">ID Number</label>
             <div className="flex items-center border border-neutral-700 rounded-md bg-neutral-800">
@@ -512,6 +462,31 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
           </div>
         </div>
 
+        {/* Data Privacy Notice */}
+        <div className="p-4 space-y-2 bg-neutral-900 rounded-md border border-neutral-700 text-sm mx-4 mb-4">
+          <h4 className="font-semibold text-pink-400 flex items-center gap-2">
+            <FaExclamationCircle className="text-pink-400" /> Data Privacy Notice
+          </h4>
+          <p className="text-gray-300">
+            We collect your full name, ID number, and a photo of your valid PWD or Senior Citizen card solely for the purpose of verifying your eligibility for a special discount.
+          </p>
+          <p className="text-gray-300">
+            This data will be handled securely and in strict compliance with the Data Privacy Act of 2012 (Republic Act No. 10173). Your information will not be shared with third parties and will be used exclusively for its stated purpose.
+          </p>
+          <div className="flex items-start mt-4">
+            <input
+              type="checkbox"
+              id="privacyConsent"
+              name="privacyConsent"
+              required
+              className="mt-1 mr-2 accent-pink-600"
+            />
+            <label htmlFor="privacyConsent" className="text-gray-400 text-xs">
+              I have read and agree to the collection and use of my personal data as described above.
+            </label>
+          </div>
+        </div>
+
         <div className="p-4 border-t border-neutral-700">
           <button
             type="submit"
@@ -524,6 +499,12 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
               ? 'Update Application'
               : 'Submit Application'}
           </button>
+          
+          <div className="mt-4 p-3 bg-blue-900 text-blue-200 rounded-md text-sm text-center">
+            <p>
+              Please be ready to present your physical PWD or Senior Citizen ID at the counter to verify your discount upon pickup.
+            </p>
+          </div>
         </div>
       </form>
     </div>

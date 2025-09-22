@@ -10,7 +10,7 @@ import SpecialDiscount from '@/components/SpecialDiscount';
 import getSingleSpace from '@/app/actions/getSingleSpace';
 import useVoucher from '@/app/actions/useVoucher';
 import getSpecialDiscount from '@/app/actions/getSpecialDiscount';
-import checkAuth from '@/app/actions/checkAuth'; // Import the server action
+import checkAuth from '@/app/actions/checkAuth';
 
 const OrderCartPage = () => {
   const [cart, setCart] = useState([]);
@@ -26,8 +26,8 @@ const OrderCartPage = () => {
   const [openSpecialDiscount, setOpenSpecialDiscount] = useState(false);
   const [specialDiscountData, setSpecialDiscountData] = useState(null);
   const [cartCount, setCartCount] = useState(0);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // New state for auth
-  const [loadingAuth, setLoadingAuth] = useState(true); // New state for loading
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
   // Check if user has special discount and authentication status on mount
   useEffect(() => {
@@ -173,25 +173,24 @@ const OrderCartPage = () => {
   const calculateTotal = () => {
     let total = 0;
     Object.entries(groupedCart).forEach(([roomId, { items }]) => {
-      const roomTotal = items.reduce((sum, item) => {
-        const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
-        if (selectedItems[key]) {
-          return sum + Number(item.menuPrice) * (item.quantity || 1);
-        }
-        return sum;
-      }, 0);
-
-      let discount = 0;
       const voucher = activeVouchersPerRoom[roomId];
       const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
 
-      if (voucher) {
-        discount = (voucher.discount / 100) * roomTotal;
-      } else if (isSpecialDiscountActive) {
-        discount = 0.2 * roomTotal;
-      }
+      items.forEach(item => {
+        const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
+        if (selectedItems[key]) {
+          let itemPrice = Number(item.menuPrice) * (item.quantity || 1);
+          let discount = 0;
 
-      total += roomTotal - discount;
+          if (voucher) {
+            discount = (voucher.discount / 100) * itemPrice;
+          } else if (isSpecialDiscountActive) {
+            discount = 0.2 * itemPrice;
+          }
+
+          total += itemPrice - discount;
+        }
+      });
     });
     return total;
   };
@@ -244,6 +243,8 @@ const OrderCartPage = () => {
 
   const combinedVoucherMap = {};
   Object.keys(groupedCart).forEach(roomId => {
+    const voucher = activeVouchersPerRoom[roomId];
+    const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
     const roomSubtotal = groupedCart[roomId].items.reduce((sum, item) => {
       const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
       if (selectedItems[key]) {
@@ -251,9 +252,6 @@ const OrderCartPage = () => {
       }
       return sum;
     }, 0);
-
-    const voucher = activeVouchersPerRoom[roomId];
-    const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
 
     if (voucher) {
       combinedVoucherMap[roomId] = voucher;
@@ -280,7 +278,6 @@ const OrderCartPage = () => {
     window.location.reload();
   };
   
-  // Display a loading state while fetching auth status
   if (loadingAuth) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-64 bg-neutral-900 text-white text-center">
@@ -314,25 +311,31 @@ const OrderCartPage = () => {
       {Object.entries(groupedCart).length > 0 ? (
         Object.entries(groupedCart).map(([roomId, { roomName, items }]) => {
           const isRoomSelected = selectAllPerRoom[roomId] || false;
-          const roomSubtotal = items
-            .filter((item) => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`])
-            .reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
-
-          let discountLabel = null;
-          let discountedSubtotal = roomSubtotal;
-
-          const voucher = activeVouchersPerRoom[roomId];
           const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
+          const voucher = activeVouchersPerRoom[roomId];
+          
+          const hasSelectedItems = items.some(item => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`]);
+
+          const roomSubtotal = items.reduce((sum, item) => {
+            const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
+            if (selectedItems[key]) {
+              return sum + Number(item.menuPrice) * (item.quantity || 1);
+            }
+            return sum;
+          }, 0);
+
+          let discountedSubtotal = 0;
+          let discountLabel = null;
 
           if (voucher) {
-            discountLabel = `${voucher.discount}% off with "${voucher.title}"`;
             discountedSubtotal = roomSubtotal - (voucher.discount / 100) * roomSubtotal;
+            discountLabel = `${voucher.discount}% off with "${voucher.title}"`;
           } else if (isSpecialDiscountActive) {
-            discountLabel = `20% off (Special Discount)`;
             discountedSubtotal = roomSubtotal * 0.8;
+            discountLabel = `20% off (Special Discount)`;
+          } else {
+            discountedSubtotal = roomSubtotal;
           }
-
-          const hasSelectedItems = items.some(item => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`]);
 
           return (
             <div key={roomId} className="mb-10">
@@ -344,7 +347,7 @@ const OrderCartPage = () => {
                   className="form-checkbox h-4 w-4 text-pink-600 bg-neutral-700 border-gray-600 mr-2"
                 />
                 {roomNames[roomId] || roomName}
-                {hasSelectedItems && isAuthenticated && ( // Conditionally render these buttons
+                {hasSelectedItems && isAuthenticated && (
                   <div className="flex items-center ml-4 space-x-2">
                     <button
                       onClick={() => setOpenVoucherRoom(roomId)}
@@ -375,6 +378,20 @@ const OrderCartPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {items.map((item) => {
                   const itemKey = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
+                  const isItemSelected = selectedItems[itemKey];
+
+                  let itemPrice = Number(item.menuPrice) * (item.quantity || 1);
+                  let finalPrice = itemPrice;
+                  let discounted = false;
+
+                  if (isItemSelected && voucher) {
+                    finalPrice = itemPrice - (voucher.discount / 100) * itemPrice;
+                    discounted = true;
+                  } else if (isItemSelected && isSpecialDiscountActive) {
+                    finalPrice = itemPrice * 0.8;
+                    discounted = true;
+                  }
+
                   return (
                     <div
                       key={itemKey}
@@ -408,9 +425,16 @@ const OrderCartPage = () => {
                           +
                         </button>
                       </div>
-                      <span className="text-pink-600 font-semibold mt-1">
-                        ₱{(Number(item.menuPrice) * Number(item.quantity || 1)).toFixed(2)}
-                      </span>
+                      <div className="flex flex-col items-center mt-1">
+                        {discounted && (
+                          <span className="text-xs text-neutral-400 line-through">
+                            ₱{itemPrice.toFixed(2)}
+                          </span>
+                        )}
+                        <span className="text-pink-600 font-semibold">
+                          ₱{finalPrice.toFixed(2)}
+                        </span>
+                      </div>
                       <button
                         onClick={() => removeItem(roomId, item.menuName, item.size)}
                         className="mt-1 text-red-500 hover:text-red-600"
@@ -508,7 +532,7 @@ const OrderCartPage = () => {
         </div>
       )}
 
-<Dialog
+      <Dialog
         open={openSpecialDiscount}
         onClose={() => setOpenSpecialDiscount(false)}
         className="relative z-50"
