@@ -48,7 +48,7 @@ const HomePreview = () => {
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight">
             Find something{' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-              for your crave
+              you crave for
             </span>
           </h1>
 

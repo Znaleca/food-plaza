@@ -31,9 +31,9 @@ const FeaturedPage = () => {
             CATEGORIES
           </h2>
           <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
-            Find something{' '}
+            Your cravings, {' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-              for your crave
+             sorted
             </span>
           </p>
         </header>
