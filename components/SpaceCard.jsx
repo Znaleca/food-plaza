@@ -18,42 +18,43 @@ const SpaceCard = ({ room, priority = false, averageRating = 0, reviewCount = 0 
 
   return (
     <Link href={`/rooms/${room.$id}`} passHref>
-  <div className="bg-neutral-900 border border-pink-600 rounded-3xl overflow-hidden mb-4 transition-all duration-300 w-full max-w-xs sm:max-w-sm cursor-pointer flex flex-col h-[340px] mx-auto hover:scale-105 hover:shadow-2xl">
-    {/* Image */}
-    <div className="relative w-full h-40 bg-gray-800">
-      <Image
-        src={imageSrc}
-        alt={room.name}
-        fill
-        className="object-cover rounded-t-3xl transition duration-300"
-        sizes="(max-width: 768px) 100vw, 50vw"
-        priority={priority}
-      />
-    </div>
+      <div className="bg-neutral-950 border border-gray-400 rounded-3xl overflow-hidden mb-4
+                transition-all duration-300 w-full max-w-xs sm:max-w-sm cursor-pointer flex flex-col
+                h-[340px] mx-auto hover:border-white hover:scale-[1.03]">
 
-    {/* Card Content */}
-    <div className="flex flex-col flex-1 justify-between p-5 text-center">
-      <div>
-        <div className="w-12 h-0.5 bg-pink-600 group-hover:bg-pink-700 mx-auto mb-4 transition-colors duration-300" />
-        <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white uppercase tracking-wide mb-2">
-          {room.name}
-        </h3>
-        <div className="w-12 h-0.5 bg-gray-600 mx-auto mb-4" />
+        
+        {/* Image */}
+        <div className="relative w-full h-40 bg-gray-800">
+          <Image
+            src={imageSrc}
+            alt={room.name}
+            fill
+            className="object-cover rounded-t-3xl transition-transform duration-500 hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority={priority}
+          />
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-col flex-1 justify-between p-5 text-center">
+          <div>
+            <h3 className="text-lg sm:text-xl md:text-xl font-bold text-white uppercase tracking-wide mb-3">
+              {room.name}
+            </h3>
+            <div className="w-16 h-0.5 bg-gradient-to-r from-pink-500 to-fuchsia-600 mx-auto mb-4" />
+          </div>
+
+          {/* Rating */}
+          <div>
+            {reviewCount > 0 ? (
+              <RatePreview average={averageRating} count={reviewCount} />
+            ) : (
+              <p className="text-sm text-gray-400">No reviews yet</p>
+            )}
+          </div>
+        </div>
       </div>
-
-      {/* Star Rating Preview */}
-      <div>
-        {reviewCount > 0 ? (
-          <RatePreview average={averageRating} count={reviewCount} />
-        ) : (
-          <p className="text-sm text-gray-400">No reviews</p>
-        )}
-      </div>
-    </div>
-  </div>
-</Link>
-
-  
+    </Link>
   );
 };
 

@@ -5,20 +5,20 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-neutral-900 text-white py-16 px-6">
+    <footer className="bg-neutral-950 text-white py-16 px-6 font-sans relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center md:text-left">
           
           {/* Brand Info */}
           <div>
-            <h2 className="text-3xl font-extrabold tracking-widest text-white font-poppins">
+            <h2 className="text-3xl font-extrabold tracking-widest text-white">
               THE CORNER
             </h2>
-            <p className="text-pink-600 text-sm font-semibold tracking-widest mt-1">
+            <p className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-400 text-sm font-semibold tracking-[0.3em] mt-1">
               FOOD PLAZA
             </p>
-            <p className="mt-4 text-gray-400 text-sm leading-relaxed">
+            <p className="mt-4 text-gray-400 text-sm leading-relaxed max-w-sm mx-auto md:mx-0">
               Your go-to destination for the best food stalls around. 
               Enjoy a variety of flavors at The Corner!
             </p>
@@ -26,75 +26,58 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4 tracking-wide">Quick Links</h3>
+            <h3 className="text-lg font-semibold mb-4 tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+              Quick Links
+            </h3>
             <ul className="space-y-3">
-              <li>
-                <Link
-                  href="/about"
-                  className="text-gray-400 hover:text-pink-500 transition duration-300"
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="text-gray-400 hover:text-pink-500 transition duration-300"
-                >
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/privacy-policy"
-                  className="text-gray-400 hover:text-pink-500 transition duration-300"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
+              {[
+                { name: 'About Us', href: '/about' },
+                { name: 'Contact', href: '/contact' },
+                { name: 'Privacy Policy', href: '/privacy-policy' },
+              ].map((link) => (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className="text-gray-400 hover:text-fuchsia-400 transition duration-300"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Social Media Icons */}
+          {/* Social Media */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4 tracking-wide">Follow Us</h3>
+            <h3 className="text-lg font-semibold mb-4 tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
+              Follow Us
+            </h3>
             <div className="flex justify-center md:justify-start space-x-4">
-              <Link
-                href="https://facebook.com"
-                target="_blank"
-                className="p-3 bg-neutral-800 rounded-full hover:bg-blue-600 transition"
-              >
-                <FaFacebookF className="w-5 h-5" />
-              </Link>
-              <Link
-                href="https://instagram.com"
-                target="_blank"
-                className="p-3 bg-neutral-800 rounded-full hover:bg-pink-500 transition"
-              >
-                <FaInstagram className="w-5 h-5" />
-              </Link>
-              <Link
-                href="https://twitter.com"
-                target="_blank"
-                className="p-3 bg-neutral-800 rounded-full hover:bg-blue-400 transition"
-              >
-                <FaTwitter className="w-5 h-5" />
-              </Link>
-              <Link
-                href="https://linkedin.com"
-                target="_blank"
-                className="p-3 bg-neutral-800 rounded-full hover:bg-blue-700 transition"
-              >
-                <FaLinkedinIn className="w-5 h-5" />
-              </Link>
+              {[
+                { href: 'https://facebook.com', icon: FaFacebookF, hover: 'hover:text-blue-500' },
+                { href: 'https://instagram.com', icon: FaInstagram, hover: 'hover:text-pink-500' },
+                { href: 'https://twitter.com', icon: FaTwitter, hover: 'hover:text-cyan-400' },
+                { href: 'https://linkedin.com', icon: FaLinkedinIn, hover: 'hover:text-blue-400' },
+              ].map(({ href, icon: Icon, hover }, idx) => (
+                <Link
+                  key={idx}
+                  href={href}
+                  target="_blank"
+                  className={`p-3 rounded-full bg-neutral-900 border border-neutral-800 shadow-md hover:border-fuchsia-400 hover:shadow-fuchsia-500/30 transition ${hover}`}
+                >
+                  <Icon className="w-5 h-5" />
+                </Link>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Bottom Footer */}
-        <div className="border-t border-neutral-700 mt-12 pt-6 text-center text-sm text-gray-500">
+        <div className="border-t border-neutral-800 mt-12 pt-6 text-center text-sm text-gray-500">
           &copy; {currentYear}{' '}
-          <span className="font-semibold text-white tracking-wide">The Corner</span>. All rights reserved.
+          <span className="font-semibold bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
+            The Corner
+          </span>. All rights reserved.
         </div>
       </div>
     </footer>

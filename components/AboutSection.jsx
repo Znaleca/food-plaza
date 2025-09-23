@@ -76,8 +76,8 @@ const AboutSection = () => {
         key={person.name}
         ref={(el) => (teamRefs.current[index] = el)}
         data-index={index}
-        className={`flex flex-col items-center text-center p-8 rounded-3xl bg-neutral-900 border-2 border-transparent
-          hover:border-pink-500/50 transform transition-all duration-700 ease-out hover:-translate-y-4 hover:scale-105
+        className={`flex flex-col items-center text-center p-8 rounded-3xl bg-neutral-950 border-2 border-transparent
+      transform transition-all duration-700 ease-out hover:-translate-y-4 hover:scale-105
           ${
             isVisible
               ? 'opacity-100 scale-100 translate-y-0'
@@ -127,34 +127,54 @@ const AboutSection = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-neutral-900 text-white p-8 font-sans relative overflow-hidden">
+    <div className="w-full min-h-screen bg-neutral-950 text-white p-8 font-sans relative overflow-hidden">
       
       {/* Hero Section */}
       <section className="mt-12 sm:mt-16 text-center mb-20 px-4 relative z-10">
-        <h1 className="mt-4 text-3xl sm:text-8xl md:text-9xl font-extrabold text-white leading-tight tracking-tighter animate-fade-in-up">
+      <header className="text-center mb-20">
+        <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
           ABOUT US
-        </h1>
-        <p className="text-xl sm:text-2xl font-light text-gray-300 leading-relaxed max-w-4xl mx-auto mt-6 animate-fade-in delay-200">
+        </h2>
+        <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+          Meet our{' '}
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+            Team & Values
+          </span>
+        </p>
+        <p className="mt-6 max-w-3xl mx-auto text-gray-400 text-lg">
           The Corner is more than just a food plaza — it's a celebration of
           culinary diversity, creativity, and community. We bring together
           passionate food vendors who serve up fresh, flavorful dishes in a
           vibrant, inclusive atmosphere.
         </p>
+      </header>
       </section>
 
       {/* Core Values Section */}
-      <section className="mb-20 relative z-10">
-        <div
-          className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 max-w-6xl w-full text-center mx-auto"
-        >
-          {coreValues.map((value, index) => renderCoreValue(value, index))}
+      <section className="mb-24">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {coreValues.map((value) => {
+            const Icon = value.icon;
+            return (
+              <div
+                key={value.title}
+                className="rounded-2xl bg-neutral-950/60 backdrop-blur-md border border-neutral-800 hover:border-fuchsia-400 shadow-md hover:shadow-fuchsia-500/30 transition-all duration-500 p-8 flex flex-col items-center text-center"
+              >
+                <Icon className="text-6xl text-fuchsia-400 mb-4 group-hover:text-cyan-400 transition-colors duration-300" />
+                <h3 className="text-2xl font-bold mb-2">{value.title}</h3>
+                <p className="text-gray-400 text-sm">{value.description}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
       {/* Team Section */}
       <section className="w-full max-w-7xl mx-auto mb-20 relative z-10">
-        <h2 className="text-center text-4xl sm:text-5xl font-bold text-white mb-16 animate-fade-in delay-500">
-          Meet the Team
+      <h2 className="text-center text-3xl sm:text-5xl font-extrabold mb-16">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
+            Meet the Team
+          </span>
         </h2>
         
         <div className="flex flex-wrap justify-center gap-12">

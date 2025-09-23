@@ -30,49 +30,40 @@ const HomePage = () => {
       {/* Hero Section */}
       <HomePreview />
 
-      {/* Features Section */}
-      <section className=" mb-44 bg-stone-900">
-        <div className="container mx-auto px-4">
-          <FeaturesSection />
-        </div>
-      </section>
-
       {/* Food Stall / Menu Section */}
-      <section id="browse" className="py-12 bg-neutral-900">
-        <h2 className="text-lg sm:text-xl lg:mt-32 md:mt-32 text-center text-pink-600 font-light tracking-widest">
-          Browse
-        </h2>
-        <p className="mt-4 text-2xl -mb-20 text-center sm:text-5xl font-extrabold leading-tight">
-          What's in the Food Plaza?
-        </p>
+      <section id="browse" className=" py-4 bg-neutral-950">
         <BrowsePreview />
       </section>
-
       {/* Featured Menu Section */}
-      <section className="py-12 bg-stone-900">
-        <div className="container mx-auto px-4">
+      <div className="w-full mx-auto">
           <FeaturedPage />
         </div>
-      </section>
+
+      <div className=" -mt-52 w-full mx-auto">
+          <FeaturesSection />
+        </div>
 
       {/* Reviews Section */}
       <section
         id="reviews"
-        className="py-12 flex-col items-center justify-center text-center bg-neutral-900"
+        className="py-12 flex-col items-center justify-center text-center bg-neutral-950"
       >
-        <div className="text-center mb-12 px-4">
-          <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">
+        <div className="text-center -mt-40 mb-28 px-4">
+        <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
             REVIEWS
           </h2>
-          <p className="mt-4 text-3xl sm:text-5xl font-extrabold text-white">
-            Your opinion is important
+          <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+            Your opinion is{' '}
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+              important
+            </span>
           </p>
         </div>
         <RateCard />
       </section>
 
       {/* About Us Section */}
-      <section id="about-us" className="py-12 items-center justify-center bg-neutral-900">
+      <section id="about-us" className="py-12 items-center justify-center bg-neutral-950">
         <div className="w-full">
           <AboutSection />
         </div>

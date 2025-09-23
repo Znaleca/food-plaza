@@ -77,7 +77,7 @@ const RateCard = () => {
   const handleStart = (clientX) => {
     startX.current = clientX;
     isDragging.current = true;
-    clearInterval(intervalRef.current); // stop auto-slide while dragging
+    clearInterval(intervalRef.current);
   };
 
   const handleMove = (clientX) => {
@@ -91,12 +91,10 @@ const RateCard = () => {
     isDragging.current = false;
 
     if (currentTranslate.current < -50) {
-      // swipe left → next
       setCurrentIndex((prev) =>
         prev + 1 >= reviews.length ? 0 : prev + 1
       );
     } else if (currentTranslate.current > 50) {
-      // swipe right → previous
       setCurrentIndex((prev) =>
         prev - 1 < 0 ? reviews.length - 1 : prev - 1
       );
@@ -104,7 +102,6 @@ const RateCard = () => {
 
     currentTranslate.current = 0;
 
-    // restart auto slide
     if (reviews.length > 3) {
       intervalRef.current = setInterval(() => {
         setCurrentIndex((prev) =>
@@ -115,19 +112,25 @@ const RateCard = () => {
   };
 
   const renderStarRating = (ratingValue) => (
-    <div className="flex justify-center gap-2 text-2xl sm:text-3xl">
+    <div className="flex justify-center gap-1 text-xl sm:text-2xl">
       {[1, 2, 3, 4, 5].map((star) => (
         <FontAwesomeIcon
           key={star}
           icon={solidStar}
-          className={ratingValue >= star ? 'text-pink-600' : 'text-neutral-600'}
+          className={
+            ratingValue >= star
+              ? 'text-fuchsia-400 drop-shadow-md'
+              : 'text-neutral-700'
+          }
         />
       ))}
     </div>
   );
 
   return (
-    <div className="w-full text-white">
+    <div className="w-full text-white py-10 px-6 bg-neutral-950 relative">
+     
+
       {loading ? (
         <p className="text-neutral-400 text-xl text-center">Loading...</p>
       ) : error ? (
@@ -155,23 +158,24 @@ const RateCard = () => {
               <div
                 key={idx}
                 className="min-w-[80%] sm:min-w-[40%] md:min-w-[30%] 
-                           bg-neutral-950 border border-neutral-700 
-                           rounded-3xl shadow-xl p-6 aspect-square 
-                           flex flex-col"
+                           bg-neutral-900/70 backdrop-blur-md border border-neutral-800 
+                           rounded-3xl shadow-lg hover:shadow-fuchsia-500/30 
+                           hover:border-fuchsia-400 transition-all duration-500 
+                           p-6 aspect-square flex flex-col"
               >
-                <h3 className="text-lg sm:text-xl font-extrabold text-white mb-2 line-clamp-2">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2">
                   {review.item.menuName}
                 </h3>
 
-                <p className="italic text-pink-400 text-sm leading-relaxed mb-3 line-clamp-3">
+                <p className="italic text-gray-300 text-sm leading-relaxed mb-3 line-clamp-3">
                   "{review.comment}"
                 </p>
 
                 <div className="mt-auto">
                   <div className="mb-3">{renderStarRating(review.rating)}</div>
-                  <div className="text-xs text-neutral-400 text-center">
+                  <div className="text-xs text-gray-400 text-center">
                     Reviewed by{" "}
-                    <span className="text-neutral-200 font-semibold">
+                    <span className="text-cyan-400 font-semibold">
                       {review.user}
                     </span>
                   </div>
