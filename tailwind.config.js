@@ -5,6 +5,10 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    "accent-pink-600", // ✅ keep accent color for checkbox
+    "checked:bg-pink-600", // ✅ fallback checked state
+  ],
   theme: {
     extend: {
       colors: {

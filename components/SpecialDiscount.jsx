@@ -474,17 +474,19 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
             This data will be handled securely and in strict compliance with the Data Privacy Act of 2012 (Republic Act No. 10173). Your information will not be shared with third parties and will be used exclusively for its stated purpose.
           </p>
           <div className="flex items-start mt-4">
-            <input
-              type="checkbox"
-              id="privacyConsent"
-              name="privacyConsent"
-              required
-              className="mt-1 mr-2 accent-pink-600"
-            />
-            <label htmlFor="privacyConsent" className="text-gray-400 text-xs">
-              I have read and agree to the collection and use of my personal data as described above.
-            </label>
-          </div>
+  <input
+    type="checkbox"
+    id="privacyConsent"
+    name="privacyConsent"
+    required
+    className="mt-1 mr-2 accent-pink-600 border border-gray-400 rounded-sm checked:bg-pink-600"
+  />
+  <label htmlFor="privacyConsent" className="text-gray-400 text-xs">
+    I have read and agree to the collection and use of my personal data as
+    described above.
+  </label>
+</div>
+
         </div>
 
         <div className="p-4 border-t border-neutral-700">
