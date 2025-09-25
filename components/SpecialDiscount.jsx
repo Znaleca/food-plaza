@@ -10,7 +10,9 @@ import {
   FaCamera,
   FaTimesCircle,
   FaSyncAlt,
-  FaExclamationCircle
+  FaExclamationCircle,
+  FaChevronDown,
+  FaInfoCircle
 } from 'react-icons/fa';
 import createSpecialDiscount from '@/app/actions/createSpecialDiscount';
 import updateSpecialDiscount from '@/app/actions/updateSpecialDiscount';
@@ -25,6 +27,9 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   const [idNumber, setIdNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [mode, setMode] = useState('upload');
+  const [isDPACollapsed, setIsDPACollapsed] = useState(true);
+  const [agreedToDPA, setAgreedToDPA] = useState(false);
+
 
   // Scanner states
   const [scanning, setScanning] = useState(false);
@@ -223,6 +228,12 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!agreedToDPA) {
+      toast.error('Please agree to the Data Privacy Notice to proceed.');
+      return;
+    }
+
     setLoading(true);
 
     const formData = new FormData(e.target);
@@ -247,6 +258,20 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
     setLoading(false);
   };
+
+  const dpaNotice = (
+    <>
+      <div className="flex items-center text-pink-400 font-semibold mb-2">
+        <FaInfoCircle className="mr-2" /> Data Privacy Notice
+      </div>
+      <p className="text-sm text-gray-300 mb-2">
+        We collect your full name, ID number, and a photo of your valid PWD or Senior Citizen card solely for the purpose of verifying your eligibility for a special discount.
+      </p>
+      <p className="text-sm text-gray-300">
+        This data will be handled securely and in strict compliance with the Data Privacy Act of 2012 (Republic Act No. 10173). Your information will not be shared with third parties and will be used exclusively for its stated purpose.
+      </p>
+    </>
+  );
 
   return (
     <div className="relative w-full">
@@ -462,38 +487,30 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
           </div>
         </div>
 
-        {/* Data Privacy Notice */}
-        <div className="p-4 space-y-2 bg-neutral-900 rounded-md border border-neutral-700 text-sm mx-4 mb-4">
-          <h4 className="font-semibold text-pink-400 flex items-center gap-2">
-            <FaExclamationCircle className="text-pink-400" /> Data Privacy Notice
-          </h4>
-          <p className="text-gray-300">
-            We collect your full name, ID number, and a photo of your valid PWD or Senior Citizen card solely for the purpose of verifying your eligibility for a special discount.
-          </p>
-          <p className="text-gray-300">
-            This data will be handled securely and in strict compliance with the Data Privacy Act of 2012 (Republic Act No. 10173). Your information will not be shared with third parties and will be used exclusively for its stated purpose.
-          </p>
-          <div className="flex items-start mt-4">
-  <input
-    type="checkbox"
-    id="privacyConsent"
-    name="privacyConsent"
-    required
-    className="mt-1 mr-2 accent-pink-600 border border-gray-400 rounded-sm checked:bg-pink-600"
-  />
-  <label htmlFor="privacyConsent" className="text-gray-400 text-xs">
-    I have read and agree to the collection and use of my personal data as
-    described above.
-  </label>
-</div>
-
+        {/* Data Privacy Act Section */}
+        <div className="p-4 border-t border-b border-neutral-700">
+          {dpaNotice}
+          <div className="flex items-center mt-4">
+            <input
+              type="checkbox"
+              id="agree-to-dpa"
+              checked={agreedToDPA}
+              onChange={(e) => setAgreedToDPA(e.target.checked)}
+              className="form-checkbox text-pink-600"
+            />
+            <label htmlFor="agree-to-dpa" className="ml-2 text-sm text-gray-300">
+              I have read and agree to the collection and use of my personal data as described above.
+            </label>
+          </div>
         </div>
 
         <div className="p-4 border-t border-neutral-700">
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-pink-600 py-2 rounded-md font-semibold"
+            disabled={loading || !agreedToDPA}
+            className={`w-full py-2 rounded-md font-semibold transition-colors duration-200 ${
+              loading || !agreedToDPA ? 'bg-gray-600 text-gray-300 cursor-not-allowed' : 'bg-pink-600'
+            }`}
           >
             {loading
               ? 'Submitting...'
