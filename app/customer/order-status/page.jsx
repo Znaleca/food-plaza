@@ -31,11 +31,20 @@ const OrderStatusPage = () => {
   }, []);
 
   return (
-    <div className="w-full min-h-screen bg-neutral-900 text-white">
+    <div className="w-full -mt-20 min-h-screen bg-neutral-950 text-white">
       <section className="w-full py-32 px-4 sm:px-6">
         <div className="text-center mb-12">
-          <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest">MY ORDERS</h2>
-          <p className="mt-4 text-xl sm:text-5xl font-bold">Track and rate your meals.</p>
+        <header className="text-center mb-28 mt-12 sm:mt-16 px-4">
+        <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+          MY ORDERS
+        </h2>
+        <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+        Track and rate{' '}
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+          your meals.          </span>
+        </p>
+      </header>
+         
         </div>
 
         {loading ? (

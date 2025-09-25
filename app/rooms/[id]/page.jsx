@@ -96,8 +96,8 @@ function RoomSpace({ params }) {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center min-h-screen bg-neutral-900">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-600" />
+      <div className="flex justify-center items-center min-h-screen bg-neutral-950">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-400" />
       </div>
     );
 
@@ -126,11 +126,11 @@ function RoomSpace({ params }) {
   };
 
   return (
-    <div className="w-full min-h-screen bg-neutral-900 text-white pb-8">
+    <div className="w-full min-h-screen -mt-20 bg-neutral-950 text-white pb-8">
       <div className="px-4 sm:px-8">
         <Link
           href="/"
-          className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6"
+          className="flex items-center text-white hover:text-cyan-400 transition duration-300 py-6"
         >
           <FaChevronLeft className="mr-2" />
           <span className="font-medium text-lg">Back</span>
@@ -138,7 +138,7 @@ function RoomSpace({ params }) {
       </div>
 
       <div className="mt-6 sm:mt-12 text-center mb-8 px-4 sm:px-8">
-        <h2 className="text-sm sm:text-lg text-pink-600 font-light tracking-widest uppercase">
+        <h2 className="text-sm sm:text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 font-light tracking-widest uppercase">
           Food Stall
         </h2>
         <p className="mt-2 text-3xl sm:text-5xl font-extrabold leading-tight">
@@ -154,7 +154,7 @@ function RoomSpace({ params }) {
         <div className="flex flex-col sm:flex-row justify-center sm:justify-around items-center gap-6 mt-6 mb-12 sm:mb-20">
           <div className="flex flex-col items-center">
             <span className="font-semibold text-base mb-2">Stall #:</span>
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-pink-600 flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-500 flex items-center justify-center shadow-lg">
               <p className="text-lg sm:text-xl font-bold">{room.stallNumber || 'N/A'}</p>
             </div>
           </div>
@@ -167,8 +167,8 @@ function RoomSpace({ params }) {
         </div>
       </div>
 
-      <div className="bg-pink-600 text-white p-4 sm:p-6 rounded-lg -mt-6 sm:-mt-9 shadow-lg text-center mx-4 sm:mx-8">
-        <p className="mt-2 italic text-sm sm:text-lg">
+      <div className="bg-neutral-900 text-white p-4 sm:p-6 rounded-lg -mt-6 sm:-mt-9 shadow-lg text-center mx-4 sm:mx-8 border border-neutral-800">
+        <p className="mt-2 italic text-sm sm:text-lg text-neutral-400">
           {room.description || 'Delicious food available here!'}
         </p>
       </div>
@@ -188,7 +188,9 @@ function RoomSpace({ params }) {
           if (!items.length) return null;
           return (
             <div key={cat} className="mb-8">
-              <h3 className="text-white font-semibold mb-4 text-lg">{cat}</h3>
+              <h3 className="text-white font-semibold mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+                {cat}
+              </h3>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {items.map((m) => (
                   <div
@@ -197,14 +199,14 @@ function RoomSpace({ params }) {
                       if (!m.isAvailable) return;
                       handleSelectMenu(m);
                     }}
-                    className={`relative border border-neutral-600 rounded-md bg-neutral-900 p-3 flex flex-col items-center text-center transition-all duration-300 ${
+                    className={`relative border border-neutral-800 rounded-md bg-neutral-900 p-3 flex flex-col items-center text-center transition-all duration-300 ${
                       m.isAvailable
                         ? 'cursor-pointer hover:border-white hover:shadow-xl hover:scale-105'
                         : 'grayscale opacity-60 cursor-not-allowed'
                     }`}
                   >
                     {!m.isAvailable && (
-                      <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
+                      <div className="absolute top-2 left-2 bg-neutral-800 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
                         Not Available
                       </div>
                     )}

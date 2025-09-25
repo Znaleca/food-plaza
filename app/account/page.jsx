@@ -5,6 +5,9 @@ import { FaRegEdit, FaPhone } from 'react-icons/fa';
 import getCurrentUser from '../actions/getCurrentUser';
 import updateUser from '../actions/updateUser';
 import checkUserExists from '../actions/checkUserExists'; // Import the new server action
+import { FaUserShield } from 'react-icons/fa6';
+import { FaGear } from 'react-icons/fa6';
+
 
 const formatDate = (isoString) => {
   const date = new Date(isoString);
@@ -16,12 +19,12 @@ const formatDate = (isoString) => {
 };
 
 const EditableField = ({ label, isEditing, onToggle, children }) => (
-  <div className="bg-neutral-800 p-5 rounded-xl border border-neutral-700 shadow-sm relative">
+  <div className="bg-neutral-900 p-5 rounded-xl border border-neutral-800 shadow-sm relative">
     <div className="flex justify-between items-center text-neutral-400 mb-1">
       <p className="font-medium">{label}</p>
       <FaRegEdit
         onClick={onToggle}
-        className="text-pink-500 cursor-pointer hover:text-pink-400 transition"
+        className="text-fuchsia-500 cursor-pointer hover:text-fuchsia-400 transition"
         title={`Edit ${label}`}
         aria-label={`Edit ${label}`}
       />
@@ -195,7 +198,7 @@ const AccountSettings = () => {
     return (
       <ul className="text-sm ml-5 space-y-1">
         {rules.map((rule, i) => (
-          <li key={i} className={`list-disc ${rule.valid ? 'text-green-400' : 'text-neutral-400'}`}>
+          <li key={i} className={`list-disc ${rule.valid ? 'text-cyan-400' : 'text-neutral-500'}`}>
             {rule.label}
           </li>
         ))}
@@ -205,24 +208,25 @@ const AccountSettings = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-neutral-900 text-white">
+      <div className="min-h-screen w-full flex items-center justify-center bg-neutral-950 text-white">
         <p className="text-lg font-medium">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full bg-neutral-900 text-white py-20 px-4 sm:px-8">
+    <div className="min-h-screen w-full -mt-20 bg-neutral-950 text-white py-20 px-4 sm:px-8">
       <div className="text-center mb-12 px-4 max-w-3xl mx-auto">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">
-          Account Settings
-        </h2>
+      <div className="flex justify-center items-center gap-3 mb-2 text-xl sm:text-2xl font-light bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+          <FaGear />
+          <p>ACOUNT SETTINGS</p>
+        </div>
         <p className="mt-4 text-2xl sm:text-5xl font-extrabold text-white leading-tight">
           Manage Your Profile
         </p>
       </div>
 
-      <div className="max-w-3xl mx-auto bg-stone-800 rounded-2xl shadow-xl p-8 sm:p-12 space-y-10">
+      <div className="max-w-3xl mx-auto bg-neutral-900 rounded-2xl shadow-xl p-8 sm:p-12 space-y-10 border border-neutral-800">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-base sm:text-lg">
           <EditableField label="Nickname" isEditing={editMode.name} onToggle={() => toggleEdit('name')}>
             {editMode.name ? (
@@ -231,7 +235,7 @@ const AccountSettings = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full bg-neutral-700 text-white p-3 rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full bg-neutral-800 text-white p-3 rounded focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
                 autoFocus
                 required
               />
@@ -247,7 +251,7 @@ const AccountSettings = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-neutral-700 text-white p-3 rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full bg-neutral-800 text-white p-3 rounded focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
                 autoFocus
                 required
               />
@@ -259,7 +263,7 @@ const AccountSettings = () => {
           <EditableField label="Phone Number" isEditing={editMode.phone} onToggle={() => toggleEdit('phone')}>
             {editMode.phone ? (
               <div className="relative flex items-center">
-                <span className="px-3 py-3 bg-neutral-700 border border-neutral-700 rounded-l-md text-neutral-400 flex items-center gap-2">
+                <span className="px-3 py-3 bg-neutral-800 border border-neutral-800 rounded-l-md text-neutral-400 flex items-center gap-2">
                   <FaPhone />
                   +63
                 </span>
@@ -270,7 +274,7 @@ const AccountSettings = () => {
                   value={formData.phone.replace('+63', '')}
                   onChange={handleChange}
                   placeholder="9123456789"
-                  className={`w-full px-4 py-3 bg-neutral-700 border border-neutral-700 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-pink-500`}
+                  className={`w-full px-4 py-3 bg-neutral-800 border border-neutral-800 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-fuchsia-500`}
                 />
               </div>
             ) : (
@@ -278,7 +282,7 @@ const AccountSettings = () => {
             )}
           </EditableField>
 
-          <div className="bg-neutral-800 p-5 rounded-xl border border-neutral-700 shadow-sm">
+          <div className="bg-neutral-900 p-5 rounded-xl border border-neutral-800 shadow-sm">
             <p className="text-neutral-400 mb-1 font-medium">Labels</p>
             <p className="font-semibold text-white select-text">
               {user.labels?.length > 0 ? user.labels.join(', ') : '—'}
@@ -294,7 +298,7 @@ const AccountSettings = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="New password"
-                  className="w-full bg-neutral-700 text-white p-3 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  className="w-full bg-neutral-800 text-white p-3 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
                   required
                 />
                 <input
@@ -303,7 +307,7 @@ const AccountSettings = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Confirm new password"
-                  className="w-full bg-neutral-700 text-white p-3 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-500"
+                  className="w-full bg-neutral-800 text-white p-3 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
                   required
                 />
                 {passwordValidationFeedback()}
@@ -313,21 +317,21 @@ const AccountSettings = () => {
             )}
           </EditableField>
 
-          <div className="bg-neutral-800 p-5 rounded-xl border border-neutral-700 shadow-sm">
+          <div className="bg-neutral-900 p-5 rounded-xl border border-neutral-800 shadow-sm">
             <p className="text-neutral-400 mb-1 font-medium">Date Created</p>
             <p className="font-semibold text-white select-text">{formatDate(user.$createdAt)}</p>
           </div>
 
-          <div className="bg-neutral-800 p-5 rounded-xl border border-neutral-700 shadow-sm">
+          <div className="bg-neutral-900 p-5 rounded-xl border border-neutral-800 shadow-sm">
             <p className="text-neutral-400 mb-1 font-medium">User ID</p>
-            <p className="font-mono text-pink-500 select-text">{user.$id}</p>
+            <p className="font-mono bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 select-text break-all">{user.$id}</p>
           </div>
 
           <div className="sm:col-span-2 text-right pt-6">
             {hasChanges() && (
               <button
                 type="submit"
-                className="px-8 py-3 rounded-lg bg-pink-600 text-white font-semibold hover:bg-pink-700 transition"
+                className="px-8 py-3 rounded-lg bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-white font-semibold hover:from-cyan-500 hover:to-fuchsia-600 transition"
                 aria-label="Save Changes"
               >
                 Save Changes
@@ -336,7 +340,7 @@ const AccountSettings = () => {
             {status && (
               <p
                 className={`mt-3 text-sm text-center ${
-                  status.includes('Error') ? 'text-red-500' : 'text-pink-400'
+                  status.includes('Error') ? 'text-red-500' : 'text-cyan-400'
                 }`}
                 role="alert"
               >

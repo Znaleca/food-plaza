@@ -120,7 +120,7 @@ const SearchResultPage = () => {
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex justify-center items-center bg-neutral-900">
+      <div className="w-full h-screen flex justify-center items-center bg-neutral-950">
         <p className="text-white text-xl font-semibold animate-pulse">
           Loading food stalls...
         </p>
@@ -136,7 +136,7 @@ const SearchResultPage = () => {
   });
 
   return (
-    <div className="w-full min-h-screen -mt-20 bg-neutral-900 text-white px-6 pt-28 pb-24">
+    <div className="w-full min-h-screen -mt-20 bg-neutral-950 text-white px-6 pt-28 pb-24">
       {/* Search Bar */}
       <div className="mb-12 flex justify-center">
         <input

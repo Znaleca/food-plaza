@@ -110,12 +110,17 @@ const CustomerPromoPage = () => {
   };
 
   return (
-    <div className="container mx-auto py-12 bg-neutral-900 text-white">
+    <div className="-mt-20 py-12 bg-neutral-950 text-white">
       <div className="text-center mb-40 mt-5 px-4">
-        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">PROMOTIONS</h2>
-        <p className="mt-4 text-xl sm:text-5xl font-bold text-white tracking-widest">
-          Unlock exclusive deals and discounts.
+      <header className="text-center mb-28 mt-12 sm:mt-16 px-4">
+        <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+        PROMOTIONS        </h2>
+        <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+        Unlock exclusive{' '}
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+          deals and discounts.          </span>
         </p>
+      </header>
       </div>
 
       {renderContent()}

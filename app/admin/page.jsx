@@ -221,12 +221,13 @@ const AdminPage = () => {
                   {/* Added padding for the marker */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h3 className="text-xl font-bold text-white">
-                        {res.room_id?.name || 'Unnamed Stall'}
-                      </h3>
-                      <p className="text-sm text-neutral-400 mt-1">
-                        Stall #{res.room_id?.stallNumber || 'N/A'}
-                      </p>
+                    <h3 className="text-xl font-bold text-white">
+  {res.room?.name || 'Unnamed Stall'}
+</h3>
+<p className="text-sm text-neutral-400 mt-1">
+  Stall #{res.room?.stallNumber || 'N/A'}
+</p>
+
                     </div>
                     <span
                       className={`text-xs px-3 py-1 rounded-full font-semibold ${status.color} text-white`}

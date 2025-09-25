@@ -11,7 +11,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
   const [showRenewForm, setShowRenewForm] = useState(false);
   const [showContract, setShowContract] = useState(false);
 
-  const room = booking?.room_id || { name: 'Unknown Stall', stallNumber: 'N/A', $id: '' };
+  const room = booking?.room || { name: 'Unknown Stall', stallNumber: 'N/A' };
   const stallName = room?.name || 'Unnamed Stall';
   const tenantName = booking?.fname || 'Unnamed Tenant';
 

@@ -136,7 +136,7 @@ const CheckoutButton = ({
   };
 
   return (
-    <div className="bg-neutral-900 text-white px-6 py-12 max-w-2xl mx-auto mt-12 w-full">
+    <div className="bg-neutral-950 text-white w-full max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="text-center mb-8">
         {message && <p className="text-sm text-red-400">{message}</p>}
 
@@ -146,7 +146,7 @@ const CheckoutButton = ({
           className={`w-full py-3 rounded-xl font-bold tracking-widest text-lg transition-all ${
             loading || !phone || !hasSelectedItems
               ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-              : 'bg-pink-600 text-white hover:bg-pink-700'
+              : 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 hover:from-cyan-500 hover:to-fuchsia-600 text-white'
           }`}
         >
           {loading ? 'Processing...' : 'Checkout Order'}
@@ -159,16 +159,18 @@ const CheckoutButton = ({
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Dialog.Panel className="w-full max-w-4xl bg-neutral-950 border border-neutral-800 rounded-2xl p-8 text-white shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="text-center mb-6">
-              <h2 className="text-base text-pink-500 tracking-widest uppercase font-semibold">Summary</h2>
+            <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+            Summary
+              </h2>
               <p className="mt-2 text-3xl sm:text-4xl font-extrabold text-white">Your Order</p>
             </div>
 
             {/* PHONE DISPLAY */}
             <div className="flex items-center justify-center gap-3 bg-neutral-800 border border-neutral-700 rounded-xl px-5 py-3 mb-8">
-              <div className="p-2 bg-pink-600 rounded-full shadow-md">
+              <div className="p-2 bg-gradient-to-r from-cyan-400 to-fuchsia-500 rounded-full shadow-md">
                 <FaPhone className="text-white w-4 h-4" />
               </div>
-              <span className="font-medium text-lg">
+              <span className="font-medium text-lg text-white">
                 {phone || 'No phone on file'}
               </span>
             </div>
@@ -224,7 +226,7 @@ const CheckoutButton = ({
                           </p>
                         )
                       )}
-                      <p className="font-semibold text-pink-400">
+                      <p className="font-semibold text-cyan-400">
                         <span className="font-normal text-left float-left">Stall Total:</span>
                         {formatCurrency(discountedSubtotal)}
                       </p>
@@ -235,7 +237,10 @@ const CheckoutButton = ({
             </div>
 
             <div className="text-center mt-8 text-2xl font-bold">
-              Total: <span className="text-pink-500">{formatCurrency(total)}</span>
+              Total:{' '}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+                {formatCurrency(total)}
+              </span>
             </div>
 
             <hr className="my-8 border-neutral-700" />
@@ -246,7 +251,9 @@ const CheckoutButton = ({
                 {promos.map((promo, idx) => (
                   <li key={idx} className="flex justify-between items-center text-neutral-300">
                     <span className="font-medium">{promo.roomName}: {promo.name}</span>
-                    <span className="text-pink-400 font-semibold">{promo.discount}% off</span>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 font-semibold">
+                      {promo.discount}% off
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -255,17 +262,17 @@ const CheckoutButton = ({
             <div className="flex justify-center gap-4 mt-8">
               <button
                 onClick={() => setIsPopupOpen(false)}
-                className="px-6 py-3 rounded-xl border border-gray-600 text-gray-300 hover:text-white hover:border-white transition"
+                className="px-6 py-3 rounded-xl border border-gray-600 text-gray-300 hover:text-white hover:border-white transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmPayment}
                 disabled={loading}
-                className={`px-6 py-3 rounded-xl font-semibold text-lg tracking-wide transition ${
+                className={`px-6 py-3 rounded-xl font-semibold text-lg tracking-wide transition-all ${
                   loading
                     ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-pink-600 text-white hover:bg-pink-700'
+                    : 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 hover:from-cyan-500 hover:to-fuchsia-600 text-white'
                 }`}
               >
                 {loading ? 'Processing...' : 'Confirm & Pay'}

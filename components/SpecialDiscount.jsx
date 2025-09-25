@@ -261,13 +261,13 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
   const dpaNotice = (
     <>
-      <div className="flex items-center text-pink-400 font-semibold mb-2">
+      <div className="flex items-center text-cyan-400 font-semibold mb-2">
         <FaInfoCircle className="mr-2" /> Data Privacy Notice
       </div>
-      <p className="text-sm text-gray-300 mb-2">
+      <p className="text-sm text-neutral-400 mb-2">
         We collect your full name, ID number, and a photo of your valid PWD or Senior Citizen card solely for the purpose of verifying your eligibility for a special discount.
       </p>
-      <p className="text-sm text-gray-300">
+      <p className="text-sm text-neutral-400">
         This data will be handled securely and in strict compliance with the Data Privacy Act of 2012 (Republic Act No. 10173). Your information will not be shared with third parties and will be used exclusively for its stated purpose.
       </p>
     </>
@@ -277,14 +277,14 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
     <div className="relative w-full">
       <form onSubmit={handleSubmit} className="flex flex-col">
         {/* Header */}
-        <div className="flex flex-col items-center p-4 text-center border-b border-neutral-700">
-          <div className="flex items-center justify-center w-12 h-12 mb-2 bg-pink-600 rounded-full">
+        <div className="flex flex-col items-center p-4 text-center border-b border-neutral-800">
+          <div className="flex items-center justify-center w-12 h-12 mb-2 bg-gradient-to-r from-cyan-400 to-fuchsia-500 rounded-full">
             <FaIdCard className="text-white text-2xl" />
           </div>
-          <h3 className="text-xl font-bold text-pink-400">
+          <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
             {initialData ? 'Edit Discount' : 'Special Discount'}
           </h3>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-neutral-400">
             {initialData ? 'Update details.' : 'Apply for PWD / Senior Citizen.'}
           </p>
         </div>
@@ -293,7 +293,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
         <div className="flex flex-col p-4 space-y-4">
           {/* Type */}
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Type</label>
+            <label className="block text-xs text-neutral-400 mb-1">Type</label>
             <select
               name="type"
               value={type}
@@ -302,7 +302,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                 setType(e.target.value);
                 setIdNumber('');
               }}
-              className="w-full border border-neutral-700 rounded-md px-3 py-2 bg-neutral-800 text-sm"
+              className="w-full border border-neutral-700 rounded-md px-3 py-2 bg-neutral-800 text-sm focus:ring-fuchsia-500 focus:ring-2 focus:outline-none"
             >
               <option value="">Select Type</option>
               <option value="pwd">PWD</option>
@@ -314,7 +314,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
           <div>
             <input type="file" name="image_card" accept="image/*" className="hidden" />
 
-            <label className="block text-xs text-gray-400 mb-1">Verification Method</label>
+            <label className="block text-xs text-neutral-400 mb-1">Verification Method</label>
             <div className="flex gap-2 sm:gap-4">
               <button
                 type="button"
@@ -322,8 +322,8 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                   setMode('upload');
                   stopScanner();
                 }}
-                className={`px-3 py-2 rounded-md flex-1 text-xs sm:text-base ${
-                  mode === 'upload' ? 'bg-pink-600' : 'bg-neutral-700'
+                className={`px-3 py-2 rounded-md flex-1 text-xs sm:text-base font-semibold transition-colors ${
+                  mode === 'upload' ? 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-white' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
                 }`}
               >
                 <FaUpload className="inline mr-1 sm:mr-2" />{' '}
@@ -332,8 +332,8 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
               <button
                 type="button"
                 onClick={() => setMode('scanner')}
-                className={`px-3 py-2 rounded-md flex-1 text-xs sm:text-base ${
-                  mode === 'scanner' ? 'bg-pink-600' : 'bg-neutral-700'
+                className={`px-3 py-2 rounded-md flex-1 text-xs sm:text-base font-semibold transition-colors ${
+                  mode === 'scanner' ? 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-white' : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
                 }`}
               >
                 <FaCamera className="inline mr-1 sm:mr-2" />{' '}
@@ -350,7 +350,12 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                   accept="image/*"
                   required={!initialData}
                   onChange={handleFileChange}
-                  className="block w-full text-sm text-gray-400"
+                  className="block w-full text-sm text-neutral-400
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-neutral-800 file:text-cyan-400
+                  hover:file:bg-neutral-700"
                 />
               </div>
             )}
@@ -359,8 +364,8 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
             {mode === 'scanner' && (
               <div className="flex flex-col items-center mt-2">
                 {!isAccessGranted ? (
-                  <div className="text-center text-gray-400 p-4">
-                    <FaExclamationCircle className="inline text-2xl text-red-500 mb-2" />
+                  <div className="text-center text-neutral-400 p-4">
+                    <FaExclamationCircle className="inline text-2xl text-fuchsia-500 mb-2" />
                     <p>
                       Camera access is required for scanning.
                       <br />
@@ -373,7 +378,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                       <button
                         type="button"
                         onClick={startScanner}
-                        className="w-full bg-pink-600 px-4 py-2 rounded-md"
+                        className="w-full bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-white px-4 py-2 rounded-md"
                       >
                         <FaCamera className="inline mr-2" /> Start Camera
                       </button>
@@ -390,7 +395,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
                         <canvas ref={canvasRef} className="hidden"></canvas>
 
-                        <p className="text-xs text-gray-400 text-center mb-2">
+                        <p className="text-xs text-neutral-400 text-center mb-2">
                           Using: {currentLabel}
                         </p>
 
@@ -398,7 +403,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                           <button
                             type="button"
                             onClick={captureImage}
-                            className="bg-white text-black px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
+                            className="bg-white text-neutral-900 px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
                           >
                             <FaCamera className="inline mr-1" /> Capture
                           </button>
@@ -408,8 +413,8 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                             disabled={devices.length < 2}
                             className={`px-3 py-2 rounded-md text-sm flex-1 sm:flex-none ${
                               devices.length < 2
-                                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
-                                : 'bg-neutral-700 text-white'
+                                ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
+                                : 'bg-neutral-800 text-neutral-400'
                             }`}
                           >
                             <FaSyncAlt className="inline mr-1" /> Switch
@@ -417,17 +422,11 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                           <button
                             type="button"
                             onClick={stopScanner}
-                            className="bg-neutral-700 text-white px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
+                            className="bg-neutral-800 text-neutral-400 px-3 py-2 rounded-md text-sm flex-1 sm:flex-none"
                           >
                             <FaTimesCircle className="inline mr-1" /> Stop
                           </button>
                         </div>
-
-                        {devices.length < 2 && (
-                          <p className="text-xs text-gray-400 mt-1">
-                            No other camera available
-                          </p>
-                        )}
                       </div>
                     )}
                   </>
@@ -440,7 +439,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                 <img
                   src={preview}
                   alt="Preview"
-                  className="w-full max-w-sm h-auto object-cover rounded-md border aspect-video"
+                  className="w-full max-w-sm h-auto object-cover rounded-md border-2 border-neutral-700 aspect-video"
                 />
               </div>
             )}
@@ -448,9 +447,9 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
           {/* Full Name */}
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Full Name</label>
+            <label className="block text-xs text-neutral-400 mb-1">Full Name</label>
             <div className="flex items-center border border-neutral-700 rounded-md bg-neutral-800">
-              <FaUser className="text-pink-400 ml-3 text-sm" />
+              <FaUser className="text-cyan-400 ml-3 text-sm" />
               <input
                 type="text"
                 name="fname"
@@ -458,17 +457,17 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 placeholder="JOHN D. DOE"
-                className="flex-1 px-3 py-2 bg-transparent text-sm"
+                className="flex-1 px-3 py-2 bg-transparent text-sm focus:ring-fuchsia-500 focus:ring-2 focus:outline-none"
               />
             </div>
           </div>
 
           {/* ID Number */}
           <div>
-            <label className="block text-xs text-gray-400 mb-1">ID Number</label>
+            <label className="block text-xs text-neutral-400 mb-1">ID Number</label>
             <div className="flex items-center border border-neutral-700 rounded-md bg-neutral-800">
-              <FaHashtag className="text-pink-400 ml-3 text-sm" />
-              <input
+            <FaHashtag className="text-cyan-400 ml-3 text-sm" />
+            <input
                 type="text"
                 name="id_number"
                 value={idNumber}
@@ -481,14 +480,14 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                     ? '9 digits only'
                     : 'Select type first'
                 }
-                className="flex-1 px-3 py-2 bg-transparent text-sm"
+                className="flex-1 px-3 py-2 bg-transparent text-sm focus:ring-fuchsia-500 focus:ring-2 focus:outline-none"
               />
             </div>
           </div>
         </div>
 
         {/* Data Privacy Act Section */}
-        <div className="p-4 border-t border-b border-neutral-700">
+        <div className="p-4 border-t border-b border-neutral-800">
           {dpaNotice}
           <div className="flex items-center mt-4">
             <input
@@ -496,20 +495,20 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
               id="agree-to-dpa"
               checked={agreedToDPA}
               onChange={(e) => setAgreedToDPA(e.target.checked)}
-              className="form-checkbox text-pink-600"
+              className="form-checkbox h-4 w-4 text-cyan-500 bg-neutral-800 border-neutral-600 rounded focus:ring-cyan-500"
             />
-            <label htmlFor="agree-to-dpa" className="ml-2 text-sm text-gray-300">
+            <label htmlFor="agree-to-dpa" className="ml-2 text-sm text-neutral-400">
               I have read and agree to the collection and use of my personal data as described above.
             </label>
           </div>
         </div>
 
-        <div className="p-4 border-t border-neutral-700">
+        <div className="p-4 border-t border-neutral-800">
           <button
             type="submit"
             disabled={loading || !agreedToDPA}
             className={`w-full py-2 rounded-md font-semibold transition-colors duration-200 ${
-              loading || !agreedToDPA ? 'bg-gray-600 text-gray-300 cursor-not-allowed' : 'bg-pink-600'
+              loading || !agreedToDPA ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-white hover:from-cyan-500 hover:to-fuchsia-600'
             }`}
           >
             {loading
@@ -519,7 +518,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
               : 'Submit Application'}
           </button>
           
-          <div className="mt-4 p-3 bg-blue-900 text-blue-200 rounded-md text-sm text-center">
+          <div className="mt-4 p-3 bg-neutral-800 text-neutral-300 rounded-md text-sm text-center border-l-4 border-cyan-400">
             <p>
               Please be ready to present your physical PWD or Senior Citizen ID at the counter to verify your discount upon pickup.
             </p>

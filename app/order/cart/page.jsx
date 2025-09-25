@@ -11,6 +11,8 @@ import getSingleSpace from '@/app/actions/getSingleSpace';
 import useVoucher from '@/app/actions/useVoucher';
 import getSpecialDiscount from '@/app/actions/getSpecialDiscount';
 import checkAuth from '@/app/actions/checkAuth';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import Link from 'next/link';
 
 const OrderCartPage = () => {
   const [cart, setCart] = useState([]);
@@ -29,7 +31,6 @@ const OrderCartPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
 
-  // Check if user has special discount and authentication status on mount
   useEffect(() => {
     const loadInitialData = async () => {
       const [authRes, specialRes] = await Promise.all([
@@ -70,10 +71,11 @@ const OrderCartPage = () => {
       groupItemsByRoom(enrichedCart);
     };
 
-    loadCartAndGroup();
-  }, []);
+    if (!loadingAuth) {
+      loadCartAndGroup();
+    }
+  }, [loadingAuth]);
 
-  // Cancel vouchers if subtotal < min order
   useEffect(() => {
     const checkMinOrders = async () => {
       const updatedVouchers = { ...activeVouchersPerRoom };
@@ -280,266 +282,282 @@ const OrderCartPage = () => {
   
   if (loadingAuth) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-64 bg-neutral-900 text-white text-center">
-        <p className="text-xl text-pink-600">Loading your cart...</p>
+      <div className="w-full min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <LoadingSpinner message="Loading your cart..." />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-64 bg-neutral-900 text-white">
+    <div className="w-full -mt-20 min-h-screen bg-neutral-950 text-white py-20 px-4 sm:px-6 lg:px-8">
       {/* HEADER */}
-      <div className="text-center mb-40 -mt-52 px-4">
-        <h2 className="text-lg sm:text-1xl text-pink-600 font-light tracking-widest">YOUR CART ({cartCount})</h2>
-        <p className="mt-4 text-xl sm:text-5xl font-bold text-white tracking-widest">
-          Get ready to indulge in every bite.
+      <div className="text-center mb-28 mt-12 sm:mt-16">
+        <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+        YOUR CART ({cartCount})
+        </h2>
+        <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+        Get ready to indulge in <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">every bite.</span>
         </p>
       </div>
 
-      {/* SELECT ALL */}
-      <div className="flex items-center mb-6">
-        <input
-          type="checkbox"
-          checked={selectAll}
-          onChange={handleGlobalSelectAllChange}
-          className="form-checkbox h-4 w-4 text-pink-600 bg-neutral-700 border-gray-600 mr-2"
-        />
-        <span className="text-sm">Select All Items</span>
-      </div>
+      {cart.length > 0 ? (
+        <>
+          {/* SELECT ALL */}
+          <div className="max-w-7xl mx-auto flex items-center mb-6">
+            <input
+              type="checkbox"
+              checked={selectAll}
+              onChange={handleGlobalSelectAllChange}
+              className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent"
+            />
+            <span className="ml-2 text-sm text-gray-300">Select All Items</span>
+          </div>
 
-      {/* CART ITEMS */}
-      {Object.entries(groupedCart).length > 0 ? (
-        Object.entries(groupedCart).map(([roomId, { roomName, items }]) => {
-          const isRoomSelected = selectAllPerRoom[roomId] || false;
-          const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
-          const voucher = activeVouchersPerRoom[roomId];
-          
-          const hasSelectedItems = items.some(item => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`]);
-
-          const roomSubtotal = items.reduce((sum, item) => {
-            const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
-            if (selectedItems[key]) {
-              return sum + Number(item.menuPrice) * (item.quantity || 1);
-            }
-            return sum;
-          }, 0);
-
-          let discountedSubtotal = 0;
-          let discountLabel = null;
-
-          if (voucher) {
-            discountedSubtotal = roomSubtotal - (voucher.discount / 100) * roomSubtotal;
-            discountLabel = `${voucher.discount}% off with "${voucher.title}"`;
-          } else if (isSpecialDiscountActive) {
-            discountedSubtotal = roomSubtotal * 0.8;
-            discountLabel = `20% off (Special Discount)`;
-          } else {
-            discountedSubtotal = roomSubtotal;
-          }
-
-          return (
-            <div key={roomId} className="mb-10">
-              <h2 className="text-xl font-semibold text-white mb-2 flex items-center">
-                <input
-                  type="checkbox"
-                  checked={isRoomSelected}
-                  onChange={() => handleRoomSelectAllChange(roomId)}
-                  className="form-checkbox h-4 w-4 text-pink-600 bg-neutral-700 border-gray-600 mr-2"
-                />
-                {roomNames[roomId] || roomName}
-                {hasSelectedItems && isAuthenticated && (
-                  <div className="flex items-center ml-4 space-x-2">
-                    <button
-                      onClick={() => setOpenVoucherRoom(roomId)}
-                      className="text-sm text-pink-400 hover:underline flex items-center"
-                    >
-                      <FaTag className="mr-1" /> Apply Voucher
-                    </button>
-                    {specialDiscountData && (
-                      <button
-                        onClick={() => handleToggleSpecialCardForRoom(roomId)}
-                        className={`text-sm flex items-center ${activeSpecialDiscountPerRoom[roomId] ? 'text-green-400' : 'text-pink-400'} hover:underline`}
-                      >
-                        <FaIdCard className="mr-1" />
-                        {activeSpecialDiscountPerRoom[roomId] ? 'Cancel Special' : 'Apply Special'}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </h2>
-
-              <div className="text-sm text-pink-400 mb-3 ml-6">
-                Subtotal: ₱{discountedSubtotal.toFixed(2)}
-                {discountLabel && (
-                  <span className="text-green-400 ml-2">({discountLabel})</span>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {items.map((item) => {
-                  const itemKey = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
-                  const isItemSelected = selectedItems[itemKey];
-
-                  let itemPrice = Number(item.menuPrice) * (item.quantity || 1);
-                  let finalPrice = itemPrice;
-                  let discounted = false;
-
-                  if (isItemSelected && voucher) {
-                    finalPrice = itemPrice - (voucher.discount / 100) * itemPrice;
-                    discounted = true;
-                  } else if (isItemSelected && isSpecialDiscountActive) {
-                    finalPrice = itemPrice * 0.8;
-                    discounted = true;
+          {/* CART ITEMS */}
+          {Object.entries(groupedCart).length > 0 && (
+            <div className="max-w-7xl mx-auto space-y-12">
+              {Object.entries(groupedCart).map(([roomId, { roomName, items }]) => {
+                const isRoomSelected = selectAllPerRoom[roomId] || false;
+                const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
+                const voucher = activeVouchersPerRoom[roomId];
+                
+                const hasSelectedItems = items.some(item => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`]);
+                
+                const roomSubtotal = items.reduce((sum, item) => {
+                  const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
+                  if (selectedItems[key]) {
+                    return sum + Number(item.menuPrice) * (item.quantity || 1);
                   }
+                  return sum;
+                }, 0);
 
-                  return (
-                    <div
-                      key={itemKey}
-                      className="bg-neutral-800 rounded-md p-3 flex flex-col items-center text-sm border-2 border-pink-600"
-                    >
-                      {item.menuImage && (
-                        <img
-                          src={item.menuImage}
-                          alt={item.menuName}
-                          className="w-16 h-16 object-cover rounded-full mb-2"
-                        />
-                      )}
-                      <h3 className="font-medium text-center">{item.menuName}</h3>
-                      {item.size && (
-                        <p className="text-xs text-neutral-400 italic mt-0.5">
-                          {item.size === 'One-size' ? 'One-size' : `Size: ${item.size}`}
-                        </p>
-                      )}
-                      <div className="flex items-center space-x-2 mt-2">
-                        <button
-                          onClick={() => updateQuantity(roomId, item.menuName, item.size, -1)}
-                          className="px-2 py-0.5 bg-neutral-700 rounded hover:bg-neutral-600"
-                        >
-                          −
-                        </button>
-                        <span className="font-semibold">{item.quantity || 1}</span>
-                        <button
-                          onClick={() => updateQuantity(roomId, item.menuName, item.size, 1)}
-                          className="px-2 py-0.5 bg-neutral-700 rounded hover:bg-neutral-600"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className="flex flex-col items-center mt-1">
-                        {discounted && (
-                          <span className="text-xs text-neutral-400 line-through">
-                            ₱{itemPrice.toFixed(2)}
-                          </span>
-                        )}
-                        <span className="text-pink-600 font-semibold">
-                          ₱{finalPrice.toFixed(2)}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => removeItem(roomId, item.menuName, item.size)}
-                        className="mt-1 text-red-500 hover:text-red-600"
-                      >
-                        <FaTrash size={14} />
-                      </button>
-                      <label className="mt-2 flex items-center">
+                let discountedSubtotal = 0;
+                let discountLabel = null;
+
+                if (voucher) {
+                  discountedSubtotal = roomSubtotal - (voucher.discount / 100) * roomSubtotal;
+                  discountLabel = `${voucher.discount}% off with "${voucher.title}"`;
+                } else if (isSpecialDiscountActive) {
+                  discountedSubtotal = roomSubtotal * 0.8;
+                  discountLabel = `20% off (Special Discount)`;
+                } else {
+                  discountedSubtotal = roomSubtotal;
+                }
+
+                return (
+                  <div key={roomId} className="p-6 rounded-xl bg-neutral-900 border border-neutral-800 shadow-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
+                      <div className="flex items-center mb-2 sm:mb-0">
                         <input
                           type="checkbox"
-                          checked={selectedItems[itemKey] || false}
-                          onChange={() => handleCheckboxChange(roomId, item.menuName, item.size)}
-                          className="form-checkbox h-4 w-4 text-pink-600 bg-neutral-700 border-gray-600 mr-1"
+                          checked={isRoomSelected}
+                          onChange={() => handleRoomSelectAllChange(roomId)}
+                          className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent"
                         />
-                        Select
-                      </label>
+                        <h2 className="ml-2 text-xl font-semibold text-white tracking-wide">{roomNames[roomId] || roomName}</h2>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        {hasSelectedItems && isAuthenticated && (
+                          <>
+                            <button
+                              onClick={() => setOpenVoucherRoom(roomId)}
+                              className="text-sm font-medium text-cyan-400 hover:text-fuchsia-500 transition-colors duration-200 flex items-center"
+                            >
+                              <FaTag className="mr-2" /> Apply Voucher
+                            </button>
+                            {specialDiscountData && (
+                              <button
+                                onClick={() => handleToggleSpecialCardForRoom(roomId)}
+                                className={`text-sm font-medium transition-colors duration-200 flex items-center ${activeSpecialDiscountPerRoom[roomId] ? 'text-fuchsia-500' : 'text-pink-600 hover:text-fuchsia-500'}`}
+                              >
+                                <FaIdCard className="mr-2" />
+                                {activeSpecialDiscountPerRoom[roomId] ? 'Cancel Special' : 'Apply Special'}
+                              </button>
+                            )}
+                          </>
+                        )}
+                        <div className="text-sm text-gray-400 whitespace-nowrap">
+                          Subtotal: <span className="text-cyan-400 font-bold">₱{discountedSubtotal.toFixed(2)}</span>
+                          {discountLabel && (
+                            <span className="ml-2 text-green-500 font-light">({discountLabel})</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })
-      ) : (
-        <p className="text-gray-400 text-lg text-center mt-4">Cart is empty</p>
-      )}
 
-      {cart.length > 0 && (
-        <div className="mt-6 text-center text-xl font-semibold">
-          Total: ₱{calculateTotal().toFixed(2)}
-        </div>
-      )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                      {items.map((item) => {
+                        const itemKey = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
+                        const isItemSelected = selectedItems[itemKey];
 
-      {/* CHECKOUT */}
-      {cart.length > 0 && isAuthenticated ? (
-        <>
-          {Object.keys(combinedVoucherMap).length > 0 && (
-            <div className="mt-8">
-              <UsedVoucherWallet
-                activeVouchersPerRoom={combinedVoucherMap}
-                roomNames={roomNames}
-              />
+                        let itemPrice = Number(item.menuPrice) * (item.quantity || 1);
+                        let finalPrice = itemPrice;
+                        let discounted = false;
+
+                        if (isItemSelected && voucher) {
+                          finalPrice = itemPrice - (voucher.discount / 100) * itemPrice;
+                          discounted = true;
+                        } else if (isItemSelected && isSpecialDiscountActive) {
+                          finalPrice = itemPrice * 0.8;
+                          discounted = true;
+                        }
+
+                        return (
+                          <div
+                            key={itemKey}
+                            className="bg-neutral-800 rounded-lg p-4 flex flex-col items-center text-center shadow-inner"
+                          >
+                            <label className="flex items-center w-full justify-end mb-2">
+                              <input
+                                type="checkbox"
+                                checked={isItemSelected || false}
+                                onChange={() => handleCheckboxChange(roomId, item.menuName, item.size)}
+                                className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent"
+                              />
+                            </label>
+                            {item.menuImage && (
+                              <img
+                                src={item.menuImage}
+                                alt={item.menuName}
+                                className="w-20 h-20 object-cover rounded-full border-2 border-neutral-700 mb-2"
+                              />
+                            )}
+                            <h3 className="font-semibold text-lg text-white tracking-wide">{item.menuName}</h3>
+                            {item.size && (
+                              <p className="text-sm text-neutral-400 italic mt-0.5">
+                                {item.size === 'One-size' ? 'One-size' : `Size: ${item.size}`}
+                              </p>
+                            )}
+                            <div className="flex items-center space-x-3 my-3">
+                              <button
+                                onClick={() => updateQuantity(roomId, item.menuName, item.size, -1)}
+                                className="w-8 h-8 flex items-center justify-center bg-neutral-700 text-white rounded-full hover:bg-neutral-600 transition-colors"
+                              >
+                                −
+                              </button>
+                              <span className="font-bold text-lg">{item.quantity || 1}</span>
+                              <button
+                                onClick={() => updateQuantity(roomId, item.menuName, item.size, 1)}
+                                className="w-8 h-8 flex items-center justify-center bg-neutral-700 text-white rounded-full hover:bg-neutral-600 transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <div className="flex flex-col items-center">
+                              {discounted && (
+                                <span className="text-xs text-neutral-400 line-through">
+                                  ₱{itemPrice.toFixed(2)}
+                                </span>
+                              )}
+                              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
+                                ₱{finalPrice.toFixed(2)}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => removeItem(roomId, item.menuName, item.size)}
+                              className="mt-2 text-red-500 hover:text-red-400 transition-colors"
+                            >
+                              <FaTrash size={16} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          <div className="mt-8">
-            <CheckoutButton
-              cart={cart.filter(item =>
-                selectedItems[`${item.room_id}-${item.menuName}-${item.size || 'One-size'}`]
-              )}
-              total={calculateTotal()}
-              selectedItems={selectedItems}
-              groupedCart={groupedCart}
-              activeVouchersPerRoom={combinedVoucherMap}
-              roomNames={roomNames}
-              promos={promos}
-              onCheckoutSuccess={() => {
-                setCart([]);
-                setGroupedCart({});
-                setActiveVouchersPerRoom({});
-                setActiveSpecialDiscountPerRoom({});
-                setSelectedItems({});
-                setSelectAll(false);
-                setSelectAllPerRoom({});
-                setCartCount(0);
-              }}
-            />
-          </div>
+          {cart.length > 0 && (
+            <div className="max-w-7xl mx-auto mt-12 text-center text-3xl font-extrabold tracking-tight">
+              Total: <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">₱{calculateTotal().toFixed(2)}</span>
+            </div>
+          )}
 
-          <div className="mt-6 flex flex-col items-center gap-4">
-            {specialDiscountData ? (
-              <button
-                onClick={() => setOpenSpecialDiscount(true)}
-                className="px-6 py-2 rounded-lg flex items-center justify-center bg-neutral-700 hover:bg-neutral-600 text-white transition-colors duration-200"
-              >
-                <FaIdCard className="mr-2" /> Edit PWD / Senior Card
-              </button>
-            ) : (
-              <button
-                onClick={() => setOpenSpecialDiscount(true)}
-                className="px-6 py-2 rounded-lg flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white transition-colors duration-200"
-              >
-                <FaIdCard className="mr-2" /> Apply PWD / Senior Card
-              </button>
-            )}
-          </div>
+          {/* CHECKOUT */}
+          {isAuthenticated ? (
+            <div className="max-w-7xl mx-auto">
+              {Object.keys(combinedVoucherMap).length > 0 && (
+                <div className="mt-8">
+                  <UsedVoucherWallet
+                    activeVouchersPerRoom={combinedVoucherMap}
+                    roomNames={roomNames}
+                  />
+                </div>
+              )}
+
+              <div className="mt-8">
+                <CheckoutButton
+                  cart={cart.filter(item =>
+                    selectedItems[`${item.room_id}-${item.menuName}-${item.size || 'One-size'}`]
+                  )}
+                  total={calculateTotal()}
+                  selectedItems={selectedItems}
+                  groupedCart={groupedCart}
+                  activeVouchersPerRoom={combinedVoucherMap}
+                  roomNames={roomNames}
+                  promos={promos}
+                  onCheckoutSuccess={() => {
+                    setCart([]);
+                    setGroupedCart({});
+                    setActiveVouchersPerRoom({});
+                    setActiveSpecialDiscountPerRoom({});
+                    setSelectedItems({});
+                    setSelectAll(false);
+                    setSelectAllPerRoom({});
+                    setCartCount(0);
+                  }}
+                />
+              </div>
+
+              <div className="mt-6 flex flex-col items-center gap-4">
+                {specialDiscountData ? (
+                  <button
+                    onClick={() => setOpenSpecialDiscount(true)}
+                    className="px-8 py-3 rounded-xl flex items-center justify-center bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 text-white font-medium transition-colors duration-200"
+                  >
+                    <FaIdCard className="mr-2" /> Edit PWD / Senior Card
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setOpenSpecialDiscount(true)}
+                    className="px-8 py-3 rounded-xl flex items-center justify-center bg-gradient-to-r from-cyan-400 to-fuchsia-500 hover:from-cyan-500 hover:to-fuchsia-600 text-white font-bold transition-colors duration-200 shadow-lg"
+                  >
+                    <FaIdCard className="mr-2" /> Apply PWD / Senior Card
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-xl mx-auto mt-8 text-center p-10 bg-neutral-900 rounded-lg">
+              <p className="text-lg text-white font-semibold mb-4">
+                You need to be logged in to proceed with checkout.
+              </p>
+              <p className="text-sm text-neutral-400 mb-6">
+                Please log in or create an account to finalize your order.
+              </p>
+              <Link href="/login" passHref>
+                <button className="bg-gradient-to-r from-cyan-400 to-fuchsia-500 hover:from-cyan-500 hover:to-fuchsia-600 transition duration-300 text-white font-bold py-3 px-6 rounded-lg text-base shadow-lg">
+                  Go to Login
+                </button>
+              </Link>
+            </div>
+          )}
         </>
-      ) : cart.length > 0 && (
-        <div className="mt-8 text-center">
-          <p className="text-pink-600 text-lg font-semibold">
-            You need to be logged in to proceed with checkout.
-          </p>
-          <p className="text-sm text-neutral-400 mt-2">
-            Please log in or create an account to finalize your order.
-          </p>
-        </div>
+      ) : (
+        <p className="text-gray-500 text-lg text-center mt-20">Your cart is empty.</p>
       )}
 
+      {/* SPECIAL DISCOUNT MODAL */}
       <Dialog
         open={openSpecialDiscount}
         onClose={() => setOpenSpecialDiscount(false)}
         className="relative z-50"
       >
-        <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+        <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-6">
-          <Dialog.Panel className="w-full max-w-4xl bg-neutral-900 text-white rounded-lg shadow-xl border border-pink-600 overflow-y-auto max-h-[90vh]">
+          <Dialog.Panel className="w-full max-w-4xl bg-neutral-900 text-white rounded-xl shadow-xl border border-neutral-800 overflow-y-auto max-h-[90vh]">
             <SpecialDiscount
               initialData={specialDiscountData}
               onSubmissionSuccess={handleSubmissionSuccess}
@@ -547,7 +565,7 @@ const OrderCartPage = () => {
             <div className="text-center mt-6">
               <button
                 onClick={() => setOpenSpecialDiscount(false)}
-                className="text-sm text-gray-300 hover:text-white underline"
+                className="text-sm text-gray-400 hover:text-white underline transition-colors"
               >
                 Close
               </button>
@@ -562,9 +580,9 @@ const OrderCartPage = () => {
         onClose={() => setOpenVoucherRoom(null)}
         className="relative z-50"
       >
-        <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+        <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-3xl bg-neutral-900 rounded-lg p-6 shadow-xl">
+          <Dialog.Panel className="w-full max-w-3xl bg-neutral-900 rounded-xl p-6 shadow-xl border border-neutral-800">
             <VoucherWallet
               roomIdFilter={openVoucherRoom}
               onVoucherUsed={handleVoucherUsed}
@@ -580,7 +598,7 @@ const OrderCartPage = () => {
             <div className="text-center mt-4">
               <button
                 onClick={() => setOpenVoucherRoom(null)}
-                className="text-sm text-gray-300 hover:text-white underline"
+                className="text-sm text-gray-400 hover:text-white underline transition-colors"
               >
                 Close
               </button>
