@@ -12,6 +12,9 @@ import BestSellers from '@/components/BestSellers';
 
 const categories = ['Drinks', 'Add-Ons', 'Meals', 'Snacks', 'Dessert'];
 
+// simple cache so we don’t refetch the same stall repeatedly
+const bestSellersCache = {};
+
 function RoomSpace({ params }) {
   const { id } = params;
   const [room, setRoom] = useState(null);
@@ -60,14 +63,19 @@ function RoomSpace({ params }) {
     })) || [];
 
   useEffect(() => {
+    if (!room) return;
+
+    // check cache first
+    if (bestSellersCache[id]) {
+      setTopItems(bestSellersCache[id]);
+      return;
+    }
+
     const fetchBestSellers = async () => {
       try {
         const allCounts = await getOrdersQuantity();
-
-        // only items for this room
         const roomCounts = allCounts.filter((item) => item.roomId === id);
 
-        // sort top 3
         const sorted = roomCounts
           .sort((a, b) => b.count - a.count)
           .slice(0, 3)
@@ -76,7 +84,6 @@ function RoomSpace({ params }) {
               (m) => m.menuId === item.menuId || m.name === item.menuName
             );
             if (!found) return null;
-
             return {
               name: found.name,
               count: item.count,
@@ -85,14 +92,15 @@ function RoomSpace({ params }) {
           })
           .filter(Boolean);
 
+        bestSellersCache[id] = sorted; // save in cache
         setTopItems(sorted);
       } catch (err) {
         console.error('Failed to fetch top items:', err);
       }
     };
 
-    if (room) fetchBestSellers();
-  }, [room, menuData, id]);
+    fetchBestSellers();
+  }, [room, id]); // removed menuData dependency
 
   if (loading)
     return (
@@ -141,9 +149,7 @@ function RoomSpace({ params }) {
         <h2 className="text-sm sm:text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 font-light tracking-widest uppercase">
           Food Stall
         </h2>
-        <p className="mt-2 text-3xl sm:text-5xl font-extrabold leading-tight">
-          {room.name}
-        </p>
+        <p className="mt-2 text-3xl sm:text-5xl font-extrabold leading-tight">{room.name}</p>
       </div>
 
       <div className="w-full">
