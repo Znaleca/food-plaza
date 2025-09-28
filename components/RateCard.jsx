@@ -13,32 +13,30 @@ const RateCard = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const intervalRef = useRef(null);
 
-  // drag/swipe state
   const startX = useRef(0);
   const currentTranslate = useRef(0);
   const isDragging = useRef(false);
+
+  const containerRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const loadReviews = async () => {
       try {
         const data = await getAllReviews();
-        if (!Array.isArray(data.orders)) {
-          throw new Error('Unexpected response format');
-        }
+        if (!Array.isArray(data.orders)) throw new Error('Unexpected response format');
 
         const extracted = [];
         data.orders.forEach((order) => {
           const { items, rated, rating, comment } = order;
           items.forEach((itemString, index) => {
             if (!rated?.[index]) return;
-
             let item;
             try {
               item = JSON.parse(itemString);
             } catch {
               item = { menuName: 'Invalid Item' };
             }
-
             extracted.push({
               orderId: order.$id,
               user: order.name || 'Anonymous',
@@ -61,23 +59,37 @@ const RateCard = () => {
     loadReviews();
   }, []);
 
-  // Auto slide
+  // 🔥 Observe visibility
   useEffect(() => {
-    if (reviews.length > 3) {
-      intervalRef.current = setInterval(() => {
-        setCurrentIndex((prev) =>
-          prev + 1 >= reviews.length ? 0 : prev + 1
-        );
-      }, 3000);
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => setIsVisible(entry.isIntersecting));
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
-      return () => clearInterval(intervalRef.current);
+  // Auto slide only if visible
+  useEffect(() => {
+    if (reviews.length > 3 && isVisible) {
+      intervalRef.current = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1 >= reviews.length ? 0 : prev + 1));
+      }, 3000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
     }
-  }, [reviews]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [reviews, isVisible]);
 
   const handleStart = (clientX) => {
     startX.current = clientX;
     isDragging.current = true;
-    clearInterval(intervalRef.current);
+    if (intervalRef.current) clearInterval(intervalRef.current);
   };
 
   const handleMove = (clientX) => {
@@ -91,24 +103,12 @@ const RateCard = () => {
     isDragging.current = false;
 
     if (currentTranslate.current < -50) {
-      setCurrentIndex((prev) =>
-        prev + 1 >= reviews.length ? 0 : prev + 1
-      );
+      setCurrentIndex((prev) => (prev + 1 >= reviews.length ? 0 : prev + 1));
     } else if (currentTranslate.current > 50) {
-      setCurrentIndex((prev) =>
-        prev - 1 < 0 ? reviews.length - 1 : prev - 1
-      );
+      setCurrentIndex((prev) => (prev - 1 < 0 ? reviews.length - 1 : prev - 1));
     }
 
     currentTranslate.current = 0;
-
-    if (reviews.length > 3) {
-      intervalRef.current = setInterval(() => {
-        setCurrentIndex((prev) =>
-          prev + 1 >= reviews.length ? 0 : prev + 1
-        );
-      }, 3000);
-    }
   };
 
   const renderStarRating = (ratingValue) => (
@@ -117,20 +117,14 @@ const RateCard = () => {
         <FontAwesomeIcon
           key={star}
           icon={solidStar}
-          className={
-            ratingValue >= star
-              ? 'text-fuchsia-400 drop-shadow-md'
-              : 'text-neutral-700'
-          }
+          className={ratingValue >= star ? 'text-fuchsia-400 drop-shadow-md' : 'text-neutral-700'}
         />
       ))}
     </div>
   );
 
   return (
-    <div className="w-full text-white py-10 px-6 bg-neutral-950 relative">
-     
-
+    <div ref={containerRef} className="w-full text-white py-10 px-6 bg-neutral-950 relative">
       {loading ? (
         <p className="text-neutral-400 text-xl text-center">Loading...</p>
       ) : error ? (
@@ -174,10 +168,8 @@ const RateCard = () => {
                 <div className="mt-auto">
                   <div className="mb-3">{renderStarRating(review.rating)}</div>
                   <div className="text-xs text-gray-400 text-center">
-                    Reviewed by{" "}
-                    <span className="text-cyan-400 font-semibold">
-                      {review.user}
-                    </span>
+                    Reviewed by{' '}
+                    <span className="text-cyan-400 font-semibold">{review.user}</span>
                   </div>
                 </div>
               </div>
