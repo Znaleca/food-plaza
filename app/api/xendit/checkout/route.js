@@ -1,131 +1,131 @@
-// checkout handler
-import { NextResponse } from 'next/server';
-import { groupBy } from 'lodash';
-import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
-import processCheckout from '@/app/actions/processCheckout';
-import { Client, Databases, Query } from 'node-appwrite';
+"use server";
 
-const client = new Client()
-  .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT)
-  .setKey(process.env.NEXT_APPWRITE_KEY);
+import { cookies } from "next/headers";
+import { Client, Databases, Query, Users } from "node-appwrite";
+import createAdminClient from "../appwrite-admin";
+import xenditFetch from "../xenditFetch";
+import { ID } from "node-appwrite";
 
-const databases = new Databases(client);
-
-async function xenditFetch(endpoint, method, body, extraHeaders = {}) {
-  const authHeader = `Basic ${Buffer.from(`${process.env.XENDIT_API_KEY}:`).toString('base64')}`;
-
-  const res = await fetch(`https://api.xendit.co${endpoint}`, {
-    method,
-    headers: {
-      Authorization: authHeader,
-      'Content-Type': 'application/json',
-      ...extraHeaders,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    console.error('❌ Xendit API Error:', data);
-    throw new Error(data.message || 'Xendit API request failed');
-  }
-  return data;
-}
-
-function sanitizeForXendit(str) {
-  return str.replace(/[^a-zA-Z0-9 ]/g, '') || 'DefaultName';
-}
-
-export async function POST(req) {
+export default async function checkout({ selectedItems, vouchers }) {
   try {
-    const body = await req.json();
-    const { items, user, totalAmount, voucherMap } = body;
+    const { database, account, users } = await createAdminClient();
 
-    // 1. Save order in Appwrite
-    const orderResult = await processCheckout(items, null, voucherMap);
-    if (!orderResult.success) {
-      return NextResponse.json({ success: false, message: orderResult.message });
-    }
-    const orderId = orderResult.orderId;
+    const sessionCookie = cookies().get("appwrite-session");
+    if (!sessionCookie) throw new Error("No session found");
 
-    // 2. Group items by stall and calculate totals
-    const groupedItems = groupBy(items, 'room_id');
-    const splitRoutes = [];
+    const user = await account.get();
+
+    // Group items by stall (roomId)
+    const groupedItems = selectedItems.reduce((acc, item) => {
+      if (!acc[item.roomId]) acc[item.roomId] = [];
+      acc[item.roomId].push(item);
+      return acc;
+    }, {});
+
     let finalDiscountedTotal = 0;
+    const splitRoutes = [];
 
-    for (const roomId in groupedItems) {
-      const stallItems = groupedItems[roomId];
-      const roomName = stallItems[0]?.room_name || `Stall ${roomId}`;
+    for (const [roomId, items] of Object.entries(groupedItems)) {
+      const stallVoucher = vouchers[roomId];
+      const stallTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-      let stallTotal = stallItems.reduce(
-        (acc, item) => acc + (Number(item.menuPrice) * Number(item.quantity || 1)),
-        0
-      );
-
-      const voucher = voucherMap?.[roomId];
-      if (voucher?.discount) {
-        const discountRate = Number(voucher.discount) / 100;
-        stallTotal = stallTotal - stallTotal * discountRate;
+      let discount = 0;
+      if (stallVoucher) {
+        discount = stallVoucher.discount || 0;
       }
 
-      const roundedTotal = Math.round(stallTotal);
+      const discountedTotal = stallTotal - discount;
+
+      const roundedTotal = parseFloat(discountedTotal.toFixed(2)); // ✅ keep 2 decimals
       finalDiscountedTotal += roundedTotal;
 
-      const subAccountId = await getOrCreateSubAccount(roomId, roomName);
+      // Fetch stall owner’s balance
+      const stall = await database.getDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+        process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS,
+        roomId
+      );
+
+      const ownerId = stall.ownerId;
+
+      // Update balance
+      const balanceDocId = `balance_${ownerId}`;
+      let currentBalance = 0;
+      try {
+        const balanceDoc = await database.getDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+          "stall-balances",
+          balanceDocId
+        );
+        currentBalance = parseFloat(balanceDoc.balance) || 0;
+      } catch {
+        // create balance doc if not exists
+        await database.createDocument(
+          process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+          "stall-balances",
+          balanceDocId,
+          { ownerId, balance: 0 }
+        );
+      }
+
+      const newBalance = parseFloat((currentBalance + roundedTotal).toFixed(2));
+
+      await database.updateDocument(
+        process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+        "stall-balances",
+        balanceDocId,
+        { balance: newBalance }
+      );
 
       splitRoutes.push({
+        split_rule_id: ownerId, // use stall owner as split rule
         flat_amount: roundedTotal,
-        currency: 'PHP',
-        destination_account_id: subAccountId,
-        reference_id: sanitizeForXendit(roomId),
+        currency: "PHP"
       });
-
-      const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
-      const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
-
-      const result = await databases.listDocuments(databaseId, collectionId, [
-        Query.equal('room_id', roomId),
-      ]);
-
-      if (result.documents.length > 0) {
-        const doc = result.documents[0];
-        const currentBalance = doc.balance || 0;
-        const newBalance = currentBalance + roundedTotal;
-
-        await databases.updateDocument(databaseId, collectionId, doc.$id, {
-          balance: newBalance,
-          balance_updated_at: new Date().toISOString(),
-        });
-      }
     }
 
-    // 3. Create Split Rule
-    const splitRule = await xenditFetch('/split_rules', 'POST', {
-      name: sanitizeForXendit(`Order ${orderId} Split`),
-      description: sanitizeForXendit(`Order ${orderId} Split`),
-      routes: splitRoutes,
-    });
+    // Create order document
+    const orderId = ID.unique();
+    const orderData = {
+      userId: user.$id,
+      items: selectedItems,
+      vouchers,
+      total: parseFloat(finalDiscountedTotal.toFixed(2)),
+      status: "pending",
+      createdAt: new Date().toISOString()
+    };
 
-    // 4. Create Invoice with prefixed external_id
-    const invoice = await xenditFetch(
-      '/v2/invoices',
-      'POST',
-      {
-        external_id: `thecorner_${orderId}`,
-        amount: finalDiscountedTotal,
-        payer_email: user?.email || 'guest@example.com',
-        description: 'Food Order Payment',
-        currency: 'PHP',
-        success_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-status?orderId=${orderId}`,
-        failure_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-failed`,
-      },
-      { 'with-split-rule': splitRule.id }
+    await database.createDocument(
+      process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
+      "order-status",
+      orderId,
+      orderData
     );
 
-    return NextResponse.json({ success: true, redirect_url: invoice.invoice_url });
+    // Create invoice with Xendit
+    const splitRule = await xenditFetch("/v2/split_rules", "POST", {
+      description: `Split rule for order ${orderId}`,
+      routes: splitRoutes
+    });
+
+    const invoice = await xenditFetch(
+      "/v2/invoices",
+      "POST",
+      {
+        external_id: `thecorner_${orderId}`,
+        amount: parseFloat(finalDiscountedTotal.toFixed(2)), // ✅ float total
+        payer_email: user?.email || "guest@example.com",
+        description: "Food Order Payment",
+        currency: "PHP",
+        success_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-status?orderId=${orderId}`,
+        failure_redirect_url: `${process.env.NEXT_PUBLIC_URL}/customer/order-failed`
+      },
+      { "with-split-rule": splitRule.id }
+    );
+
+    return { checkoutUrl: invoice.invoice_url };
   } catch (error) {
-    console.error('❌ Checkout + Split Error:', error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error("Checkout error:", error);
+    throw error;
   }
 }
