@@ -173,31 +173,29 @@ const OrderCartPage = () => {
   };
 
   const calculateTotal = () => {
-    let total = 0.0;
+    let total = 0;
     Object.entries(groupedCart).forEach(([roomId, { items }]) => {
       const voucher = activeVouchersPerRoom[roomId];
       const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
-  
-      let stallTotal = 0.0;
+
       items.forEach(item => {
         const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
         if (selectedItems[key]) {
-          stallTotal += parseFloat(item.menuPrice) * (item.quantity || 1);
+          let itemPrice = Number(item.menuPrice) * (item.quantity || 1);
+          let discount = 0;
+
+          if (voucher) {
+            discount = (voucher.discount / 100) * itemPrice;
+          } else if (isSpecialDiscountActive) {
+            discount = 0.2 * itemPrice;
+          }
+
+          total += itemPrice - discount;
         }
       });
-  
-      if (voucher) {
-        total += stallTotal - (voucher.discount / 100) * stallTotal;
-      } else if (isSpecialDiscountActive) {
-        total += stallTotal * 0.8;
-      } else {
-        total += stallTotal;
-      }
     });
-  
-    return parseFloat(total.toFixed(2));
+    return total;
   };
-  
 
   const handleCheckboxChange = (roomId, menuName, size = 'One-size') => {
     const key = `${roomId}-${menuName}-${size}`;
@@ -473,11 +471,8 @@ const OrderCartPage = () => {
 
           {cart.length > 0 && (
             <div className="max-w-7xl mx-auto mt-12 text-center text-3xl font-extrabold tracking-tight">
-            Total: <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-              ₱{calculateTotal().toFixed(2)}
-            </span>
-          </div>
-          
+              Total: <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">₱{calculateTotal().toFixed(2)}</span>
+            </div>
           )}
 
           {/* CHECKOUT */}

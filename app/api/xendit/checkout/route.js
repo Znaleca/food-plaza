@@ -40,7 +40,7 @@ function sanitizeForXendit(str) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { items, user, voucherMap } = body;
+    const { items, user, totalAmount, voucherMap } = body;
 
     // 1. Save order in Appwrite
     const orderResult = await processCheckout(items, null, voucherMap);
@@ -68,12 +68,9 @@ export async function POST(req) {
         const discountRate = Number(voucher.discount) / 100;
         stallTotal = stallTotal - stallTotal * discountRate;
       }
-      
-      // Accumulate the unrounded total for the final invoice amount
-      finalDiscountedTotal += stallTotal;
 
-      // Xendit split rules require integer amounts. We'll round it here for the split only.
       const roundedTotal = Math.round(stallTotal);
+      finalDiscountedTotal += roundedTotal;
 
       const subAccountId = await getOrCreateSubAccount(roomId, roomName);
 
