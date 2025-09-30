@@ -194,7 +194,8 @@ const OrderCartPage = () => {
         }
       });
     });
-    return total;
+    // Ensure final total is rounded to two decimal places
+    return Number(total.toFixed(2));
   };
 
   const handleCheckboxChange = (roomId, menuName, size = 'One-size') => {
@@ -336,9 +337,11 @@ const OrderCartPage = () => {
 
                 if (voucher) {
                   discountedSubtotal = roomSubtotal - (voucher.discount / 100) * roomSubtotal;
+                  discountedSubtotal = Number(discountedSubtotal.toFixed(2));
                   discountLabel = `${voucher.discount}% off with "${voucher.title}"`;
                 } else if (isSpecialDiscountActive) {
                   discountedSubtotal = roomSubtotal * 0.8;
+                  discountedSubtotal = Number(discountedSubtotal.toFixed(2));
                   discountLabel = `20% off (Special Discount)`;
                 } else {
                   discountedSubtotal = roomSubtotal;
@@ -401,6 +404,9 @@ const OrderCartPage = () => {
                           finalPrice = itemPrice * 0.8;
                           discounted = true;
                         }
+                        
+                        // Ensure final price is rounded to two decimal places
+                        finalPrice = Number(finalPrice.toFixed(2));
 
                         return (
                           <div
