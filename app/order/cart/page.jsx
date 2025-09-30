@@ -178,21 +178,21 @@ const OrderCartPage = () => {
       const voucher = activeVouchersPerRoom[roomId];
       const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
   
+      let stallTotal = 0.0;
       items.forEach(item => {
         const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
         if (selectedItems[key]) {
-          let itemPrice = parseFloat(item.menuPrice) * (item.quantity || 1);
-          let discount = 0.0;
-  
-          if (voucher) {
-            discount = (voucher.discount / 100) * itemPrice;
-          } else if (isSpecialDiscountActive) {
-            discount = 0.2 * itemPrice;
-          }
-  
-          total += itemPrice - discount;
+          stallTotal += parseFloat(item.menuPrice) * (item.quantity || 1);
         }
       });
+  
+      if (voucher) {
+        total += stallTotal - (voucher.discount / 100) * stallTotal;
+      } else if (isSpecialDiscountActive) {
+        total += stallTotal * 0.8;
+      } else {
+        total += stallTotal;
+      }
     });
   
     return parseFloat(total.toFixed(2));

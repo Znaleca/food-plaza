@@ -65,33 +65,43 @@ const CheckoutButton = ({
   const handleConfirmPayment = async () => {
     setLoading(true);
     try {
-      const voucherMap = Object.fromEntries(
-        Object.entries(activeVouchersPerRoom).map(([roomId, voucher]) => [
-          roomId,
-          {
-            title: voucher?.title,
-            discount: voucher?.discount,
-            roomName: roomNames[roomId] || 'Unknown Room',
-          },
-        ])
-      );
+      // ✅ Generate voucher map to send to the server
+      const voucherMap = {};
+      Object.entries(groupedCart).forEach(([roomId, { items }]) => {
+        const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
+        const voucher = activeVouchersPerRoom[roomId];
+        const roomSubtotal = items.reduce((sum, item) => {
+          const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
+          if (selectedItems[key]) {
+            return sum + Number(item.menuPrice) * (item.quantity || 1);
+          }
+          return sum;
+        }, 0);
 
-      // NEW: include special discount in request
-      const specialDiscount = {
-        active: Boolean(useSpecialCard),
-        discount: Number(specialDiscountPercent) || 0,
-        title: 'PWD/Senior Discount',
-      };
+        if (voucher) {
+          voucherMap[roomId] = {
+            title: voucher.title,
+            discount: voucher.discount,
+            roomName: roomNames[roomId] || 'Unknown Room',
+          };
+        } else if (isSpecialDiscountActive && roomSubtotal > 0) {
+          voucherMap[roomId] = {
+            title: 'Special Discount',
+            discount: 20,
+            roomName: roomNames[roomId] || 'Unknown Room',
+            isSpecial: true,
+          };
+        }
+      });
 
       const response = await fetch('/api/xendit/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: cart,
+          items: cart.filter(item => selectedItems[`${item.room_id}-${item.menuName}-${item.size || 'One-size'}`]),
           user,
-          totalAmount: total,
+          totalAmount: total, // Pass the float total
           voucherMap,
-          specialDiscount,
         }),
       });
 
