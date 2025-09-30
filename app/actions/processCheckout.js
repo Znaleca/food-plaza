@@ -20,6 +20,7 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
 
     const userId = user.id;
 
+    // calculateTotals returns float values
     const { cleanedCart, baseTotal, serviceCharge, discountAmount, finalTotal } =
       await calculateTotals(cart, null, databases, voucherMap);
 
@@ -72,6 +73,7 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       phone: user.phone || 'No phone',
       status: ['order-placed'],
       items: stringifiedItems,
+      // The total array will now contain float values
       total: [baseTotal, serviceCharge, -discountAmount, finalTotal],
       promos: promoStrings,
       created_at: new Date().toISOString(),
