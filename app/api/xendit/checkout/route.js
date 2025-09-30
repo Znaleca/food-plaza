@@ -1,4 +1,3 @@
-// checkout handler
 import { NextResponse } from 'next/server';
 import { groupBy } from 'lodash';
 import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
@@ -69,13 +68,14 @@ export async function POST(req) {
         stallTotal = stallTotal - stallTotal * discountRate;
       }
 
-      const roundedTotal = Math.round(stallTotal);
-      finalDiscountedTotal += roundedTotal;
+      // ❌ REMOVED: Math.round()
+      const total = stallTotal;
+      finalDiscountedTotal += total;
 
       const subAccountId = await getOrCreateSubAccount(roomId, roomName);
 
       splitRoutes.push({
-        flat_amount: roundedTotal,
+        flat_amount: total,
         currency: 'PHP',
         destination_account_id: subAccountId,
         reference_id: sanitizeForXendit(roomId),
@@ -91,7 +91,7 @@ export async function POST(req) {
       if (result.documents.length > 0) {
         const doc = result.documents[0];
         const currentBalance = doc.balance || 0;
-        const newBalance = currentBalance + roundedTotal;
+        const newBalance = currentBalance + total; // Use the float value here too
 
         await databases.updateDocument(databaseId, collectionId, doc.$id, {
           balance: newBalance,
