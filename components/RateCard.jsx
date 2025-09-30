@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import getAllReviews from '@/app/actions/getAllReviews';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar as solidStar } from '@fortawesome/free-solid-svg-icons';
+import Link from 'next/link'; // 👈 Import Link
 
 const RateCard = () => {
   const [reviews, setReviews] = useState([]);
@@ -34,6 +35,8 @@ const RateCard = () => {
             let item;
             try {
               item = JSON.parse(itemString);
+              // Assuming `item` now includes a `roomId` property
+              if (!item.roomId) return; // Skip if no roomId
             } catch {
               item = { menuName: 'Invalid Item' };
             }
@@ -43,6 +46,7 @@ const RateCard = () => {
               item,
               rating: rating?.[index],
               comment: comment?.[index],
+              roomId: item.roomId // 👈 Extract roomId
             });
           });
         });
@@ -59,7 +63,7 @@ const RateCard = () => {
     loadReviews();
   }, []);
 
-  // 🔥 Observe visibility
+  // ... [IntersectionObserver and Auto-slide useEffects remain the same] ...
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
@@ -72,7 +76,6 @@ const RateCard = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Auto slide only if visible
   useEffect(() => {
     if (reviews.length > 3 && isVisible) {
       intervalRef.current = setInterval(() => {
@@ -85,6 +88,7 @@ const RateCard = () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [reviews, isVisible]);
+  // ...
 
   const handleStart = (clientX) => {
     startX.current = clientX;
@@ -149,30 +153,31 @@ const RateCard = () => {
             }}
           >
             {reviews.map((review, idx) => (
-              <div
-                key={idx}
-                className="min-w-[80%] sm:min-w-[40%] md:min-w-[30%] 
-                           bg-neutral-900/70 backdrop-blur-md border border-neutral-800 
-                           rounded-3xl shadow-lg hover:shadow-fuchsia-500/30 
-                           hover:border-fuchsia-400 transition-all duration-500 
-                           p-6 aspect-square flex flex-col"
-              >
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2">
-                  {review.item.menuName}
-                </h3>
+              // 👈 Link component added
+              <Link key={idx} href={`/rooms/${review.roomId}`} passHref className="min-w-[80%] sm:min-w-[40%] md:min-w-[30%]">
+                <div
+                  className="bg-neutral-900/70 backdrop-blur-md border border-neutral-800 
+                             rounded-3xl shadow-lg hover:shadow-fuchsia-500/30 
+                             hover:border-fuchsia-400 transition-all duration-500 
+                             p-6 aspect-square flex flex-col cursor-pointer" // 👈 Add cursor-pointer
+                >
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2">
+                    {review.item.menuName}
+                  </h3>
 
-                <p className="italic text-gray-300 text-sm leading-relaxed mb-3 line-clamp-3">
-                  "{review.comment}"
-                </p>
+                  <p className="italic text-gray-300 text-sm leading-relaxed mb-3 line-clamp-3">
+                    "{review.comment}"
+                  </p>
 
-                <div className="mt-auto">
-                  <div className="mb-3">{renderStarRating(review.rating)}</div>
-                  <div className="text-xs text-gray-400 text-center">
-                    Reviewed by{' '}
-                    <span className="text-cyan-400 font-semibold">{review.user}</span>
+                  <div className="mt-auto">
+                    <div className="mb-3">{renderStarRating(review.rating)}</div>
+                    <div className="text-xs text-gray-400 text-center">
+                      Reviewed by{' '}
+                      <span className="text-cyan-400 font-semibold">{review.user}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
