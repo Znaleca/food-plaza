@@ -47,6 +47,7 @@ function RoomSpace({ params }) {
       ? room.menuAvailability
       : new Array(room?.menuName?.length || 0).fill(true);
 
+  // --- MODIFIED menuData GENERATION TO INCLUDE SUB-TYPE ---
   const menuData =
     (room?.menuName || []).map((name, idx) => ({
       menuId: `${id}_${idx}`,
@@ -55,12 +56,31 @@ function RoomSpace({ params }) {
       description: room.menuDescription?.[idx] ?? '',
       image: menuImageUrls[idx] || null,
       type: room.menuType?.[idx] || 'Others',
+      // Get the subType, use a default key if the value is empty
+      subType: room.menuSubType?.[idx] || 'Main Items', 
       smallFee: room.menuSmall?.[idx] ?? 0,
       mediumFee: room.menuMedium?.[idx] ?? 0,
       largeFee: room.menuLarge?.[idx] ?? 0,
       isAvailable: menuAvailability[idx] ?? true,
       idx,
     })) || [];
+
+  // --- NEW LOGIC: Group menuData by Type and then SubType ---
+  const groupedMenu = categories.reduce((acc, cat) => {
+    const items = menuData.filter((m) => m.type === cat);
+    if (items.length) {
+      acc[cat] = items.reduce((subAcc, item) => {
+        const subTypeKey = item.subType.trim() || 'Main Items';
+        if (!subAcc[subTypeKey]) {
+          subAcc[subTypeKey] = [];
+        }
+        subAcc[subTypeKey].push(item);
+        return subAcc;
+      }, {});
+    }
+    return acc;
+  }, {});
+  // --- END NEW LOGIC ---
 
   useEffect(() => {
     if (!room) return;
@@ -100,7 +120,7 @@ function RoomSpace({ params }) {
     };
 
     fetchBestSellers();
-  }, [room, id]); // removed menuData dependency
+  }, [room, id, menuData]); // Added menuData dependency back since it is computed outside useEffect
 
   if (loading)
     return (
@@ -115,6 +135,7 @@ function RoomSpace({ params }) {
   const imageUrls = (room.images || []).map(toURL);
 
   const handleSelectMenu = (menuItem) => {
+    // Note: Recommended menus currently filters by main type.
     const recommendedMenus = menuData.filter(
       (m) => m.type === menuItem.type && m.menuId !== menuItem.menuId
     );
@@ -188,49 +209,63 @@ function RoomSpace({ params }) {
         />
       </div>
 
+      {/* --- MODIFIED MENU RENDERING SECTION --- */}
       <div className="mt-12 sm:mt-20 px-4 sm:px-8">
-        {categories.map((cat) => {
-          const items = menuData.filter((m) => m.type === cat);
-          if (!items.length) return null;
-          return (
-            <div key={cat} className="mb-8">
-              <h3 className="text-white font-semibold mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-                {cat}
-              </h3>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {items.map((m) => (
-                  <div
-                    key={m.idx}
-                    onClick={() => {
-                      if (!m.isAvailable) return;
-                      handleSelectMenu(m);
-                    }}
-                    className={`relative border border-neutral-800 rounded-md bg-neutral-900 p-3 flex flex-col items-center text-center transition-all duration-300 ${
-                      m.isAvailable
-                        ? 'cursor-pointer hover:border-white hover:shadow-xl hover:scale-105'
-                        : 'grayscale opacity-60 cursor-not-allowed'
-                    }`}
-                  >
-                    {!m.isAvailable && (
-                      <div className="absolute top-2 left-2 bg-neutral-800 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
-                        Not Available
+        {Object.keys(groupedMenu).map((cat) => (
+          <div key={cat} className="mb-12">
+            <h3 className="text-white font-semibold mb-6 text-2xl bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 border-b border-neutral-700 pb-2">
+              {cat}
+            </h3>
+
+            {/* Iterate over Sub-Types within the Category */}
+            {Object.keys(groupedMenu[cat]).map((subType) => {
+              const items = groupedMenu[cat][subType];
+              return (
+                <div key={subType} className="mb-8">
+                  {/* Sub-Type Heading - only show if it's not the default "Main Items" */}
+                  {subType !== 'Main Items' && (
+                    <h4 className="text-neutral-300 font-medium mb-4 text-lg border-l-4 border-fuchsia-500 pl-3">
+                      {subType}
+                    </h4>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {items.map((m) => (
+                      <div
+                        key={m.idx}
+                        onClick={() => {
+                          if (!m.isAvailable) return;
+                          handleSelectMenu(m);
+                        }}
+                        className={`relative border border-neutral-800 rounded-md bg-neutral-900 p-3 flex flex-col items-center text-center transition-all duration-300 ${
+                          m.isAvailable
+                            ? 'cursor-pointer hover:border-white hover:shadow-xl hover:scale-105'
+                            : 'grayscale opacity-60 cursor-not-allowed'
+                        }`}
+                      >
+                        {!m.isAvailable && (
+                          <div className="absolute top-2 left-2 bg-neutral-800 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
+                            Not Available
+                          </div>
+                        )}
+                        {m.image && (
+                          <img
+                            src={m.image}
+                            alt={m.name}
+                            className="w-20 h-20 rounded-full object-cover mb-2 shadow-sm"
+                          />
+                        )}
+                        <h4 className="text-sm font-medium">{m.name}</h4>
                       </div>
-                    )}
-                    {m.image && (
-                      <img
-                        src={m.image}
-                        alt={m.name}
-                        className="w-20 h-20 rounded-full object-cover mb-2 shadow-sm"
-                      />
-                    )}
-                    <h4 className="text-sm font-medium">{m.name}</h4>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
+      {/* --- END MODIFIED MENU RENDERING SECTION --- */}
 
       <div className="px-4 sm:px-8 mt-6">
         <CustomerRatingCard roomName={room.name} />

@@ -24,6 +24,9 @@ async function updateSpace(_, formData) {
     const menuPrices = formData.getAll('menuPrices[]').map(v => parseFloat(v) || 0);
     const menuDescriptions = formData.getAll('menuDescriptions[]').map(v => v.trim());
     const menuTypes = formData.getAll('menuType[]');
+    
+    // --- NEW: Retrieve the menuSubType array ---
+    const menuSubTypes = formData.getAll('menuSubType[]'); 
 
     const menuSmall = formData.getAll('menuSmall[]').map(v => parseFloat(v) || 0);
     const menuMedium = formData.getAll('menuMedium[]').map(v => parseFloat(v) || 0);
@@ -40,11 +43,13 @@ async function updateSpace(_, formData) {
         const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), newImageFile);
         menuImages.push(uploaded.$id);
       } else {
-        menuImages.push(existingMenuImages[i] || null);
+        // Retain existing image if no new file is uploaded
+        menuImages.push(existingMenuImages[i] || null); 
       }
     }
 
     const stallImageIDs = [];
+    // Handle new stall images
     for (const image of newStallImages) {
       if (image instanceof File && image.size > 0) {
         const uploaded = await storage.createFile(BUCKET_ID, ID.unique(), image);
@@ -52,6 +57,7 @@ async function updateSpace(_, formData) {
       }
     }
 
+    // --- NEW: Add menuSubType to the database update call ---
     const updated = await databases.updateDocument(DB_ID, COLLECTION_ID, id, {
       name,
       description,
@@ -61,12 +67,14 @@ async function updateSpace(_, formData) {
       menuPrice: menuPrices,
       menuDescription: menuDescriptions,
       menuType: menuTypes,
+      menuSubType: menuSubTypes, // <-- SAVING THE SUB-TYPES
       menuSmall,
       menuMedium,
       menuLarge,
       menuImages,
       ...(stallImageIDs.length > 0 && { images: stallImageIDs })
     });
+    // --- END NEW ---
 
     return { success: true, data: updated };
   } catch (error) {

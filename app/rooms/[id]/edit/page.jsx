@@ -49,11 +49,18 @@ export default function EditSpacePage({ params }) {
 
         const initialMenuItems = (data.menuName || []).map((name, index) => {
           const hasSizes = !!(data.menuSmall?.[index] || data.menuMedium?.[index] || data.menuLarge?.[index]);
+          
+          // Check if menuSubType exists to determine if useSubType should be checked
+          const existingSubType = data.menuSubType?.[index];
+
           return {
             name,
             price: data.menuPrice?.[index] || '',
             description: data.menuDescription?.[index] || '',
             menuType: data.menuType?.[index] || '',
+            // Initialize the new field and flag
+            menuSubType: existingSubType || '',
+            useSubType: !!existingSubType, // Checked if there is an existing sub-type
             smallFee: data.menuSmall?.[index] || '',
             mediumFee: data.menuMedium?.[index] || '',
             largeFee: data.menuLarge?.[index] || '',
@@ -86,6 +93,11 @@ export default function EditSpacePage({ params }) {
     setMenuItems(prev => {
       const updated = [...prev];
       updated[index][field] = value;
+      
+      // If the user unchecks the useSubType box, clear the subType text
+      if (field === 'useSubType' && value === false) {
+        updated[index].menuSubType = '';
+      }
       return updated;
     });
   };
@@ -106,6 +118,9 @@ export default function EditSpacePage({ params }) {
         price: '',
         description: '',
         menuType: '',
+        // Include the new fields
+        menuSubType: '', 
+        useSubType: false,
         smallFee: '',
         mediumFee: '',
         largeFee: '',
@@ -138,6 +153,11 @@ export default function EditSpacePage({ params }) {
       formData.append('menuPrices[]', item.useSizes ? '' : item.price);
       formData.append('menuDescriptions[]', item.description);
       formData.append('menuType[]', item.menuType);
+      
+      // Only append menuSubType if useSubType is checked, otherwise send empty string
+      const subType = item.useSubType ? item.menuSubType : '';
+      formData.append('menuSubType[]', subType); 
+
       formData.append('menuSmall[]', item.useSizes && item.smallChecked ? item.smallFee : '');
       formData.append('menuMedium[]', item.useSizes && item.mediumChecked ? item.mediumFee : '');
       formData.append('menuLarge[]', item.useSizes && item.largeChecked ? item.largeFee : '');
@@ -310,6 +330,31 @@ export default function EditSpacePage({ params }) {
                       ))}
                     </select>
                   </div>
+                  
+                  {/* --- NEW SUB-TYPE CHECKBOX AND INPUT --- */}
+                  <div className="border border-neutral-700 rounded-lg p-3">
+                    <label className="flex items-center space-x-2 cursor-pointer mb-2">
+                      <input
+                        type="checkbox"
+                        checked={item.useSubType}
+                        onChange={e => handleMenuChange(index, 'useSubType', e.target.checked)}
+                        className="accent-pink-500 w-4 h-4"
+                      />
+                      <span className="text-sm font-medium text-neutral-300">Add Menu Sub-Type (e.g., Hot/Cold, Flavor, Style)</span>
+                    </label>
+
+                    {item.useSubType && (
+                      <input
+                        type="text"
+                        placeholder="Enter Sub-Type (e.g., Spicy, Iced, Korean Style)"
+                        value={item.menuSubType}
+                        onChange={e => handleMenuChange(index, 'menuSubType', e.target.value)}
+                        className="mt-2 bg-neutral-900 text-white border border-neutral-700 rounded-lg py-2 px-3 w-full"
+                      />
+                    )}
+                  </div>
+                  {/* --- END NEW SUB-TYPE SECTION --- */}
+
 
                   {/* Description */}
                   <textarea
