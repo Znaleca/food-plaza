@@ -31,6 +31,8 @@ export default function EditSpacePage({ params }) {
   const [menuItems, setMenuItems] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [otherCategory, setOtherCategory] = useState("");
+  
+  // Initialize custom categories by filtering out foodTypes from the existing stall types
   const [customCategories, setCustomCategories] = useState([]);
   const fileInputRef = useRef(null);
 
@@ -46,11 +48,14 @@ export default function EditSpacePage({ params }) {
 
         setStall(data);
         setSelectedTypes(data.type || []);
+        
+        // Populate custom categories based on existing types not in foodTypes
+        const initialCustomCategories = (data.type || []).filter(t => !foodTypes.includes(t));
+        setCustomCategories(initialCustomCategories);
 
         const initialMenuItems = (data.menuName || []).map((name, index) => {
           const hasSizes = !!(data.menuSmall?.[index] || data.menuMedium?.[index] || data.menuLarge?.[index]);
           
-          // Check if menuSubType exists to determine if useSubType should be checked
           const existingSubType = data.menuSubType?.[index];
 
           return {
@@ -58,9 +63,8 @@ export default function EditSpacePage({ params }) {
             price: data.menuPrice?.[index] || '',
             description: data.menuDescription?.[index] || '',
             menuType: data.menuType?.[index] || '',
-            // Initialize the new field and flag
             menuSubType: existingSubType || '',
-            useSubType: !!existingSubType, // Checked if there is an existing sub-type
+            useSubType: !!existingSubType,
             smallFee: data.menuSmall?.[index] || '',
             mediumFee: data.menuMedium?.[index] || '',
             largeFee: data.menuLarge?.[index] || '',
@@ -81,6 +85,25 @@ export default function EditSpacePage({ params }) {
 
     fetchStall();
   }, [id, router]);
+
+  // --- NEW CUSTOM CATEGORY LOGIC ---
+  const handleAddCustomCategory = () => {
+    const newCategory = otherCategory.trim();
+    if (newCategory !== "" && !customCategories.includes(newCategory) && !foodTypes.includes(newCategory)) {
+      setCustomCategories(prev => [...prev, newCategory]);
+      setSelectedTypes(prev => [...prev, newCategory]); // Automatically select it
+      setOtherCategory(""); // Clear the input
+    }
+  };
+
+  const handleRemoveCustomCategory = (categoryToRemove) => {
+    // Only remove from customCategories if it exists there
+    setCustomCategories(prev => prev.filter(cat => cat !== categoryToRemove));
+    // Always deselect it if it's currently selected
+    setSelectedTypes(prev => prev.filter(t => t !== categoryToRemove));
+  };
+  // --- END NEW CUSTOM CATEGORY LOGIC ---
+
 
   const handleTypeChange = (e) => {
     const value = e.target.value;
@@ -118,7 +141,6 @@ export default function EditSpacePage({ params }) {
         price: '',
         description: '',
         menuType: '',
-        // Include the new fields
         menuSubType: '', 
         useSubType: false,
         smallFee: '',
@@ -146,6 +168,7 @@ export default function EditSpacePage({ params }) {
     formData.append('name', e.target.name.value);
     formData.append('description', e.target.description.value);
     formData.append('stallNumber', e.target.stallNumber.value);
+    // Send all selected types, including both foodTypes and customCategories
     formData.append('selectedTypes', JSON.stringify(selectedTypes));
 
     menuItems.forEach((item, index) => {
@@ -251,6 +274,7 @@ export default function EditSpacePage({ params }) {
           <div>
             <label className="block font-semibold mb-3">Select Categories</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {/* Combine permanent foodTypes and customCategories for display */}
               {foodTypes.concat(customCategories).map(type => (
                 <label key={type} className="flex items-center space-x-2 text-sm text-neutral-300">
                   <input
@@ -265,27 +289,53 @@ export default function EditSpacePage({ params }) {
               ))}
             </div>
 
-            {/* Add custom category input */}
-            <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2">
-              <span className="text-sm font-medium text-neutral-300">Add a custom category:</span>
-              <input
-                type="text"
-                placeholder="e.g., Filipino Cuisine"
-                value={otherCategory}
-                onChange={(e) => setOtherCategory(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && otherCategory.trim() !== "") {
-                    const newCategory = otherCategory.trim();
-                    if (!customCategories.includes(newCategory) && !foodTypes.includes(newCategory)) {
-                      setCustomCategories(prev => [...prev, newCategory]);
-                      setSelectedTypes(prev => [...prev, newCategory]);
+            {/* Add/Manage Custom Categories */}
+            <div className="mt-4 border border-neutral-700 rounded-lg p-4">
+              <label htmlFor="customCategoryInput" className="text-sm font-semibold mb-2 block">Add Custom Category</label>
+              <div className="flex gap-2">
+                <input
+                  id="customCategoryInput"
+                  type="text"
+                  placeholder="e.g., Filipino Cuisine, Comfort Food"
+                  value={otherCategory}
+                  onChange={(e) => setOtherCategory(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleAddCustomCategory();
+                      e.preventDefault();
                     }
-                    setOtherCategory("");
-                    e.preventDefault();
-                  }
-                }}
-                className="border text-neutral-200 bg-neutral-800 rounded px-3 py-2 text-sm w-full sm:w-60 focus:ring-pink-500 focus:border-pink-500"
-              />
+                  }}
+                  className="border text-neutral-200 bg-neutral-800 rounded px-3 py-2 text-sm flex-grow focus:ring-pink-500 focus:border-pink-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCustomCategory}
+                  className="bg-pink-600 text-white rounded px-4 py-2 text-sm hover:bg-pink-700 transition-colors duration-300 font-medium whitespace-nowrap"
+                  disabled={otherCategory.trim() === "" || customCategories.includes(otherCategory.trim()) || foodTypes.includes(otherCategory.trim())}
+                >
+                  Add
+                </button>
+              </div>
+
+              {customCategories.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-medium mb-2">Current Custom Categories:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {customCategories.map(category => (
+                      <span key={category} className="flex items-center bg-neutral-700 text-neutral-200 rounded-full px-3 py-1 text-xs">
+                        {category}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCustomCategory(category)}
+                          className="ml-2 text-red-400 hover:text-red-300 font-bold leading-none"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
