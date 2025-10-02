@@ -10,7 +10,7 @@ export default async function updateUser(_, formData) {
   const name = formData.get('name');
   const email = formData.get('email');
   const password = formData.get('password');
-  const phone = formData.get('phone');
+  let phone = formData.get('phone');
 
   try {
     const currentUser = await users.get(userId);
@@ -32,10 +32,18 @@ export default async function updateUser(_, formData) {
       }
     }
 
-    // Update phone number if it has changed
-    const currentPhoneWithoutPrefix = currentUser.phone?.replace('+63', '') || '';
-    if (phone && phone !== currentPhoneWithoutPrefix) {
-        await users.updatePhone(userId, `+63${phone}`);
+    // ✅ Always normalize phone before updating
+    if (phone) {
+      // Remove any existing +63 if user typed it
+      phone = phone.replace(/^(\+63|63)/, '');
+      // Ensure only digits
+      phone = phone.replace(/\D/g, '');
+      // Save with +63 prefix
+      const normalizedPhone = `+63${phone}`;
+      
+      if (normalizedPhone !== currentUser.phone) {
+        await users.updatePhone(userId, normalizedPhone);
+      }
     }
 
     // Update password if a new one is provided
@@ -48,24 +56,17 @@ export default async function updateUser(_, formData) {
     
     // If the email or password was updated, we need to create a new session.
     if ((email && email !== currentUser.email) || password) {
-      // Create a new session with the updated credentials.
-      // We use the new email (if changed) or the old one.
       const newEmail = email || currentUser.email;
-      
       const newSession = await account.createEmailPasswordSession(newEmail, password);
-
-      // Set the new session cookie.
-      cookies().set('appwrite-session', newSession.secret, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'strict',
-          expires: new Date(newSession.expire),
-          path: '/'
-      });
       
-      return { success: true };
+      cookies().set('appwrite-session', newSession.secret, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        expires: new Date(newSession.expire),
+        path: '/'
+      });
     }
-
 
     return { success: true };
   } catch (error) {
