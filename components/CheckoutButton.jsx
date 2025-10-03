@@ -22,9 +22,6 @@ const CheckoutButton = ({
   roomNames = {},
   onCheckoutSuccess,
   promos = [],
-  // NEW: special discount props
-  useSpecialCard = false,
-  specialDiscountPercent = 20,
 }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -65,33 +62,38 @@ const CheckoutButton = ({
   const handleConfirmPayment = async () => {
     setLoading(true);
     try {
+      // Prepare voucher map for the API
       const voucherMap = Object.fromEntries(
         Object.entries(activeVouchersPerRoom).map(([roomId, voucher]) => [
           roomId,
           {
+            // Note: combinedVoucherMap from OrderCartPage handles the title/discount logic
             title: voucher?.title,
             discount: voucher?.discount,
+            isSpecial: voucher?.isSpecial, // Include this flag for backend verification
             roomName: roomNames[roomId] || 'Unknown Room',
           },
         ])
       );
-
-      // NEW: include special discount in request
-      const specialDiscount = {
-        active: Boolean(useSpecialCard),
-        discount: Number(specialDiscountPercent) || 0,
-        title: 'PWD/Senior Discount',
-      };
+      
+      // Since discount is already calculated per item, the specialDiscount object 
+      // primarily serves as a flag for the backend if a PWD/Senior card was used.
+      // We check if any special discount promo was active across any room.
+      const isAnySpecialDiscountActive = Object.values(voucherMap).some(v => v.isSpecial);
 
       const response = await fetch('/api/xendit/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: cart,
+          items: cart, // This now includes discountAmount per item
           user,
           totalAmount: total,
           voucherMap,
-          specialDiscount,
+          specialDiscount: {
+            active: isAnySpecialDiscountActive,
+            title: 'PWD/Senior Discount',
+            // No need to pass percent, as item discounts are calculated
+          },
         }),
       });
 
@@ -117,23 +119,43 @@ const CheckoutButton = ({
     }
   };
 
-  const getRoomSubtotal = (roomId) => {
-    const items = groupedCart[roomId]?.items || [];
-    return items
-      .filter((item) => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`])
-      .reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
+  // --- NEW LOGIC FOR POPUP SUMMARY ---
+  const getRoomSummary = (roomId) => {
+    // Filter the enriched `cart` (passed as prop) for items belonging to this room
+    const roomItems = cart.filter(item => item.room_id === roomId);
+    
+    let subtotalBeforeDiscount = 0;
+    let totalDiscount = 0;
+    
+    roomItems.forEach(item => {
+      // Calculate item price before any discount
+      const itemPrice = Number(item.menuPrice) * (item.quantity || 1);
+      
+      subtotalBeforeDiscount += itemPrice;
+      totalDiscount += item.discountAmount || 0;
+    });
+
+    const discountedSubtotal = subtotalBeforeDiscount - totalDiscount;
+    const roomPromo = activeVouchersPerRoom[roomId];
+
+    return { 
+      items: roomItems, 
+      subtotal: subtotalBeforeDiscount, 
+      discountedSubtotal, 
+      totalDiscount,
+      promo: roomPromo
+    };
   };
 
-  // NEW: apply special discount if active, else voucher
-  const getDiscountedSubtotal = (roomId, subtotal) => {
-    if (useSpecialCard) {
-      const rate = (Number(specialDiscountPercent) || 0) / 100;
-      return subtotal - rate * subtotal;
+  // Group the enriched cart by room ID for the popup summary
+  const groupedCheckoutCart = cart.reduce((acc, item) => {
+    if (!acc[item.room_id]) {
+        acc[item.room_id] = [];
     }
-    const voucher = activeVouchersPerRoom[roomId];
-    const discount = voucher?.discount || 0;
-    return subtotal - (discount / 100) * subtotal;
-  };
+    acc[item.room_id].push(item);
+    return acc;
+  }, {});
+  // --- END NEW LOGIC ---
 
   return (
     <div className="bg-neutral-950 text-white w-full max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -177,29 +199,47 @@ const CheckoutButton = ({
 
             {/* ITEMS PER ROOM */}
             <div className="space-y-8">
-              {Object.entries(groupedCart).map(([roomId, { roomName, items }]) => {
-                const filteredItems = items.filter(
-                  (item) => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`]
-                );
-                if (filteredItems.length === 0) return null;
+              {Object.entries(groupedCheckoutCart).map(([roomId, items]) => {
+                const { subtotal, discountedSubtotal, totalDiscount, promo } = getRoomSummary(roomId);
+                
+                // Determine the discount label based on the active promo for the room
+                let discountLabel = '';
+                if (promo?.isSpecial) {
+                    discountLabel = `(${promo.discount}% - Special)`;
+                } else if (promo) {
+                    discountLabel = `(${promo.discount}% - ${promo.title})`;
+                } else if (totalDiscount > 0) {
+                    // This handles scenarios where only some items in a room got a special discount
+                    discountLabel = '(Item Discounts Applied)';
+                }
 
-                const subtotal = getRoomSubtotal(roomId);
-                const discountedSubtotal = getDiscountedSubtotal(roomId, subtotal);
-                const voucher = activeVouchersPerRoom[roomId];
 
                 return (
                   <div key={roomId} className="border-b border-neutral-700 pb-4">
                     <h3 className="text-lg font-bold text-white mb-2">
-                      {roomNames[roomId] || roomName}
+                      {roomNames[roomId] || groupedCart[roomId]?.roomName || 'Unknown Room'}
                     </h3>
 
                     <ul className="text-sm space-y-2">
-                      {filteredItems.map((item, idx) => (
+                      {items.map((item, idx) => (
                         <li key={`${item.menuName}-${item.size}-${idx}`} className="flex justify-between">
                           <span>
                             {item.menuName} {item.size && `(${item.size})`} × {item.quantity || 1}
                           </span>
-                          <span>{formatCurrency(item.menuPrice * (item.quantity || 1))}</span>
+                          <span className="flex flex-col items-end">
+                            {item.discountAmount > 0 ? (
+                                <>
+                                    <span className="line-through text-xs text-neutral-400">
+                                        {formatCurrency(Number(item.menuPrice) * (item.quantity || 1))}
+                                    </span>
+                                    <span className="font-semibold">
+                                        {formatCurrency(Number(item.menuPrice) * (item.quantity || 1) - item.discountAmount)}
+                                    </span>
+                                </>
+                            ) : (
+                                <span>{formatCurrency(Number(item.menuPrice) * (item.quantity || 1))}</span>
+                            )}
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -209,22 +249,13 @@ const CheckoutButton = ({
                         <span className="font-normal text-left float-left">Subtotal:</span>
                         {formatCurrency(subtotal)}
                       </p>
-                      {useSpecialCard ? (
+                      {totalDiscount > 0 && (
                         <p className="text-green-400">
                           <span className="font-normal text-left float-left">
-                            Discount ({specialDiscountPercent}% - Special):
+                            Discount {discountLabel}:
                           </span>
-                          −{formatCurrency(subtotal - discountedSubtotal)} (PWD/Senior)
+                          −{formatCurrency(totalDiscount)}
                         </p>
-                      ) : (
-                        voucher && (
-                          <p className="text-green-400">
-                            <span className="font-normal text-left float-left">
-                              Discount ({voucher.discount}%):
-                            </span>
-                            −{formatCurrency(subtotal - discountedSubtotal)} ({voucher.title})
-                          </p>
-                        )
                       )}
                       <p className="font-semibold text-cyan-400">
                         <span className="font-normal text-left float-left">Stall Total:</span>
@@ -259,18 +290,17 @@ const CheckoutButton = ({
               </ul>
             </div>
             {/* --- NEW NON-REFUNDABLE WARNING --- */}
-<div className="mt-8 flex items-start gap-3 text-red-400 bg-neutral-900 border border-red-500/50 p-4 rounded-lg shadow-md">
-  <FaExclamationTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
-  <p className="text-sm leading-relaxed">
-    <span className="font-semibold">Important:</span> Your confirmation signifies
-    acceptance of the order as displayed. <br />
-    <span className="italic text-red-300">
-    All completed transactions are considered final and cannot be refunded.
-    </span>
-  </p>
-</div>
- 
-
+            <div className="mt-8 flex items-start gap-3 text-red-400 bg-neutral-900 border border-red-500/50 p-4 rounded-lg shadow-md">
+              <FaExclamationTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
+              <p className="text-sm leading-relaxed">
+                <span className="font-semibold">Important:</span> Your confirmation signifies
+                acceptance of the order as displayed. <br />
+                <span className="italic text-red-300">
+                All completed transactions are considered final and cannot be refunded.
+                </span>
+              </p>
+            </div>
+            
             <div className="flex justify-center gap-4 mt-8">
               <button
                 onClick={() => setIsPopupOpen(false)}

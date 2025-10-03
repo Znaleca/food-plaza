@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { FaTrash, FaTag, FaIdCard, FaHandHoldingDollar, FaXmark } from 'react-icons/fa6'; // Added FaXmark
+import { FaTrash, FaTag, FaIdCard, FaHandHoldingDollar, FaXmark } from 'react-icons/fa6';
 import { Dialog } from '@headlessui/react';
 import VoucherWallet from '@/components/VoucherWallet';
 import CheckoutButton from '@/components/CheckoutButton';
@@ -368,6 +368,48 @@ const OrderCartPage = () => {
     window.location.reload(); 
   };
   
+  // =========================================================================
+  // ⭐ NEW LOGIC: Prepare the cart for checkout with per-item discounts
+  // =========================================================================
+  const checkoutCart = useMemo(() => {
+    const finalCart = [];
+    
+    cart.forEach(item => {
+      const itemKey = `${item.room_id}-${item.menuName}-${item.size || 'One-size'}`;
+      
+      // 1. Only include selected items
+      if (selectedItems[itemKey]) {
+        const voucher = activeVouchersPerRoom[item.room_id];
+        const isSpecialDiscountActiveForItem = activeSpecialDiscountItems[itemKey];
+        
+        const itemPrice = Number(item.menuPrice) * (item.quantity || 1);
+        let discountAmount = 0;
+
+        // 2. Determine the discount
+        if (voucher) {
+          // Voucher has priority
+          discountAmount = (voucher.discount / 100) * itemPrice;
+        } else if (isSpecialDiscountActiveForItem) { 
+          // Special Discount (20% off)
+          discountAmount = 0.2 * itemPrice;
+        }
+
+        // 3. Add the enriched item to the final cart
+        finalCart.push({
+          ...item,
+          // Crucial new property: the calculated discount for this item
+          discountAmount: discountAmount, 
+        });
+      }
+    });
+
+    return finalCart;
+  }, [cart, selectedItems, activeVouchersPerRoom, activeSpecialDiscountItems]);
+  // =========================================================================
+  // ⭐ END NEW LOGIC
+  // =========================================================================
+
+
   if (loadingAuth) {
     return (
       <div className="w-full min-h-screen bg-neutral-950 text-white flex items-center justify-center">
@@ -574,9 +616,7 @@ const OrderCartPage = () => {
 
               <div className="mt-8">
                 <CheckoutButton
-                  cart={cart.filter(item =>
-                    selectedItems[`${item.room_id}-${item.menuName}-${item.size || 'One-size'}`]
-                  )}
+                  cart={checkoutCart} // ⭐ Using the enriched cart with discountAmount
                   total={calculateTotal}
                   selectedItems={selectedItems}
                   groupedCart={groupedCart}
