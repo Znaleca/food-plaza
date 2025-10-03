@@ -1,4 +1,3 @@
-// checkout handler
 import { NextResponse } from 'next/server';
 import { groupBy } from 'lodash';
 import getOrCreateSubAccount from '@/app/actions/getOrCreateSubAccount';
@@ -40,7 +39,7 @@ function sanitizeForXendit(str) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { items, user, totalAmount, voucherMap } = body;
+    const { items, user, voucherMap } = body;
 
     // 1. Save order in Appwrite
     const orderResult = await processCheckout(items, null, voucherMap);
@@ -49,7 +48,7 @@ export async function POST(req) {
     }
     const orderId = orderResult.orderId;
 
-    // 2. Group items by stall and calculate totals
+    // 2. Group items by stall and calculate totals (per-item discounts applied)
     const groupedItems = groupBy(items, 'room_id');
     const splitRoutes = [];
     let finalDiscountedTotal = 0;
@@ -58,20 +57,23 @@ export async function POST(req) {
       const stallItems = groupedItems[roomId];
       const roomName = stallItems[0]?.room_name || `Stall ${roomId}`;
 
-      let stallTotal = stallItems.reduce(
-        (acc, item) => acc + (Number(item.menuPrice) * Number(item.quantity || 1)),
-        0
-      );
+      // ✅ Calculate subtotal and per-item discounts
+      let stallSubtotal = 0;
+      let stallDiscountedTotal = 0;
 
-      const voucher = voucherMap?.[roomId];
-      if (voucher?.discount) {
-        const discountRate = Number(voucher.discount) / 100;
-        stallTotal = stallTotal - stallTotal * discountRate;
-      }
+      stallItems.forEach((item) => {
+        const quantity = Number(item.quantity || 1);
+        const itemBase = Number(item.menuPrice) * quantity;
+        const itemDiscount = Number(item.discountAmount || 0);
 
-      const roundedTotal = Math.round(stallTotal);
+        stallSubtotal += itemBase;
+        stallDiscountedTotal += itemBase - itemDiscount;
+      });
+
+      const roundedTotal = Math.round(stallDiscountedTotal);
       finalDiscountedTotal += roundedTotal;
 
+      // ✅ Create or fetch sub-account for stall
       const subAccountId = await getOrCreateSubAccount(roomId, roomName);
 
       splitRoutes.push({
@@ -81,6 +83,7 @@ export async function POST(req) {
         reference_id: sanitizeForXendit(roomId),
       });
 
+      // ✅ Update stall balance in Appwrite
       const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUB_ACCOUNTS;
       const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
 

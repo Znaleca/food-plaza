@@ -3,7 +3,6 @@
 import { createAdminClient } from '@/config/appwrite';
 import checkAuth from './checkAuth';
 import { ID, Query } from 'node-appwrite';
-import calculateTotals from './calculateTotal';
 
 const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
   if (!cart || cart.length === 0) {
@@ -20,16 +19,36 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
 
     const userId = user.id;
 
-    const { cleanedCart, baseTotal, serviceCharge, discountAmount, finalTotal } =
-      await calculateTotals(cart, null, databases, voucherMap);
+    // ✅ Per-item discount-aware calculation
+    let baseTotal = 0;
+    let discountAmount = 0;
+    let finalTotal = 0;
 
-    const stringifiedItems = cleanedCart.map(item => JSON.stringify(item));
+    const cleanedCart = cart.map((item) => {
+      const quantity = Number(item.quantity || 1);
+      const itemBase = Number(item.menuPrice) * quantity;
+      const itemDiscount = Number(item.discountAmount || 0);
+
+      baseTotal += itemBase;
+      discountAmount += itemDiscount;
+      finalTotal += itemBase - itemDiscount;
+
+      return {
+        ...item,
+        quantity,
+        discountAmount: itemDiscount,
+      };
+    });
+
+    const serviceCharge = 0; // can add service charge later if needed
+
+    const stringifiedItems = cleanedCart.map((item) => JSON.stringify(item));
 
     // Build promo strings for display
     const promoStrings = Object.entries(voucherMap).map(([roomId, voucher]) => {
       const itemWithRoomName = cleanedCart.find(item => item.room_id === roomId);
       const roomName = itemWithRoomName?.room_name || `Room ${roomId}`;
-      return `${roomName} - ${voucher?.title} (${voucher?.discount}% off)`;
+      return `${roomName} - ${voucher?.title || 'Special Discount'} (${voucher?.discount || ''}% off)`;
     });
 
     // Update redeemed users for each voucher (skip special discounts)
@@ -44,8 +63,6 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
 
       if (promoDocs.total > 0) {
         const promo = promoDocs.documents[0];
-
-        // Ensure redeemed is always a string array
         const redeemedList = Array.isArray(promo.redeemed) ? [...promo.redeemed] : [];
 
         if (!redeemedList.includes(userId)) {
@@ -56,8 +73,8 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
             process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROMOS,
             promo.$id,
             {
-              redeemed: redeemedList, // now always a string array
-              updated_at: new Date().toISOString()
+              redeemed: redeemedList,
+              updated_at: new Date().toISOString(),
             }
           );
         }
