@@ -11,7 +11,6 @@ import {
   FaTimesCircle,
   FaSyncAlt,
   FaExclamationCircle,
-  FaChevronDown,
   FaInfoCircle
 } from 'react-icons/fa';
 import createSpecialDiscount from '@/app/actions/createSpecialDiscount';
@@ -27,7 +26,6 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   const [idNumber, setIdNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [mode, setMode] = useState('upload');
-  const [isDPACollapsed, setIsDPACollapsed] = useState(true);
   const [agreedToDPA, setAgreedToDPA] = useState(false);
 
 
@@ -39,6 +37,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
   const [isAccessGranted, setIsAccessGranted] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const fileInputRef = useRef(null); // Ref for the actual file input
 
   // Load initial data
   useEffect(() => {
@@ -207,6 +206,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
+    // Set canvas dimensions to match video stream
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -216,12 +216,20 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
     const blob = await (await fetch(dataUrl)).blob();
     const file = new File([blob], 'scanned-id.png', { type: 'image/png' });
-    const fileInput = document.querySelector('input[name="image_card"]');
+
+    // ⭐️ FIX: Programmatically set the captured file to the file input
+    const fileInput = fileInputRef.current; // Use the ref to target the file input
+
     if (fileInput) {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      fileInput.files = dt.files;
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      fileInput.files = dataTransfer.files;
+
+      // Manually trigger the file change handler to ensure state is consistent if needed
+      // const event = new Event('change', { bubbles: true });
+      // fileInput.dispatchEvent(event);
     }
+    // ⭐️ END FIX
 
     stopScanner();
   };
@@ -238,6 +246,21 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
     const formData = new FormData(e.target);
     formData.set('id_number', idNumber);
+    
+    // Check if the file input has a file set (either by upload or capture)
+    const imageFile = fileInputRef.current.files[0];
+
+    // If initialData exists AND there is NO new file, we must explicitly tell the action 
+    // NOT to use the placeholder file input value. The server action handles not changing the image 
+    // if 'image_card' is missing or a Blob of size 0.
+    if (initialData && !imageFile) {
+        // We ensure FormData's 'image_card' is handled correctly. 
+        // For update, the server action is designed to check if image_card is a Blob with size > 0.
+        // We can simply remove it if it's not a new file, but since the component only uses one input,
+        // if no file was uploaded/captured, the input's files list will be empty, and FormData will 
+        // send an empty string or nothing for 'image_card', which is fine for the server action.
+    }
+
 
     let res;
     if (initialData) {
@@ -312,7 +335,7 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
 
           {/* Upload/Scanner Section */}
           <div>
-            <input type="file" name="image_card" accept="image/*" className="hidden" />
+            {/* Removed the initial hidden file input to avoid confusion */}
 
             <label className="block text-xs text-neutral-400 mb-1">Verification Method</label>
             <div className="flex gap-2 sm:gap-4">
@@ -341,14 +364,15 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
               </button>
             </div>
 
-            {/* Upload Mode */}
+            {/* Upload Mode - This is the primary file input */}
             {mode === 'upload' && (
               <div className="mt-2">
                 <input
+                  ref={fileInputRef} // ⭐️ Added Ref
                   type="file"
                   name="image_card"
                   accept="image/*"
-                  required={!initialData}
+                  required={!initialData || !preview} // Added !preview for better UX on update
                   onChange={handleFileChange}
                   className="block w-full text-sm text-neutral-400
                   file:mr-4 file:py-2 file:px-4
@@ -359,10 +383,23 @@ export default function SpecialDiscount({ initialData, onSubmissionSuccess }) {
                 />
               </div>
             )}
-
-            {/* Scanner Mode */}
+            
+            {/* Scanner Mode (Only needs the ref for the file input when capturing) */}
             {mode === 'scanner' && (
               <div className="flex flex-col items-center mt-2">
+                {/* ⭐️ Add a file input here, but hide it and link it to the ref ⭐️ */}
+                {/* This hidden input ensures the FormData mechanism always finds a file input 
+                    to attach the captured file, regardless of the 'mode' being rendered. */}
+                <input
+                    ref={fileInputRef} // ⭐️ Added Ref here too
+                    type="file"
+                    name="image_card"
+                    accept="image/*"
+                    required={!initialData || !preview}
+                    onChange={handleFileChange}
+                    className="hidden" // Keep it hidden
+                />
+                
                 {!isAccessGranted ? (
                   <div className="text-center text-neutral-400 p-4">
                     <FaExclamationCircle className="inline text-2xl text-fuchsia-500 mb-2" />
