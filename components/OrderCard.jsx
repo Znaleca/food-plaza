@@ -139,13 +139,7 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
           };
         }
 
-        // Add index and ensure discountAmount is a number
-        grouped[roomId].items.push({ 
-          ...item, 
-          index,
-          discountAmount: Number(item.discountAmount || 0),
-          quantity: Number(item.quantity || 1) // Ensure quantity is a number
-        });
+        grouped[roomId].items.push({ ...item, index });
       } catch {
         // skip broken item
       }
@@ -153,32 +147,8 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
     return grouped;
   };
 
-  /**
-   * Calculates the base subtotal, total discount from per-item deals, and the discounted subtotal.
-   * @returns {{baseSubtotal: number, itemDiscount: number, discountedSubtotal: number}}
-   */
-  const getRoomTotals = (items) => {
-    let baseSubtotal = 0;
-    let itemDiscount = 0;
-
-    items.forEach(item => {
-      const price = Number(item.menuPrice);
-      const quantity = item.quantity;
-      const discount = item.discountAmount;
-
-      const itemBase = price * quantity;
-      baseSubtotal += itemBase;
-      itemDiscount += discount;
-    });
-
-    const discountedSubtotal = baseSubtotal - itemDiscount;
-    
-    return {
-      baseSubtotal,
-      itemDiscount,
-      discountedSubtotal,
-    };
-  };
+  const getRoomSubtotal = (items) =>
+    items.reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
 
   const groupedItems = parseItemsGroupedByRoom();
 
@@ -193,8 +163,8 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
 
       roomPromos[roomName] = {
         label: promoStr,
-        discount, // This is the percentage for the stall/voucher discount
-        promoTitle // This is the name of the voucher
+        discount,
+        promoTitle
       };
     });
     return roomPromos;
@@ -202,26 +172,19 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
 
   const roomPromos = parsePromos();
 
-  let baseTotal = 0; // Grand total before any discounts (for display)
-  let totalItemDiscount = 0; // Grand total of all per-item discounts
-  let totalVoucherDiscount = 0; // Grand total of all per-stall discounts
-  let finalTotal = 0; // Grand total after all discounts
+  let baseTotal = 0;
+  let finalTotal = 0;
 
   Object.values(groupedItems).forEach(({ roomName, items }) => {
-    const { baseSubtotal, itemDiscount, discountedSubtotal: subtotalAfterItemDiscount } = getRoomTotals(items);
-    
-    baseTotal += baseSubtotal;
-    totalItemDiscount += itemDiscount;
+    const subtotal = getRoomSubtotal(items);
+    baseTotal += subtotal;
 
-    let totalForStall = subtotalAfterItemDiscount;
-
+    let discounted = subtotal;
     const promo = roomPromos[roomName];
     if (promo) {
-      const voucherDiscountAmount = (promo.discount / 100) * subtotalAfterItemDiscount;
-      totalVoucherDiscount += voucherDiscountAmount;
-      totalForStall = subtotalAfterItemDiscount - voucherDiscountAmount;
+      discounted = subtotal - (promo.discount / 100) * subtotal;
     }
-    finalTotal += totalForStall;
+    finalTotal += discounted;
   });
   
   return (
@@ -243,13 +206,12 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
 
         <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
           {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => {
-            const { baseSubtotal, itemDiscount, discountedSubtotal } = getRoomTotals(items);
+            const subtotal = getRoomSubtotal(items);
             const promoEntry = roomPromos[roomName];
-            const voucherDiscountPercent = promoEntry?.discount || 0;
+            const discount = promoEntry?.discount || 0;
             const promoTitle = promoEntry?.promoTitle || '';
-            const voucherDiscountAmount = (voucherDiscountPercent / 100) * discountedSubtotal;
 
-            const stallFinalTotal = discountedSubtotal - voucherDiscountAmount;
+            const discounted = subtotal - (discount / 100) * subtotal;
 
             return (
               <div key={roomId} className="border-b border-gray-200 pb-4">
@@ -259,26 +221,14 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
                     const itemRated = order.rated?.[item.index];
                     const itemRating = order.rating?.[item.index];
                     const itemComment = order.comment?.[item.index];
-                    const itemBasePrice = Number(item.menuPrice) * item.quantity;
 
                     return (
-                      <li key={item.index} className="pb-2">
+                      <li key={item.index}>
                         <div className="flex justify-between">
                           <span>{item.menuName} {item.size && `(${item.size})`} × {item.quantity}</span>
-                          <span className={`${item.discountAmount > 0 ? 'text-green-600' : 'text-black'}`}>
-                            ₱{(itemBasePrice - item.discountAmount).toFixed(2)}
-                          </span>
+                          <span>₱{(item.menuPrice * item.quantity).toFixed(2)}</span>
                         </div>
-                        {item.discountAmount > 0 && (
-                          <div className="flex justify-between text-xs text-green-500 italic">
-                             <span>  - Item Discount</span>
-                             <span>- ₱{item.discountAmount.toFixed(2)}</span>
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-500">
-                          <span className="line-through mr-1">₱{itemBasePrice.toFixed(2)}</span>
-                          <span className="text-gray-600">| Stall: {item.room_name || 'N/A'}</span>
-                        </div>
+                        <div className="text-xs text-gray-500">Stall: {item.room_name || 'N/A'}</div>
                         <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.PENDING)}</div>
 
                         {/* Conditionally hide the rating buttons if in read-only mode */}
@@ -319,39 +269,10 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
                   })}
                 </ul>
 
-                <div className="mt-4 text-sm border-t border-dashed border-gray-300 pt-2 space-y-1">
-                  <div className="flex justify-between">
-                    <p>Base Subtotal:</p>
-                    <p>₱{baseSubtotal.toFixed(2)}</p>
-                  </div>
-                  {itemDiscount > 0 && (
-                    <div className="flex justify-between text-red-500 font-semibold">
-                      <p>- Item Discounts:</p>
-                      <p>- ₱{itemDiscount.toFixed(2)}</p>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-semibold border-b border-dashed border-gray-300 pb-1">
-                    <p>Subtotal (After Item Discounts):</p>
-                    <p>₱{discountedSubtotal.toFixed(2)}</p>
-                  </div>
-                  {voucherDiscountPercent > 0 && (
-                    <>
-                      <div className="flex justify-between text-red-500 font-semibold">
-                        <p>- Voucher Discount ({voucherDiscountPercent}%{promoTitle && ` - ${promoTitle}`}):</p>
-                        <p>- ₱{voucherDiscountAmount.toFixed(2)}</p>
-                      </div>
-                      <div className="flex justify-between font-bold text-pink-600 pt-1">
-                        <p>Stall Total:</p>
-                        <p>₱{stallFinalTotal.toFixed(2)}</p>
-                      </div>
-                    </>
-                  )}
-                  {voucherDiscountPercent === 0 && (
-                     <div className="flex justify-between font-bold text-pink-600 pt-1">
-                        <p>Stall Total:</p>
-                        <p>₱{stallFinalTotal.toFixed(2)}</p>
-                      </div>
-                  )}
+                <div className="mt-2 text-sm">
+                  <p>Subtotal: ₱{subtotal.toFixed(2)}</p>
+                  {discount > 0 && <p className="text-green-500">Stall Discount: {discount}% ({promoTitle})</p>}
+                  <p className="font-semibold text-pink-500">Stall Total: ₱{discounted.toFixed(2)}</p>
                 </div>
               </div>
             );
@@ -359,26 +280,28 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
         </div>
 
         <div className="text-center mt-6">
-          <p className="text-sm text-gray-500"> Base Total (Before All Discounts):</p>
+          <p className="text-sm text-gray-500"> Base Total:</p>
           <p className="text-lg font-bold text-gray-800">₱{baseTotal.toFixed(2)}</p>
 
-          <div className="mt-4 text-sm text-left mx-auto max-w-xs text-gray-700 space-y-1">
-            <p className="font-semibold text-center text-pink-500 mb-2 border-b border-dashed border-gray-300 pb-1">Order Summary</p>
-            <div className="flex justify-between">
-              <span>Item Discounts:</span>
-              <span className="text-red-600 font-semibold">- ₱{totalItemDiscount.toFixed(2)}</span>
+          {(Object.keys(roomPromos).length > 0) && (
+            <div className="mt-4 text-sm text-left mx-auto max-w-xs text-gray-700">
+              <p className="font-semibold text-center text-pink-500 mb-2">Applied Promos:</p>
+              <ul className="space-y-1">
+                {Object.entries(roomPromos).map(([roomName, promo], idx) => (
+                  <li key={idx} className="flex justify-between border-b border-dashed border-gray-300 pb-1">
+                    <span className="font-medium text-black">{roomName}</span>
+                    <span className="text-pink-600 font-semibold">
+                      {promo.discount}% {promo.promoTitle && `(${promo.promoTitle})`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            {totalVoucherDiscount > 0 && (
-              <div className="flex justify-between">
-                <span>Voucher Discounts:</span>
-                <span className="text-red-600 font-semibold">- ₱{totalVoucherDiscount.toFixed(2)}</span>
-              </div>
-            )}
-          </div>
+          )}
 
-          <div className="mt-6 border-t border-dashed border-gray-400 pt-4">
+          <div className="mt-6">
             <p className="text-sm text-gray-500">Final Total:</p>
-            <p className="text-2xl font-bold text-pink-600">₱{finalTotal.toFixed(2)}</p>
+            <p className="text-lg font-bold text-pink-600">₱{finalTotal.toFixed(2)}</p>
           </div>
         </div>
       </div>
