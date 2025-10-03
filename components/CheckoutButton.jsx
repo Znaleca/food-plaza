@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { FaPhone } from 'react-icons/fa';
+import { FaPhone, FaExclamationTriangle } from 'react-icons/fa';
 import checkAuth from '@/app/actions/checkAuth';
 
 // Format PHP currency
@@ -258,6 +258,18 @@ const CheckoutButton = ({
                 ))}
               </ul>
             </div>
+            {/* --- NEW NON-REFUNDABLE WARNING --- */}
+<div className="mt-8 flex items-start gap-3 text-red-400 bg-neutral-900 border border-red-500/50 p-4 rounded-lg shadow-md">
+  <FaExclamationTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
+  <p className="text-sm leading-relaxed">
+    <span className="font-semibold">Important:</span> Your confirmation signifies
+    acceptance of the order as displayed. <br />
+    <span className="italic text-red-300">
+    All completed transactions are considered final and cannot be refunded.
+    </span>
+  </p>
+</div>
+ 
 
             <div className="flex justify-center gap-4 mt-8">
               <button
