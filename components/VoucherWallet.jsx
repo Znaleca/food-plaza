@@ -185,27 +185,29 @@ const VoucherWallet = ({ onVoucherUsed, roomIdFilter, usedVoucherStates, setUsed
                     {isActive && !isSoldOut ? (
                       !isUsed ? (
                         <UseVoucherButton
-                          minOrders={voucher.min_orders || 0}
-                          roomSubtotal={roomSubtotal}
-                          onUsed={() => {
-                            setUsedVoucherStates((prev) => {
-                              const newState = Object.fromEntries(
-                                Object.entries(prev).map(([id, used]) => [
-                                  id,
-                                  stallData[id]?.id === roomIdFilter ? false : used
-                                ])
-                              );
-                              newState[voucher.$id] = true;
-                              return newState;
-                            });
-                            onVoucherUsed?.({
-                              $id: voucher.$id,
-                              discount: voucher.discount,
-                              title: voucher.title,
-                              min_orders: voucher.min_orders || 0,
-                            });
-                          }}
-                        />
+  voucherId={voucher.$id}   // ✅ this was missing
+  minOrders={voucher.min_orders || 0}
+  roomSubtotal={roomSubtotal}
+  onUsed={() => {
+    setUsedVoucherStates((prev) => {
+      const newState = { ...prev };
+      Object.keys(newState).forEach((id) => {
+        if (stallData[id]?.id === roomIdFilter) {
+          newState[id] = false;
+        }
+      });
+      newState[voucher.$id] = true;
+      return newState;
+    });
+    onVoucherUsed?.({
+      $id: voucher.$id,
+      discount: voucher.discount,
+      title: voucher.title,
+      min_orders: voucher.min_orders || 0,
+    });
+  }}
+/>
+
                       ) : (
                         <CancelVoucherButton
                           onCancelled={() => {
