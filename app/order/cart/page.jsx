@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { FaTrash, FaTag, FaIdCard } from 'react-icons/fa6';
+import { useEffect, useState, useMemo } from 'react';
+import { FaTrash, FaTag, FaIdCard, FaHandHoldingDollar, FaXmark } from 'react-icons/fa6'; // Added FaXmark
 import { Dialog } from '@headlessui/react';
 import VoucherWallet from '@/components/VoucherWallet';
 import CheckoutButton from '@/components/CheckoutButton';
@@ -18,8 +18,8 @@ const OrderCartPage = () => {
   const [cart, setCart] = useState([]);
   const [groupedCart, setGroupedCart] = useState({});
   const [activeVouchersPerRoom, setActiveVouchersPerRoom] = useState({});
-  const [activeSpecialDiscountPerRoom, setActiveSpecialDiscountPerRoom] = useState({});
   const [selectedItems, setSelectedItems] = useState({});
+  const [activeSpecialDiscountItems, setActiveSpecialDiscountItems] = useState({}); 
   const [selectAll, setSelectAll] = useState(false);
   const [selectAllPerRoom, setSelectAllPerRoom] = useState({});
   const [roomNames, setRoomNames] = useState({});
@@ -87,9 +87,11 @@ const OrderCartPage = () => {
             0
           );
           if (roomSubtotal < voucher.min_orders) {
-            await useVoucher(voucher.$id, false);
+            // Automatically cancel voucher if min_orders is not met
+            await useVoucher(voucher.$id, false); 
             setActiveVouchersPerRoom((prev) => ({ ...prev, [roomId]: null }));
             setUsedVoucherStates((prev) => ({ ...prev, [voucher.$id]: false }));
+            alert(`Voucher "${voucher.title}" has been automatically removed from ${roomNames[roomId] || 'this room'} because the minimum order requirement of ₱${voucher.min_orders.toFixed(2)} is no longer met.`);
           }
         }
       }
@@ -134,6 +136,13 @@ const OrderCartPage = () => {
       (item) => !(item.room_id === roomId && item.menuName === menuName && item.size === size)
     );
     updateCartStorage(updatedCart);
+    
+    const itemKey = `${roomId}-${menuName}-${size || 'One-size'}`;
+    setActiveSpecialDiscountItems(prev => {
+      const updated = { ...prev };
+      delete updated[itemKey];
+      return updated;
+    });
   };
 
   const handleVoucherUsed = (voucher) => {
@@ -142,10 +151,15 @@ const OrderCartPage = () => {
         ...prev,
         [openVoucherRoom]: voucher,
       }));
-      setActiveSpecialDiscountPerRoom((prev) => ({
-        ...prev,
-        [openVoucherRoom]: false,
-      }));
+      // When a voucher is applied to a room, remove any item-level special discounts in that room
+      setActiveSpecialDiscountItems(prev => {
+        const updated = { ...prev };
+        (groupedCart[openVoucherRoom]?.items || []).forEach(item => {
+            const key = `${openVoucherRoom}-${item.menuName}-${item.size || 'One-size'}`;
+            delete updated[key];
+        });
+        return updated;
+      });
     } else {
       setActiveVouchersPerRoom((prev) => ({
         ...prev,
@@ -155,28 +169,50 @@ const OrderCartPage = () => {
     setOpenVoucherRoom(null);
   };
 
-  const handleToggleSpecialCardForRoom = (roomId) => {
-    setActiveSpecialDiscountPerRoom((prev) => {
-      const newActive = { ...prev };
-      const isCurrentlyActive = newActive[roomId];
-      newActive[roomId] = !isCurrentlyActive;
-
-      if (!isCurrentlyActive) {
-        setActiveVouchersPerRoom((prevVouchers) => {
-          const newVouchers = { ...prevVouchers };
-          newVouchers[roomId] = null;
-          return newVouchers;
+  // NEW HANDLER: To cancel an active voucher
+  const handleCancelVoucher = async (roomId, voucherId) => {
+    try {
+        await useVoucher(voucherId, false); // API call to release the voucher
+        setActiveVouchersPerRoom(prev => ({ ...prev, [roomId]: null }));
+        setUsedVoucherStates(prev => {
+            const updated = { ...prev };
+            updated[voucherId] = false;
+            return updated;
         });
-      }
-      return newActive;
+    } catch (error) {
+        console.error("Failed to cancel voucher:", error);
+        alert("Failed to cancel voucher. Please try again.");
+    }
+  };
+
+
+  const handleToggleSpecialDiscountItem = (roomId, menuName, size = 'One-size') => {
+    const key = `${roomId}-${menuName}-${size}`;
+    
+    const voucher = activeVouchersPerRoom[roomId];
+    if (voucher) {
+        alert("A voucher is already active for this room. Please cancel the voucher to apply a Special Discount.");
+        return;
+    }
+
+    if (!isAuthenticated || !specialDiscountData) {
+        return;
+    }
+    
+    setActiveSpecialDiscountItems((prev) => {
+        const updated = { ...prev };
+        updated[key] = !updated[key];
+        if (!updated[key]) {
+            delete updated[key];
+        }
+        return updated;
     });
   };
 
-  const calculateTotal = () => {
+  const calculateTotal = useMemo(() => {
     let total = 0;
     Object.entries(groupedCart).forEach(([roomId, { items }]) => {
       const voucher = activeVouchersPerRoom[roomId];
-      const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
 
       items.forEach(item => {
         const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
@@ -186,7 +222,7 @@ const OrderCartPage = () => {
 
           if (voucher) {
             discount = (voucher.discount / 100) * itemPrice;
-          } else if (isSpecialDiscountActive) {
+          } else if (activeSpecialDiscountItems[key]) { 
             discount = 0.2 * itemPrice;
           }
 
@@ -195,13 +231,21 @@ const OrderCartPage = () => {
       });
     });
     return total;
-  };
+  }, [groupedCart, selectedItems, activeVouchersPerRoom, activeSpecialDiscountItems]);
 
   const handleCheckboxChange = (roomId, menuName, size = 'One-size') => {
     const key = `${roomId}-${menuName}-${size}`;
     setSelectedItems((prev) => {
       const updated = { ...prev };
       updated[key] ? delete updated[key] : (updated[key] = true);
+      
+      if (!updated[key] && activeSpecialDiscountItems[key]) {
+          setActiveSpecialDiscountItems(prevSpecial => {
+              const updatedSpecial = { ...prevSpecial };
+              delete updatedSpecial[key];
+              return updatedSpecial;
+          });
+      }
       return updated;
     });
   };
@@ -216,6 +260,14 @@ const OrderCartPage = () => {
         (groupedCart[roomId]?.items || []).forEach((item) => {
           const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
           isSelected ? (updatedItems[key] = true) : delete updatedItems[key];
+          
+          if (!isSelected) {
+              setActiveSpecialDiscountItems(prevSpecial => {
+                  const updatedSpecial = { ...prevSpecial };
+                  delete updatedSpecial[key];
+                  return updatedSpecial;
+              });
+          }
         });
         return updatedItems;
       });
@@ -232,6 +284,8 @@ const OrderCartPage = () => {
         const key = `${item.room_id}-${item.menuName}-${item.size || 'One-size'}`;
         allItems[key] = true;
       });
+    } else {
+        setActiveSpecialDiscountItems({});
     }
     setSelectedItems(allItems);
     setSelectAllPerRoom(
@@ -243,41 +297,75 @@ const OrderCartPage = () => {
     setSelectAll(newSelectAll);
   };
 
-  const combinedVoucherMap = {};
-  Object.keys(groupedCart).forEach(roomId => {
-    const voucher = activeVouchersPerRoom[roomId];
-    const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
-    const roomSubtotal = groupedCart[roomId].items.reduce((sum, item) => {
-      const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
-      if (selectedItems[key]) {
-        return sum + Number(item.menuPrice) * (item.quantity || 1);
+  const combinedVoucherMap = useMemo(() => {
+    const map = {};
+    Object.keys(groupedCart).forEach(roomId => {
+      const voucher = activeVouchersPerRoom[roomId];
+      
+      const hasActiveSpecialDiscountItem = groupedCart[roomId].items.some(item => {
+        const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
+        return selectedItems[key] && activeSpecialDiscountItems[key];
+      });
+
+      if (voucher) {
+        map[roomId] = voucher;
+      } else if (hasActiveSpecialDiscountItem) {
+        map[roomId] = {
+          title: 'Special Discount Applied',
+          discount: 20,
+          roomName: roomNames[roomId] || groupedCart[roomId].roomName,
+          isSpecial: true,
+        };
       }
-      return sum;
-    }, 0);
-
-    if (voucher) {
-      combinedVoucherMap[roomId] = voucher;
-    } else if (isSpecialDiscountActive && roomSubtotal > 0) {
-      combinedVoucherMap[roomId] = {
-        title: 'Special Discount',
-        discount: 20,
-        roomName: roomNames[roomId] || groupedCart[roomId].roomName,
-        isSpecial: true,
-      };
-    }
-  });
-
+    });
+    return map;
+  }, [groupedCart, activeVouchersPerRoom, activeSpecialDiscountItems, selectedItems, roomNames]);
+  
   const promos = Object.entries(combinedVoucherMap).map(([roomId, voucher]) => {
     return {
       roomName: roomNames[roomId] || groupedCart[roomId].roomName,
       name: voucher.title,
       discount: voucher.discount,
+      isSpecial: voucher.isSpecial || false,
     };
   });
+  
+  const getRoomSubtotals = (roomId, items) => {
+    const voucher = activeVouchersPerRoom[roomId];
+    let roomSubtotal = 0;
+    let roomDiscount = 0;
+
+    items.forEach(item => {
+      const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
+      if (selectedItems[key]) {
+        let itemPrice = Number(item.menuPrice) * (item.quantity || 1);
+        roomSubtotal += itemPrice;
+        
+        let itemDiscount = 0;
+        if (voucher) {
+          itemDiscount = (voucher.discount / 100) * itemPrice;
+        } else if (activeSpecialDiscountItems[key]) {
+          itemDiscount = 0.2 * itemPrice;
+        }
+        roomDiscount += itemDiscount;
+      }
+    });
+
+    const discountedSubtotal = roomSubtotal - roomDiscount;
+    let discountLabel = null;
+
+    if (voucher) {
+      discountLabel = `${voucher.discount}% off with "${voucher.title}"`;
+    } else if (roomDiscount > 0) {
+      discountLabel = `Discount applied to ${promos.find(p => p.roomName === (roomNames[roomId] || groupedCart[roomId].roomName) && p.isSpecial)?.name || 'selected items'}`;
+    }
+
+    return { discountedSubtotal, discountLabel, voucher };
+  };
 
   const handleSubmissionSuccess = () => {
     setOpenSpecialDiscount(false);
-    window.location.reload();
+    window.location.reload(); 
   };
   
   if (loadingAuth) {
@@ -318,31 +406,9 @@ const OrderCartPage = () => {
             <div className="max-w-7xl mx-auto space-y-12">
               {Object.entries(groupedCart).map(([roomId, { roomName, items }]) => {
                 const isRoomSelected = selectAllPerRoom[roomId] || false;
-                const isSpecialDiscountActive = activeSpecialDiscountPerRoom[roomId];
-                const voucher = activeVouchersPerRoom[roomId];
-                
                 const hasSelectedItems = items.some(item => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`]);
                 
-                const roomSubtotal = items.reduce((sum, item) => {
-                  const key = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
-                  if (selectedItems[key]) {
-                    return sum + Number(item.menuPrice) * (item.quantity || 1);
-                  }
-                  return sum;
-                }, 0);
-
-                let discountedSubtotal = 0;
-                let discountLabel = null;
-
-                if (voucher) {
-                  discountedSubtotal = roomSubtotal - (voucher.discount / 100) * roomSubtotal;
-                  discountLabel = `${voucher.discount}% off with "${voucher.title}"`;
-                } else if (isSpecialDiscountActive) {
-                  discountedSubtotal = roomSubtotal * 0.8;
-                  discountLabel = `20% off (Special Discount)`;
-                } else {
-                  discountedSubtotal = roomSubtotal;
-                }
+                const { discountedSubtotal, discountLabel, voucher } = getRoomSubtotals(roomId, items);
 
                 return (
                   <div key={roomId} className="p-6 rounded-xl bg-neutral-900 border border-neutral-800 shadow-lg">
@@ -359,19 +425,21 @@ const OrderCartPage = () => {
                       <div className="flex items-center space-x-4">
                         {hasSelectedItems && isAuthenticated && (
                           <>
-                            <button
-                              onClick={() => setOpenVoucherRoom(roomId)}
-                              className="text-sm font-medium text-cyan-400 hover:text-fuchsia-500 transition-colors duration-200 flex items-center"
-                            >
-                              <FaTag className="mr-2" /> Apply Voucher
-                            </button>
-                            {specialDiscountData && (
+                            {voucher ? (
+                              // CANCEL VOUCHER BUTTON
                               <button
-                                onClick={() => handleToggleSpecialCardForRoom(roomId)}
-                                className={`text-sm font-medium transition-colors duration-200 flex items-center ${activeSpecialDiscountPerRoom[roomId] ? 'text-fuchsia-500' : 'text-pink-600 hover:text-fuchsia-500'}`}
+                                onClick={() => handleCancelVoucher(roomId, voucher.$id)}
+                                className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors duration-200 flex items-center"
                               >
-                                <FaIdCard className="mr-2" />
-                                {activeSpecialDiscountPerRoom[roomId] ? 'Cancel Special' : 'Apply Special'}
+                                <FaXmark className="mr-2" /> Cancel Voucher
+                              </button>
+                            ) : (
+                              // APPLY VOUCHER BUTTON
+                              <button
+                                onClick={() => setOpenVoucherRoom(roomId)}
+                                className="text-sm font-medium text-cyan-400 hover:text-fuchsia-500 transition-colors duration-200 flex items-center"
+                              >
+                                <FaTag className="mr-2" /> Apply Voucher
                               </button>
                             )}
                           </>
@@ -389,6 +457,7 @@ const OrderCartPage = () => {
                       {items.map((item) => {
                         const itemKey = `${roomId}-${item.menuName}-${item.size || 'One-size'}`;
                         const isItemSelected = selectedItems[itemKey];
+                        const isSpecialDiscountActiveForItem = activeSpecialDiscountItems[itemKey];
 
                         let itemPrice = Number(item.menuPrice) * (item.quantity || 1);
                         let finalPrice = itemPrice;
@@ -397,7 +466,7 @@ const OrderCartPage = () => {
                         if (isItemSelected && voucher) {
                           finalPrice = itemPrice - (voucher.discount / 100) * itemPrice;
                           discounted = true;
-                        } else if (isItemSelected && isSpecialDiscountActive) {
+                        } else if (isItemSelected && isSpecialDiscountActiveForItem) {
                           finalPrice = itemPrice * 0.8;
                           discounted = true;
                         }
@@ -405,14 +474,25 @@ const OrderCartPage = () => {
                         return (
                           <div
                             key={itemKey}
-                            className="bg-neutral-800 rounded-lg p-4 flex flex-col items-center text-center shadow-inner"
+                            className={`bg-neutral-800 rounded-lg p-4 flex flex-col items-center text-center shadow-inner relative ${isSpecialDiscountActiveForItem && !voucher ? 'border-2 border-fuchsia-500' : ''}`}
                           >
-                            <label className="flex items-center w-full justify-end mb-2">
+                            <label className="flex items-center w-full justify-between mb-2">
+                              {/* Special Discount Toggle (Visible only if no room voucher is active) */}
+                              {specialDiscountData && isAuthenticated && isItemSelected && !voucher && (
+                                <button
+                                  onClick={() => handleToggleSpecialDiscountItem(roomId, item.menuName, item.size)}
+                                  className={`p-1 rounded-full transition-colors duration-200 ${isSpecialDiscountActiveForItem ? 'bg-fuchsia-500 text-white' : 'bg-neutral-700 text-gray-400 hover:text-fuchsia-500'}`}
+                                  title={isSpecialDiscountActiveForItem ? 'Cancel Special Discount' : 'Apply Special Discount (20% Off)'}
+                                >
+                                  <FaHandHoldingDollar size={14} />
+                                </button>
+                              )}
+                              
                               <input
                                 type="checkbox"
                                 checked={isItemSelected || false}
                                 onChange={() => handleCheckboxChange(roomId, item.menuName, item.size)}
-                                className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent"
+                                className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent ml-auto"
                               />
                             </label>
                             {item.menuImage && (
@@ -452,6 +532,11 @@ const OrderCartPage = () => {
                               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
                                 ₱{finalPrice.toFixed(2)}
                               </span>
+                              {isSpecialDiscountActiveForItem && !voucher && (
+                                <span className="text-xs text-fuchsia-400 mt-1 font-medium">
+                                  20% Special Discount
+                                </span>
+                              )}
                             </div>
                             <button
                               onClick={() => removeItem(roomId, item.menuName, item.size)}
@@ -471,7 +556,7 @@ const OrderCartPage = () => {
 
           {cart.length > 0 && (
             <div className="max-w-7xl mx-auto mt-12 text-center text-3xl font-extrabold tracking-tight">
-              Total: <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">₱{calculateTotal().toFixed(2)}</span>
+              Total: <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">₱{calculateTotal.toFixed(2)}</span>
             </div>
           )}
 
@@ -492,7 +577,7 @@ const OrderCartPage = () => {
                   cart={cart.filter(item =>
                     selectedItems[`${item.room_id}-${item.menuName}-${item.size || 'One-size'}`]
                   )}
-                  total={calculateTotal()}
+                  total={calculateTotal}
                   selectedItems={selectedItems}
                   groupedCart={groupedCart}
                   activeVouchersPerRoom={combinedVoucherMap}
@@ -502,11 +587,12 @@ const OrderCartPage = () => {
                     setCart([]);
                     setGroupedCart({});
                     setActiveVouchersPerRoom({});
-                    setActiveSpecialDiscountPerRoom({});
+                    setActiveSpecialDiscountItems({});
                     setSelectedItems({});
                     setSelectAll(false);
                     setSelectAllPerRoom({});
                     setCartCount(0);
+                    localStorage.removeItem('cart');
                   }}
                 />
               </div>
