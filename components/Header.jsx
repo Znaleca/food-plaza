@@ -144,14 +144,28 @@ const Header = () => {
                 </>
               )}
               {isCustomer && (
-                <>
-                  <Link href="/" className="hover:text-pink-600 transition-colors duration-300">Home</Link>
-                  <Link href="/#browse" onClick={(e) => handleScrollToSection(e, 'browse')} className="hover:text-pink-600 transition-colors duration-300">Browse</Link>
-                  <Link href="/customer/order-status" className="hover:text-pink-600 transition-colors duration-300">My Orders</Link>
-                  <Link href="/#about-us" onClick={(e) => handleScrollToSection(e, 'about-us')} className="hover:text-pink-600 transition-colors duration-300">About Us</Link>
-                  <Link href="/customer/promos" className="hover:text-pink-600 transition-colors duration-300">Promotions</Link>
-                </>
-              )}
+  <>
+    <Link href="/" className="hover:text-pink-600 transition-colors duration-300">Home</Link>
+    <Link href="/#browse" onClick={(e) => handleScrollToSection(e, 'browse')} className="hover:text-pink-600 transition-colors duration-300">Browse</Link>
+    <Link href="/customer/order-status" className="hover:text-pink-600 transition-colors duration-300">My Orders</Link>
+    <Link href="/#about-us" onClick={(e) => handleScrollToSection(e, 'about-us')} className="hover:text-pink-600 transition-colors duration-300">About Us</Link>
+    
+    {/* Promotions Dropdown */}
+    <div className="relative group">
+      <button className="hover:text-pink-600 transition-colors duration-300 flex items-center">
+        Promotions <FaCaretRight className="ml-1 group-hover:rotate-90 transition-transform duration-200" />
+      </button>
+      <div className="absolute left-0 mt-2 w-48 rounded-lg shadow-lg bg-neutral-900 border border-neutral-700 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transform translate-y-2 transition-all duration-200 z-20">
+        <Link href="/customer/promos" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-t-lg">
+          Available Promos
+        </Link>
+        <Link href="/customer/my-promos" className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-neutral-800 rounded-b-lg">
+          My Promos
+        </Link>
+      </div>
+    </div>
+  </>
+)}
               {isAdmin && (
                 <>
                   <span className="text-gray-600">|</span>
@@ -289,10 +303,27 @@ const Header = () => {
               </>
             )}
             {isCustomer && (
-              <Link href="/customer/promos" className="flex items-center gap-2 hover:text-pink-600 transition-colors duration-300">
-                <FaGift /> Promotions
-              </Link>
-            )}
+  <div className="space-y-1">
+    <button
+      onClick={() => setIsDropdownOpen(prev => !prev)}
+      className="flex items-center gap-2 hover:text-pink-600 transition-colors duration-300 w-full text-left"
+    >
+      <FaGift /> Promotions
+      <FaCaretRight className={`ml-auto transform transition-transform ${isDropdownOpen ? "rotate-90" : ""}`} />
+    </button>
+    {isDropdownOpen && (
+      <div className="ml-6 space-y-1">
+        <Link href="/customer/promos" className="block hover:text-pink-600 transition-colors duration-300">
+          Available Promos
+        </Link>
+        <Link href="/customer/my-promos" className="block hover:text-pink-600 transition-colors duration-300">
+          My Promos
+        </Link>
+      </div>
+    )}
+  </div>
+)}
+
             {isAdmin && (
               <Link href="/admin" className="flex items-center gap-2 hover:text-yellow-400 transition-colors duration-300">
                 <FaCaretRight /> Admin Panel
