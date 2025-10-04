@@ -119,7 +119,7 @@ const CheckoutButton = ({
     }
   };
 
-  // --- NEW LOGIC FOR POPUP SUMMARY ---
+  // --- LOGIC FOR POPUP SUMMARY ---
   const getRoomSummary = (roomId) => {
     // Filter the enriched `cart` (passed as prop) for items belonging to this room
     const roomItems = cart.filter(item => item.room_id === roomId);
@@ -155,7 +155,51 @@ const CheckoutButton = ({
     acc[item.room_id].push(item);
     return acc;
   }, {});
-  // --- END NEW LOGIC ---
+  // --- END LOGIC ---
+
+  // --- NEW LOGIC FOR PROMOS DISPLAY ---
+  const getGroupedPromos = () => {
+    const grouped = {};
+    const itemDiscountCount = {};
+
+    // 1. Count items with discount for each room
+    cart.forEach(item => {
+      const roomId = item.room_id;
+      if (!itemDiscountCount[roomId]) {
+        itemDiscountCount[roomId] = 0;
+      }
+      if ((item.discountAmount || 0) > 0) {
+        itemDiscountCount[roomId] += 1;
+      }
+    });
+
+    // 2. Group the 'promos' array by room name
+    promos.forEach(promo => {
+      const roomName = promo.roomName || 'Unknown Stall';
+      const roomId = Object.keys(roomNames).find(id => roomNames[id] === roomName);
+      
+      if (!grouped[roomName]) {
+        grouped[roomName] = {
+          details: [],
+          itemCount: itemDiscountCount[roomId] || 0, // Get the count of discounted items in the room
+        };
+      }
+      
+      // Combine discount details into a single descriptive string
+      let detailString = `${promo.discount}% off (${promo.name})`;
+      if (promo.isSpecial) {
+        detailString = `${promo.discount}% off (PWD/Senior Discount)`;
+      }
+
+      grouped[roomName].details.push(detailString);
+    });
+
+    return grouped;
+  };
+
+  const groupedPromos = getGroupedPromos();
+  // --- END NEW LOGIC FOR PROMOS DISPLAY ---
+
 
   return (
     <div className="bg-neutral-950 text-white w-full max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -276,19 +320,31 @@ const CheckoutButton = ({
 
             <hr className="my-8 border-neutral-700" />
 
-            <div className="mt-8">
-              <p className="text-xl font-bold text-white mb-4">Applied Promos</p>
-              <ul className="space-y-3 text-sm">
-                {promos.map((promo, idx) => (
-                  <li key={idx} className="flex justify-between items-center text-neutral-300">
-                    <span className="font-medium">{promo.roomName}: {promo.name}</span>
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 font-semibold">
-                      {promo.discount}% off
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* REVISED APPLIED PROMOS SECTION */}
+            {(Object.keys(groupedPromos).length > 0) && (
+              <div className="mt-8 text-sm text-left mx-auto max-w-full text-neutral-300">
+                <p className="text-xl font-bold text-white mb-4">Applied Promos</p>
+                <ul className="space-y-4">
+                  {Object.entries(groupedPromos).map(([roomName, { details, itemCount }], idx) => (
+                    <li key={idx}>
+                      <p className="font-bold text-white border-b border-neutral-700 pb-1">{roomName}</p>
+                      <ul className="ml-2 mt-2 space-y-1">
+                        {details.map((detail, detailIdx) => (
+                          <li key={detailIdx} className="text-sm">
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 font-semibold">
+                              &bull; {itemCount} Item{itemCount !== 1 ? 's' : ''} applied with 
+                            </span> 
+                            <span className="italic ml-1 text-neutral-300">{detail}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {/* END REVISED APPLIED PROMOS SECTION */}
+
             {/* --- NEW NON-REFUNDABLE WARNING --- */}
             <div className="mt-8 flex items-start gap-3 text-red-400 bg-neutral-900 border border-red-500/50 p-4 rounded-lg shadow-md">
               <FaExclamationTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />

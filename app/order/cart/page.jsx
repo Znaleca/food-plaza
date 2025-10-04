@@ -521,13 +521,25 @@ const OrderCartPage = () => {
                             <label className="flex items-center w-full justify-between mb-2">
                               {/* Special Discount Toggle (Visible only if no room voucher is active) */}
                               {specialDiscountData && isAuthenticated && isItemSelected && !voucher && (
-                                <button
-                                  onClick={() => handleToggleSpecialDiscountItem(roomId, item.menuName, item.size)}
-                                  className={`p-1 rounded-full transition-colors duration-200 ${isSpecialDiscountActiveForItem ? 'bg-fuchsia-500 text-white' : 'bg-neutral-700 text-gray-400 hover:text-fuchsia-500'}`}
-                                  title={isSpecialDiscountActiveForItem ? 'Cancel Special Discount' : 'Apply Special Discount (20% Off)'}
-                                >
-                                  <FaHandHoldingDollar size={14} />
-                                </button>
+                               <button
+  onClick={() =>
+    handleToggleSpecialDiscountItem(roomId, item.menuName, item.size)
+  }
+  className={`text-sm font-medium transition-colors duration-200 flex items-center ${
+    isSpecialDiscountActiveForItem
+      ? 'text-fuchsia-500'
+      : 'text-cyan-400 hover:text-fuchsia-500'
+  }`}
+  title={
+    isSpecialDiscountActiveForItem
+      ? 'Cancel Special Discount'
+      : 'Apply Special Discount (20% Off)'
+  }
+>
+  <FaIdCard className="mr-2" size={14} />
+  {isSpecialDiscountActiveForItem ? 'Special Discount Applied' : 'Apply Special Discount'}
+</button>
+
                               )}
                               
                               <input

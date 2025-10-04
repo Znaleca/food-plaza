@@ -27,9 +27,15 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
 
+  // --- START: Extract Totals from Order Object ---
+  const baseTotal = (order.total && order.total[0]) || 0;
+  const discountAmount = Math.abs((order.total && order.total[1]) || 0); 
+  const finalTotal = (order.total && order.total[2]) || 0;
+  const serviceCharge = 0; 
+  // --- END: Extract Totals from Order Object ---
+
   const openRatingModal = (index) => {
     setSelectedItem(index);
-    // Pre-populate rating and comment if the item has already been rated
     const initialRating = order.rating?.[index] || 0;
     const initialComment = order.comment?.[index] || '';
     setRating(initialRating);
@@ -72,6 +78,8 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
       alert('Failed to submit rating.');
     }
   };
+
+  // Status badge rendering logic remains the same...
 
   const renderStatusBadge = (status) => {
     const base = 'px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase';
@@ -139,7 +147,12 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
           };
         }
 
-        grouped[roomId].items.push({ ...item, index });
+        // Add the index and original item data for correct rating tracking
+        grouped[roomId].items.push({ 
+          ...item, 
+          index,
+          itemTotal: (Number(item.menuPrice) * (item.quantity || 1)) - (Number(item.discountAmount) || 0) // Item final total
+        });
       } catch {
         // skip broken item
       }
@@ -150,42 +163,51 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
   const getRoomSubtotal = (items) =>
     items.reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
 
+  const getRoomDiscount = (items) =>
+    items.reduce((sum, item) => sum + Number(item.discountAmount || 0), 0);
+
+  const getRoomFinalTotal = (items) =>
+    items.reduce((sum, item) => sum + item.itemTotal, 0);
+
   const groupedItems = parseItemsGroupedByRoom();
 
+  /**
+   * New helper function to count discounted items for a specific room.
+   */
+  const getDiscountedItemCount = (roomName) => {
+    const roomEntry = Object.values(groupedItems).find(group => group.roomName === roomName);
+    if (!roomEntry) return 0;
+
+    // Count how many individual item entries have a non-zero discountAmount
+    const count = roomEntry.items.filter(item => (Number(item.discountAmount) || 0) > 0).length;
+    return count;
+  };
+
+  /**
+   * REVISED parsePromos FUNCTION
+   * Stores the full promo string and the descriptive part.
+   */
   const parsePromos = () => {
     const roomPromos = {};
     (order.promos || []).forEach(promoStr => {
-      const [roomName, details] = promoStr.split(' - ');
-      const match = details?.match(/(\d+)%/);
-      const discount = match ? parseInt(match[1]) : 0;
-      const promoTitleMatch = details?.match(/\((.*?)\)/);
-      const promoTitle = promoTitleMatch ? promoTitleMatch[1] : '';
+      // Assuming promo strings are like: 'Room Name - Discount Details (Promo Title)'
+      const parts = promoStr.split(' - ');
+      if (parts.length >= 2) {
+        const roomName = parts[0].trim();
+        const details = parts.slice(1).join(' - ').trim(); // Full descriptive part
 
-      roomPromos[roomName] = {
-        label: promoStr,
-        discount,
-        promoTitle
-      };
+        if (!roomPromos[roomName]) {
+          roomPromos[roomName] = [];
+        }
+
+        // Store the details part (e.g., "20% off (Launch Discount)")
+        roomPromos[roomName].push(details);
+      }
     });
     return roomPromos;
   };
 
   const roomPromos = parsePromos();
-
-  let baseTotal = 0;
-  let finalTotal = 0;
-
-  Object.values(groupedItems).forEach(({ roomName, items }) => {
-    const subtotal = getRoomSubtotal(items);
-    baseTotal += subtotal;
-
-    let discounted = subtotal;
-    const promo = roomPromos[roomName];
-    if (promo) {
-      discounted = subtotal - (promo.discount / 100) * subtotal;
-    }
-    finalTotal += discounted;
-  });
   
   return (
     <div className="px-4">
@@ -206,12 +228,9 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
 
         <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
           {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => {
-            const subtotal = getRoomSubtotal(items);
-            const promoEntry = roomPromos[roomName];
-            const discount = promoEntry?.discount || 0;
-            const promoTitle = promoEntry?.promoTitle || '';
-
-            const discounted = subtotal - (discount / 100) * subtotal;
+            const subtotal = getRoomSubtotal(items); // Base Subtotal (before room-level discount)
+            const roomDiscount = getRoomDiscount(items); // Total discount for items in this room
+            const roomFinalTotal = getRoomFinalTotal(items); // Final subtotal after discounts
 
             return (
               <div key={roomId} className="border-b border-gray-200 pb-4">
@@ -221,13 +240,22 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
                     const itemRated = order.rated?.[item.index];
                     const itemRating = order.rating?.[item.index];
                     const itemComment = order.comment?.[item.index];
+                    const itemPrice = Number(item.menuPrice);
+                    const itemQuantity = item.quantity;
+                    const itemBasePrice = itemPrice * itemQuantity;
+                    const itemDiscount = Number(item.discountAmount) || 0;
 
                     return (
                       <li key={item.index}>
                         <div className="flex justify-between">
-                          <span>{item.menuName} {item.size && `(${item.size})`} × {item.quantity}</span>
-                          <span>₱{(item.menuPrice * item.quantity).toFixed(2)}</span>
+                          <span>{item.menuName} {item.size && `(${item.size})`} × {itemQuantity}</span>
+                          <span>₱{itemBasePrice.toFixed(2)}</span>
                         </div>
+                        {itemDiscount > 0 && (
+                          <div className="flex justify-end text-xs text-red-500 italic">
+                            Discount: -₱{itemDiscount.toFixed(2)}
+                          </div>
+                        )}
                         <div className="text-xs text-gray-500">Stall: {item.room_name || 'N/A'}</div>
                         <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.PENDING)}</div>
 
@@ -270,9 +298,9 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
                 </ul>
 
                 <div className="mt-2 text-sm">
-                  <p>Subtotal: ₱{subtotal.toFixed(2)}</p>
-                  {discount > 0 && <p className="text-green-500">Stall Discount: {discount}% ({promoTitle})</p>}
-                  <p className="font-semibold text-pink-500">Stall Total: ₱{discounted.toFixed(2)}</p>
+                  <p>Base Subtotal: ₱{subtotal.toFixed(2)}</p>
+                  {roomDiscount > 0 && <p className="text-red-500">Item Discount: -₱{roomDiscount.toFixed(2)}</p>}
+                  <p className="font-semibold text-pink-500">Stall Total: ₱{roomFinalTotal.toFixed(2)}</p>
                 </div>
               </div>
             );
@@ -280,21 +308,38 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
         </div>
 
         <div className="text-center mt-6">
-          <p className="text-sm text-gray-500"> Base Total:</p>
+          <p className="text-sm text-gray-500">Base Total:</p>
           <p className="text-lg font-bold text-gray-800">₱{baseTotal.toFixed(2)}</p>
+
+          {/* Displaying the total discount amount */}
+          {discountAmount > 0 && (
+            <div className="mt-2">
+              <p className="text-sm text-gray-500">Total Discount:</p>
+              <p className="text-lg font-bold text-red-500">-₱{discountAmount.toFixed(2)}</p>
+            </div>
+          )}
 
           {(Object.keys(roomPromos).length > 0) && (
             <div className="mt-4 text-sm text-left mx-auto max-w-xs text-gray-700">
               <p className="font-semibold text-center text-pink-500 mb-2">Applied Promos:</p>
-              <ul className="space-y-1">
-                {Object.entries(roomPromos).map(([roomName, promo], idx) => (
-                  <li key={idx} className="flex justify-between border-b border-dashed border-gray-300 pb-1">
-                    <span className="font-medium text-black">{roomName}</span>
-                    <span className="text-pink-600 font-semibold">
-                      {promo.discount}% {promo.promoTitle && `(${promo.promoTitle})`}
-                    </span>
-                  </li>
-                ))}
+              <ul className="space-y-3">
+                {Object.entries(roomPromos).map(([roomName, promoDetails], idx) => {
+                  const discountedItemCount = getDiscountedItemCount(roomName);
+
+                  return (
+                    <li key={idx}>
+                      <p className="font-bold text-black border-b border-gray-300 pb-1">{roomName}</p>
+                      <ul className="ml-2 mt-1 space-y-0.5">
+                        {promoDetails.map((detail, detailIdx) => (
+                          <li key={detailIdx} className="text-pink-600 italic text-xs">
+                            {/* NEW LOGIC: Prepend the item count */}
+                            &bull; **{discountedItemCount} Item{discountedItemCount !== 1 ? 's' : ''}** applied with {detail}
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}

@@ -40,8 +40,6 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       };
     });
 
-    const serviceCharge = 0; // can add service charge later if needed
-
     const stringifiedItems = cleanedCart.map((item) => JSON.stringify(item));
 
     // Build promo strings for display
@@ -81,7 +79,7 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       }
     }
 
-    // Build order payload
+    // Build order payload (removed service charge)
     const orderPayload = {
       user_id: userId,
       name: user.name || 'Unknown User',
@@ -89,7 +87,7 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       phone: user.phone || 'No phone',
       status: ['order-placed'],
       items: stringifiedItems,
-      total: [baseTotal, serviceCharge, -discountAmount, finalTotal],
+      total: [baseTotal, -discountAmount, finalTotal], // ✅ service charge removed
       promos: promoStrings,
       created_at: new Date().toISOString(),
     };
