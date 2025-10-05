@@ -4,11 +4,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import { FaUsers, FaLeaf, FaLightbulb } from 'react-icons/fa';
 
 const teamMembers = [
-  { name: 'Russel', role: 'Documenter', image: '/images/russel.jpg' },
-  { name: 'Maricon', role: 'Programmer', image: '/images/maricon.jpg' },
-  { name: 'Lanz', role: 'Lead Programmer', image: '/images/lanz.jpg' },
-  { name: 'Jasper', role: 'QA Tester', image: '/images/jasper.jpg' },
-  { name: 'Chrisler', role: 'Documenter', image: '/images/chrisler.jpg' },
+  { name: 'Russel', role: 'Documenter', image: '/images/Russel.png' },
+  { name: 'Maricon', role: 'Programmer', image: '/images/Maricon.png' },
+  { name: 'Lanz', role: 'Lead Programmer', image: '/images/Lanz.png' },
+  { name: 'Jasper', role: 'QA Tester', image: '/images/Jasper.png' },
+  { name: 'Chrisler', role: 'Documenter', image: '/images/Chrisler.png' },
 ];
 
 const coreValues = [
