@@ -12,7 +12,7 @@ const ORDER_STATUS = {
   READY: "ready",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
-  FAILED: "failed",
+  FAILED: "failed", // The status we want to make unclickable
 };
 
 const PAYMENT_STATUS = {
@@ -280,12 +280,19 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
             status === "pending"
               ? "Pending"
               : status.charAt(0).toUpperCase() + status.slice(1);
+              
+          // Disable the button if the status is 'failed' OR if payment has failed
+          const isDisabled = status === ORDER_STATUS.FAILED || paymentStatus === PAYMENT_STATUS.FAILED;
 
           return (
             <button
               key={status}
-              onClick={() => handleUpdateStallStatus(status, parsedItems)}
-              disabled={paymentStatus === PAYMENT_STATUS.FAILED}
+              onClick={() => {
+                if (status !== ORDER_STATUS.FAILED) {
+                  handleUpdateStallStatus(status, parsedItems);
+                }
+              }}
+              disabled={isDisabled}
               className={`text-xs px-3 py-1 rounded-full border font-medium transition
                 ${
                   isActive
@@ -293,7 +300,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
                     : "bg-neutral-900 text-neutral-300 border-neutral-600 hover:bg-pink-600 hover:text-white"
                 }
                 ${
-                  paymentStatus === PAYMENT_STATUS.FAILED
+                  isDisabled
                     ? "opacity-50 cursor-not-allowed"
                     : ""
                 }`}
