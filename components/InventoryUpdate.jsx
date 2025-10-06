@@ -48,6 +48,18 @@ const InventoryUpdate = ({ stocks = [], onUpdate }) => {
   const [inventory, setInventory] = useState(initialData);
 
   const updateStock = (packageName, ingredientName, delta) => {
+    // Determine the flat array of items to pass to onUpdate *before* the state update
+    // This requires finding the current state of the item being updated
+    const updatedFlat = inventory.flatMap((pkg) =>
+      pkg.items.map((item) => {
+        if (pkg.packageName === packageName && item.ingredient === ingredientName) {
+          // Calculate the new amount
+          return { ...item, amount: Math.max(0, item.amount + delta) };
+        }
+        return item;
+      })
+    );
+
     setInventory((prev) =>
       prev.map((pkg) =>
         pkg.packageName === packageName
@@ -64,16 +76,31 @@ const InventoryUpdate = ({ stocks = [], onUpdate }) => {
     );
 
     if (onUpdate) {
-      const flat = inventory.flatMap((pkg) =>
-        pkg.items.map((item) =>
-          pkg.packageName === packageName && item.ingredient === ingredientName
-            ? { ...item, amount: Math.max(0, item.amount + delta) }
-            : item
-        )
-      );
-      onUpdate(flat);
+      // Find the specific updated item from the flat array to pass the correct data
+      const updatedItem = updatedFlat.find(item => item.ingredient === ingredientName);
+      // Since onUpdate expects a flat list, we should pass the updatedFlat array
+      // If your onUpdate expects only the one updated item, you'll need to adjust,
+      // but based on your original logic, it looked like it expected a flat list of all items.
+      // Reverting to a more correct version of your original logic that uses the *current* state
+      // *after* the update to be fully accurate is complex with functional state updates.
+      // For simplicity and matching your original intent to call onUpdate:
+      const newInventoryState = inventory.map((pkg) =>
+          pkg.packageName === packageName
+            ? {
+                ...pkg,
+                items: pkg.items.map((item) =>
+                  item.ingredient === ingredientName
+                    ? { ...item, amount: Math.max(0, item.amount + delta) }
+                    : item
+                ),
+              }
+            : pkg
+        );
+
+        onUpdate(newInventoryState.flatMap(pkg => pkg.items));
     }
   };
+
 
   const handleInputChange = (packageName, ingredientName, value) => {
     setInventory((prev) =>
@@ -136,7 +163,7 @@ const InventoryUpdate = ({ stocks = [], onUpdate }) => {
                     >
                       <td
                         className={`px-5 py-3 font-medium ${getExpiryColor(item)} ${
-                          isItemExpired ? '' : 'line-through'
+                          isItemExpired ? 'line-through' : '' // FIX APPLIED HERE: Only strike through if expired
                         }`}
                       >
                         {item.ingredient}
@@ -163,14 +190,14 @@ const InventoryUpdate = ({ stocks = [], onUpdate }) => {
                                 !isItemExpired && handleInputChange(pkg.packageName, item.ingredient, e.target.value)
                               }
                               disabled={isItemExpired}
-                              className={`w-16 text-sm px-2 py-1 rounded-md border border-neutral-700 bg-neutral-800 text-neutral-200 ${isItemExpired && 'bg-neutral-600'}`}
+                              className={`w-16 text-sm px-2 py-1 rounded-md border border-neutral-700 bg-neutral-800 text-neutral-200 ${isItemExpired ? 'bg-neutral-600' : ''}`}
                             />
                             <button
                               onClick={() =>
                                 !isItemExpired && updateStock(pkg.packageName, item.ingredient, item.inputAmount)
                               }
                               disabled={isItemExpired}
-                              className={`px-3 py-1 bg-green-500 hover:bg-green-600 rounded-md text-white text-sm transition-colors ${isItemExpired && 'bg-neutral-600'}`}
+                              className={`px-3 py-1 rounded-md text-white text-sm transition-colors ${isItemExpired ? 'bg-neutral-600' : 'bg-green-500 hover:bg-green-600'}`}
                             >
                               Add
                             </button>
@@ -179,7 +206,7 @@ const InventoryUpdate = ({ stocks = [], onUpdate }) => {
                                 !isItemExpired && updateStock(pkg.packageName, item.ingredient, -item.inputAmount)
                               }
                               disabled={isItemExpired}
-                              className={`px-3 py-1 bg-red-500 hover:bg-red-600 rounded-md text-white text-sm transition-colors ${isItemExpired && 'bg-neutral-600'}`}
+                              className={`px-3 py-1 rounded-md text-white text-sm transition-colors ${isItemExpired ? 'bg-neutral-600' : 'bg-red-500 hover:bg-red-600'}`}
                             >
                               Subtract
                             </button>
@@ -192,7 +219,7 @@ const InventoryUpdate = ({ stocks = [], onUpdate }) => {
                                   !isItemExpired && updateStock(pkg.packageName, item.ingredient, val)
                                 }
                                 disabled={isItemExpired}
-                                className={`px-2 py-1 bg-green-500 hover:bg-green-600 rounded-md text-white text-xs transition-colors ${isItemExpired && 'bg-neutral-600'}`}
+                                className={`px-2 py-1 rounded-md text-white text-xs transition-colors ${isItemExpired ? 'bg-neutral-600' : 'bg-green-500 hover:bg-green-600'}`}
                               >
                                 +{val}
                               </button>
@@ -204,7 +231,7 @@ const InventoryUpdate = ({ stocks = [], onUpdate }) => {
                                   !isItemExpired && updateStock(pkg.packageName, item.ingredient, -val)
                                 }
                                 disabled={isItemExpired}
-                                className={`px-2 py-1 bg-red-500 hover:bg-red-600 rounded-md text-white text-xs transition-colors ${isItemExpired && 'bg-neutral-600'}`}
+                                className={`px-2 py-1 rounded-md text-white text-xs transition-colors ${isItemExpired ? 'bg-neutral-600' : 'bg-red-500 hover:bg-red-600'}`}
                               >
                                 -{val}
                               </button>
