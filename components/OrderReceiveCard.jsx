@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import updateTableNumber from "@/app/actions/updateTableNumber";
@@ -31,6 +31,7 @@ const maskPhone = (phone) => {
     ? phone
     : "+63" + phone;
 
+  // Masking the middle part of the number
   return normalized.slice(0, 6) + "XXXXX" + normalized.slice(-2);
 };
 
@@ -43,24 +44,18 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
   const paymentStatus = order.payment_status || PAYMENT_STATUS.FAILED;
 
-  // Auto mark items as failed if payment failed OR set to PENDING if PAID.
+  // Auto mark items as failed if payment failed and prevent further updates
   useEffect(() => {
-    const targetStatus =
-      paymentStatus === PAYMENT_STATUS.FAILED
-        ? ORDER_STATUS.FAILED
-        : paymentStatus === PAYMENT_STATUS.PAID
-        ? ORDER_STATUS.PENDING // <--- NEW LOGIC: Set to PENDING if PAID
-        : null; // Don't enforce status if payment is still pending
-
-    if (targetStatus) {
+    if (paymentStatus === PAYMENT_STATUS.FAILED) {
       order.items.forEach((itemStr, idx) => {
         try {
           const parsed = JSON.parse(itemStr);
-          // Only update the status if it's currently different from the target
-          if (parsed.status !== targetStatus) {
-            updateOrderStatus(order.$id, idx, targetStatus);
+          // Only update status if it's not already failed
+          if (parsed.status !== ORDER_STATUS.FAILED) {
+            updateOrderStatus(order.$id, idx, ORDER_STATUS.FAILED);
           }
         } catch {
+          // Ignore items that can't be parsed
           return;
         }
       });
@@ -93,34 +88,38 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   };
 
   const handleUpdateStallStatus = async (newStatus, items) => {
+    // Prevent any status update if payment has failed
     if (paymentStatus === PAYMENT_STATUS.FAILED) return;
+
     try {
+      // Update the status for all items in this order partition
       await Promise.all(
         items.map((item) =>
           updateOrderStatus(order.$id, item.originalIndex, newStatus)
         )
       );
 
+      // SMS Notification Logic (only for non-failed payments)
       if (order.phone) {
         try {
+          let message = '';
+          let endpoint = '/api/semaphore'; // Default endpoint
+
           if (newStatus === ORDER_STATUS.PREPARING) {
-            await fetch("/api/semaphore", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                phone: order.phone,
-                name: order.name || "Customer",
-                message: `Hi ${order.name || "Customer"}, your order from ${roomName} is now being prepared. Please wait until it is ready for pickup.`
-              }),
-            });
+            message = `Hi ${order.name || "Customer"}, your order from ${roomName} is now being prepared. Please wait until it is ready for pickup.`;
           } else if (newStatus === ORDER_STATUS.READY) {
-            await fetch("/api/semaphore/order-ready", {
+            message = `Hi ${order.name || "Customer"}, your order from ${roomName} is now ready for pickup. Please proceed to the counter. Thank you for choosing us.`;
+            endpoint = "/api/semaphore/order-ready"; // Specific ready endpoint
+          }
+
+          if (message) {
+             await fetch(endpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 phone: order.phone,
                 name: order.name || "Customer",
-                message: `Hi ${order.name || "Customer"}, your order from ${roomName} is now ready for pickup. Please proceed to the counter. Thank you for choosing us.`
+                message: message
               }),
             });
           }
@@ -192,6 +191,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
     );
   };
 
+  // Filter and parse items relevant to the current roomName/stall
   const parsedItems = order.items
     .map((itemStr, idx) => {
       try {
@@ -205,10 +205,12 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
   if (parsedItems.length === 0) return null;
 
+  // Determine the overall status for this stall's part of the order.
+  // CRUCIAL LOGIC: If payment failed, force the status to FAILED.
   const stallStatus =
     paymentStatus === PAYMENT_STATUS.FAILED
       ? ORDER_STATUS.FAILED
-      : parsedItems[0].status || ORDER_STATUS.PENDING;
+      : parsedItems[0].status || ORDER_STATUS.PENDING; // Use first item status as representation
 
   const totalAmount = parsedItems.reduce(
     (acc, item) => acc + item.menuPrice * (item.quantity || 1),
@@ -281,6 +283,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
         ))}
       </div>
 
+      {/* Status Update Buttons */}
       <div className="flex flex-wrap gap-2 pt-4 border-t border-neutral-700">
         {Object.values(ORDER_STATUS).map((status) => {
           const isActive = stallStatus === status;
@@ -296,6 +299,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
             <button
               key={status}
               onClick={() => {
+                // Ensure we don't attempt to manually set the status to FAILED
                 if (status !== ORDER_STATUS.FAILED) {
                   handleUpdateStallStatus(status, parsedItems);
                 }
@@ -319,6 +323,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
         })}
       </div>
 
+      {/* ManageTable Modal */}
       <ManageTable
         isOpen={isModalOpen}
         onClose={closeModal}
@@ -327,6 +332,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
         isUpdating={updating}
       />
 
+      {/* ViewReceipt Modal */}
       {showReceipt && (
         <ViewReceipt
           order={order}
