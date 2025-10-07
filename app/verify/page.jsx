@@ -3,11 +3,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import createUser from '@/app/actions/createUser';
+import { sendVerificationEmail } from '@/app/actions/sendVerificationEmail';
 
 export default function VerifyPage() {
   const [inputCode, setInputCode] = useState('');
   const [actualCode, setActualCode] = useState('');
   const [formData, setFormData] = useState(null);
+  const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -21,6 +24,15 @@ export default function VerifyPage() {
     setFormData(data);
   }, [router]);
 
+  // Countdown effect for cooldown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
+
   const handleVerify = async (e) => {
     e.preventDefault();
     if (inputCode !== actualCode) {
@@ -33,7 +45,7 @@ export default function VerifyPage() {
     form.append('email', formData.email);
     form.append('password', formData.password);
     form.append('confirmPassword', formData.confirmPassword);
-    form.append('phone', formData.phone); // already contains +63
+    form.append('phone', formData.phone);
 
     const result = await createUser(null, form);
     if (result.error) {
@@ -42,6 +54,37 @@ export default function VerifyPage() {
       toast.success('Account created successfully!');
       localStorage.removeItem('registrationData');
       router.push('/login');
+    }
+  };
+
+  const handleResend = async () => {
+    if (!formData) {
+      toast.error('No registration data available.');
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const response = await sendVerificationEmail(formData.email, formData.name, newCode);
+
+      if (response.error) {
+        toast.error(response.error);
+      } else {
+        // Update code in localStorage
+        const updatedData = { ...formData, code: newCode };
+        localStorage.setItem('registrationData', JSON.stringify(updatedData));
+        setActualCode(newCode);
+        setFormData(updatedData);
+        toast.success('A new verification code has been sent to your email.');
+
+        // Start 60-second cooldown
+        setCooldown(60);
+      }
+    } catch (error) {
+      toast.error('Failed to resend verification code.');
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -59,11 +102,30 @@ export default function VerifyPage() {
           placeholder="Enter verification code"
           required
         />
+
         <button
           type="submit"
           className="w-full py-3 bg-pink-600 hover:bg-pink-700 rounded-lg font-semibold text-lg"
         >
           Verify and Create Account
+        </button>
+
+        {/* Resend Button with Cooldown */}
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={isResending || cooldown > 0}
+          className={`w-full py-2 mt-2 rounded-lg text-sm border transition-colors ${
+            isResending || cooldown > 0
+              ? 'border-neutral-600 text-neutral-500 cursor-not-allowed bg-neutral-800'
+              : 'border-pink-600 text-pink-500 hover:bg-pink-600 hover:text-white'
+          }`}
+        >
+          {isResending
+            ? 'Resending...'
+            : cooldown > 0
+            ? `Resend in ${cooldown}s`
+            : 'Resend Verification Email'}
         </button>
       </form>
     </div>
