@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import updateTableNumber from "@/app/actions/updateTableNumber";
@@ -43,14 +43,22 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
   const paymentStatus = order.payment_status || PAYMENT_STATUS.FAILED;
 
-  // Auto mark items as failed if payment failed
+  // Auto mark items as failed if payment failed OR set to PENDING if PAID.
   useEffect(() => {
-    if (paymentStatus === PAYMENT_STATUS.FAILED) {
+    const targetStatus =
+      paymentStatus === PAYMENT_STATUS.FAILED
+        ? ORDER_STATUS.FAILED
+        : paymentStatus === PAYMENT_STATUS.PAID
+        ? ORDER_STATUS.PENDING // <--- NEW LOGIC: Set to PENDING if PAID
+        : null; // Don't enforce status if payment is still pending
+
+    if (targetStatus) {
       order.items.forEach((itemStr, idx) => {
         try {
           const parsed = JSON.parse(itemStr);
-          if (parsed.status !== ORDER_STATUS.FAILED) {
-            updateOrderStatus(order.$id, idx, ORDER_STATUS.FAILED);
+          // Only update the status if it's currently different from the target
+          if (parsed.status !== targetStatus) {
+            updateOrderStatus(order.$id, idx, targetStatus);
           }
         } catch {
           return;
