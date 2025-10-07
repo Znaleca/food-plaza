@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Client, Databases } from 'appwrite';
 import getAllOrders from '@/app/actions/getAllOrders';
 import OrderReceiveCard from '@/components/OrderReceiveCard';
 import getMySpaces from '@/app/actions/getMySpaces';
@@ -22,7 +23,7 @@ const MyOrdersPage = () => {
 
       const spaces = await getMySpaces();
       if (spaces.length > 0) {
-        setRoomName(spaces[0].name); // Only use the first space name
+        setRoomName(spaces[0].name);
       }
     } catch (error) {
       console.error('Could not load orders or room:', error);
@@ -32,8 +33,32 @@ const MyOrdersPage = () => {
     }
   };
 
+  // 🟣 Realtime subscription setup
   useEffect(() => {
-    loadOrders();
+    loadOrders(); // Initial load
+
+    // Initialize Appwrite client
+    const client = new Client()
+      .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
+      .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT);
+
+    const databases = new Databases(client);
+
+    // Subscribe to all events in order-status collection
+    const unsubscribe = client.subscribe(
+      `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE}.collections.${process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS}.documents`,
+      async (response) => {
+        console.log('Realtime event received:', response);
+
+        // Reload orders whenever something changes in the collection
+        await loadOrders();
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const filteredOrders = orders.filter(order =>

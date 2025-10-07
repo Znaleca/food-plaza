@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import updateUserPassword from '@/app/actions/updateUserPassword';
 import getUserByEmail from '@/app/actions/getUserByEmail';
+import { sendResetCodeEmail } from '@/app/actions/sendResetCodeEmail';
 
 const validateRules = {
   minLength: /.{8,}/,
@@ -41,6 +42,7 @@ const ChangePasswordPage = () => {
   });
   const [resetCode, setResetCode] = useState('');
   const [status, setStatus] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   useEffect(() => {
     const code = localStorage.getItem('resetCode');
@@ -63,6 +65,14 @@ const ChangePasswordPage = () => {
       }
     });
   }, [router]);
+
+  // Cooldown timer for resend button
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -121,6 +131,28 @@ const ChangePasswordPage = () => {
     }
   };
 
+  const handleResendCode = async () => {
+    if (resendCooldown > 0) return;
+
+    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const name = formData.name || formData.email.split('@')[0];
+
+    try {
+      const result = await sendResetCodeEmail(formData.email, name, newCode);
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      localStorage.setItem('resetCode', newCode);
+      setResetCode(newCode);
+      setResendCooldown(30); // 30 seconds cooldown
+      toast.success('New reset code sent to your email!');
+    } catch (error) {
+      toast.error('Failed to resend code. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-neutral-900 text-white py-20 px-4 flex items-center justify-center">
       <div className="w-full max-w-2xl bg-neutral-800 border border-pink-600 rounded-3xl p-8 sm:p-12 shadow-lg">
@@ -132,6 +164,7 @@ const ChangePasswordPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email */}
           <div>
             <label className="block mb-2 text-sm">Email</label>
             <input
@@ -140,10 +173,10 @@ const ChangePasswordPage = () => {
               value={formData.email}
               readOnly
               className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-3 text-white cursor-not-allowed"
-              placeholder="Email"
             />
           </div>
 
+          {/* Name */}
           <div>
             <label className="block mb-2 text-sm">Name</label>
             <input
@@ -152,12 +185,28 @@ const ChangePasswordPage = () => {
               value={formData.name}
               readOnly
               className="w-full bg-neutral-700 border border-neutral-600 rounded-lg px-4 py-3 text-white cursor-not-allowed"
-              placeholder="User name"
             />
           </div>
 
+          {/* Reset Code + Resend Button */}
           <div>
-            <label className="block mb-2 text-sm">Reset Code</label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm">Reset Code</label>
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={resendCooldown > 0}
+                className={`text-sm ${
+                  resendCooldown > 0
+                    ? 'text-neutral-500 cursor-not-allowed'
+                    : 'text-pink-500 hover:text-pink-400 transition'
+                }`}
+              >
+                {resendCooldown > 0
+                  ? `Resend in ${resendCooldown}s`
+                  : 'Resend Code'}
+              </button>
+            </div>
             <input
               type="text"
               name="codeInput"
@@ -169,6 +218,7 @@ const ChangePasswordPage = () => {
             />
           </div>
 
+          {/* Password Fields */}
           <div>
             <label className="block mb-2 text-sm">New Password</label>
             <input
@@ -195,18 +245,23 @@ const ChangePasswordPage = () => {
             />
           </div>
 
+          {/* Password Validation */}
           {formData.newPassword && passwordValidationFeedback(formData.newPassword)}
 
+          {/* Status Message */}
           {status && (
             <p
               className={`text-sm ${
-                status.startsWith('Error') || status.includes('not') ? 'text-red-400' : 'text-green-400'
+                status.startsWith('Error') || status.includes('not')
+                  ? 'text-red-400'
+                  : 'text-green-400'
               }`}
             >
               {status}
             </p>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
             className="w-full py-3 bg-pink-600 hover:bg-pink-700 rounded-lg text-lg font-semibold transition duration-300"

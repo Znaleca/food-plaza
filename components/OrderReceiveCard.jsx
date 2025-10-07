@@ -44,8 +44,9 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
 
   const paymentStatus = order.payment_status || PAYMENT_STATUS.FAILED;
 
-  // Auto mark items as failed if payment failed and prevent further updates
+  // Auto mark items as failed if payment failed or reset to pending if paid
   useEffect(() => {
+    // If payment failed, force all items to FAILED status
     if (paymentStatus === PAYMENT_STATUS.FAILED) {
       order.items.forEach((itemStr, idx) => {
         try {
@@ -53,6 +54,24 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
           // Only update status if it's not already failed
           if (parsed.status !== ORDER_STATUS.FAILED) {
             updateOrderStatus(order.$id, idx, ORDER_STATUS.FAILED);
+          }
+        } catch {
+          // Ignore items that can't be parsed
+          return;
+        }
+      });
+    }
+    // NEW LOGIC: If payment is successful (PAID) and the items are currently FAILED,
+    // set them back to PENDING so they can be processed.
+    else if (paymentStatus === PAYMENT_STATUS.PAID) {
+      order.items.forEach(async (itemStr, idx) => {
+        try {
+          const parsed = JSON.parse(itemStr);
+          // Only update status if it's currently FAILED
+          if (parsed.status === ORDER_STATUS.FAILED) {
+            // Note: Use await here if you want to ensure all updates complete before the 
+            // parent component's realtime listener catches the changes.
+            await updateOrderStatus(order.$id, idx, ORDER_STATUS.PENDING);
           }
         } catch {
           // Ignore items that can't be parsed
