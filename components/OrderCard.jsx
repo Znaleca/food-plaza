@@ -34,6 +34,10 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
   const serviceCharge = 0; 
   // --- END: Extract Totals from Order Object ---
 
+  // New: Extract table number
+  const tableNumber = order.tableNumber?.[0] || 'N/A';
+  //
+
   const openRatingModal = (index) => {
     setSelectedItem(index);
     const initialRating = order.rating?.[index] || 0;
@@ -221,10 +225,22 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
         <div className="text-sm mb-4">
           <p className="mb-1">Customer: <strong>{order.name || 'Unknown'}</strong></p>
           <p className="mb-1">Email: {order.email}</p>
+          
+          
           <div className="mt-2">
             Payment Status: {renderPaymentBadge(order.payment_status || "failed")}
           </div>
         </div>
+
+        {/* New Table Number Preview Section */}
+        <div className="mt-4 p-3 bg-pink-50 border border-pink-200 rounded-lg flex justify-between items-center">
+            <p className="font-semibold text-pink-700">Table Number:</p>
+            <span className="text-xl font-extrabold text-pink-600 px-3 py-1 bg-white rounded shadow-sm">
+              {tableNumber}
+            </span>
+          </div>
+          {/* End Table Number Preview Section */}
+
 
         <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
           {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => {
