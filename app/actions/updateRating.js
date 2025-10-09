@@ -13,20 +13,39 @@ if (!databaseId || !collectionId) {
   throw new Error("Missing required Appwrite environment variables.");
 }
 
-const updateRating = async (roomId, updatedRatings, updatedComments, updatedRatedStatus) => {
+// Refactored to accept an object for dynamic updates
+const updateRating = async (orderId, updateData) => {
   try {
     const { databases } = await createAdminClient();
-    console.log("Updating document with", { roomId, updatedRatings, updatedComments, updatedRatedStatus });
+    
+    // Initialize payload for Appwrite update
+    const payload = {};
+
+    // 1. Handle Item-level updates
+    if (updateData.item) {
+        payload.rating = updateData.item.ratings;
+        payload.comment = updateData.item.comments;
+        payload.rated = updateData.item.ratedStatus;
+    }
+
+    // 2. Handle Stall-level updates
+    // The client component ensures updateData.stall.reviews is an array of JSON strings.
+    if (updateData.stall) {
+        payload.stallReviews = updateData.stall.reviews; 
+    }
+
+    if (Object.keys(payload).length === 0) {
+        console.warn("No update data provided for order:", orderId);
+        return { success: true, message: "No changes to commit." };
+    }
+
+    console.log("Updating document with", { orderId, payload });
 
     const response = await databases.updateDocument(
       databaseId,
       collectionId,
-      roomId,
-      {
-        rating: updatedRatings,
-        comment: updatedComments,
-        rated: updatedRatedStatus,
-      }
+      orderId,
+      payload
     );
 
     return response;

@@ -338,6 +338,64 @@ export default function EditSpacePage({ params }) {
               )}
             </div>
           </div>
+          
+          {/* --- MOVED STALL IMAGE/LOGO UPLOAD SECTION --- */}
+          <div>
+            <label className="block font-semibold mb-3">Food Stall Image/Logo</label>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              {/* Image Preview Container */}
+              <div className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden border border-neutral-700 flex-shrink-0">
+                {(newImages.length > 0) ? (
+                  <img
+                    src={URL.createObjectURL(newImages[0])}
+                    alt="New Stall Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (stall.images && stall.images.length > 0) ? (
+                  <img
+                    src={`https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${stall.images[0]}/view?project=${PROJECT_ID}`}
+                    alt="Existing Stall Image"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full bg-neutral-800 text-neutral-500 text-center p-2">
+                    No Stall Image
+                  </div>
+                )}
+              </div>
+              
+              {/* Upload controls */}
+              <div className="flex-1 flex flex-col gap-2 w-full sm:w-auto">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  id="stallImage"
+                  onChange={e => setNewImages(e.target.files.length > 0 ? [e.target.files[0]] : [])}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="stallImage"
+                  className="cursor-pointer bg-neutral-700 text-white rounded-lg py-3 px-4 text-center hover:bg-neutral-600 transition-colors duration-300 w-full"
+                >
+                  {stallImageButtonText}
+                </label>
+                {newImages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewImages([]);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-300"
+                  >
+                    Remove New Image
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* --- END MOVED SECTION --- */}
 
           {/* Menu Items Section */}
           <div>
@@ -534,63 +592,6 @@ export default function EditSpacePage({ params }) {
               >
                 <CiCirclePlus className="w-6 h-6" /> Add New Item
               </button>
-            </div>
-          </div>
-
-          {/* Stall Image/Logo Upload Section */}
-          <div>
-            <label className="block font-semibold mb-3">Food Stall Image/Logo</label>
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              {/* Image Preview Container */}
-              <div className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden border border-neutral-700 flex-shrink-0">
-                {(newImages.length > 0) ? (
-                  <img
-                    src={URL.createObjectURL(newImages[0])}
-                    alt="New Stall Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (stall.images && stall.images.length > 0) ? (
-                  <img
-                    src={`https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${stall.images[0]}/view?project=${PROJECT_ID}`}
-                    alt="Existing Stall Image"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full bg-neutral-800 text-neutral-500 text-center p-2">
-                    No Stall Image
-                  </div>
-                )}
-              </div>
-              
-              {/* Upload controls */}
-              <div className="flex-1 flex flex-col gap-2 w-full sm:w-auto">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  id="stallImage"
-                  onChange={e => setNewImages(e.target.files.length > 0 ? [e.target.files[0]] : [])}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="stallImage"
-                  className="cursor-pointer bg-neutral-700 text-white rounded-lg py-3 px-4 text-center hover:bg-neutral-600 transition-colors duration-300 w-full"
-                >
-                  {stallImageButtonText}
-                </label>
-                {newImages.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNewImages([]);
-                      if (fileInputRef.current) fileInputRef.current.value = '';
-                    }}
-                    className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-300"
-                  >
-                    Remove New Image
-                  </button>
-                )}
-              </div>
             </div>
           </div>
           

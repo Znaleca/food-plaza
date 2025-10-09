@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import getAllReviews from '@/app/actions/getAllReviews';
+import getAllStallReviews from '@/app/actions/getAllStallReviews';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar as solidStar } from '@fortawesome/free-solid-svg-icons';
 
@@ -23,34 +23,17 @@ const RateCard = () => {
   useEffect(() => {
     const loadReviews = async () => {
       try {
-        const data = await getAllReviews();
-        if (!Array.isArray(data.orders)) throw new Error('Unexpected response format');
-
-        const extracted = [];
-        data.orders.forEach((order) => {
-          const { items, rated, rating, comment } = order;
-          items.forEach((itemString, index) => {
-            if (!rated?.[index]) return;
-            let item;
-            try {
-              item = JSON.parse(itemString);
-            } catch {
-              item = { menuName: 'Invalid Item' };
-            }
-            extracted.push({
-              orderId: order.$id,
-              user: order.name || 'Anonymous',
-              item,
-              rating: rating?.[index],
-              comment: comment?.[index],
-            });
-          });
-        });
-
-        setReviews(extracted);
+        // 2. Call the new server action
+        const data = await getAllStallReviews();
+        
+        // 3. Check for the correct structure (data.reviews)
+        if (!Array.isArray(data.reviews)) throw new Error('Unexpected response format');
+        
+        // The data is already formatted correctly as stall reviews by the server action
+        setReviews(data.reviews); 
       } catch (error) {
-        console.error('Could not load reviews:', error);
-        setError('Could not load reviews');
+        console.error('Could not load stall reviews:', error);
+        setError('Could not load stall reviews');
       } finally {
         setLoading(false);
       }
@@ -130,7 +113,7 @@ const RateCard = () => {
       ) : error ? (
         <p className="text-red-500 text-xl text-center">{error}</p>
       ) : reviews.length === 0 ? (
-        <p className="text-neutral-400 text-xl text-center">No reviews found.</p>
+        <p className="text-neutral-400 text-xl text-center">No stall reviews found.</p>
       ) : (
         <div
           className="overflow-hidden w-full"
@@ -157,19 +140,23 @@ const RateCard = () => {
                            hover:border-fuchsia-400 transition-all duration-500 
                            p-6 aspect-square flex flex-col"
               >
+                {/* 4. Use the stall/room name as the title */}
                 <h3 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2">
-                  {review.item.menuName}
+                  {review.roomName || 'Overall Stall Experience'}
                 </h3>
 
+                {/* 5. Use the stall comment */}
                 <p className="italic text-gray-300 text-sm leading-relaxed mb-3 line-clamp-3">
-                  "{review.comment}"
+                  "{review.comment || 'No comment provided.'}"
                 </p>
 
                 <div className="mt-auto">
+                  {/* 6. Use the stall rating */}
                   <div className="mb-3">{renderStarRating(review.rating)}</div>
                   <div className="text-xs text-gray-400 text-center">
                     Reviewed by{' '}
-                    <span className="text-cyan-400 font-semibold">{review.user}</span>
+                    {/* 👇 Using review.user (which is the user's name from the order document) */}
+                    <span className="text-cyan-400 font-semibold">{review.user || 'Anonymous'}</span>
                   </div>
                 </div>
               </div>

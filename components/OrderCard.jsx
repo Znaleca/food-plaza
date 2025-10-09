@@ -1,9 +1,14 @@
+// OrderCard.js
+
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar as solidStar } from '@fortawesome/free-solid-svg-icons';
-import updateRating from '@/app/actions/updateRating';
+// Removed solidStar, kept status/control icons
+import { faCheckCircle, faClock, faHourglassHalf, faTimesCircle, faExclamationCircle, faBan, faReceipt, faXmark } from '@fortawesome/free-solid-svg-icons'; 
+// Removed updateRating import
+import OrderReceipt from './OrderReceipt'; // Assume OrderReceipt.js is in the same directory
 
 const MENU_STATUS = {
   PENDING: 'pending',
@@ -21,126 +26,74 @@ const PAYMENT_STATUS = {
   FAILED: "failed",
 };
 
-// Add the isReadOnly prop with a default value of false
-const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
+// Removed setOrders as it's no longer needed without rating updates
+const OrderCard = ({ order, isReadOnly = false }) => {
+  // Removed state related to rating (selectedItem, rating, comment)
+  const [showReceipt, setShowReceipt] = useState(false); 
 
-  // --- START: Extract Totals from Order Object ---
-  const baseTotal = (order.total && order.total[0]) || 0;
-  const discountAmount = Math.abs((order.total && order.total[1]) || 0); 
-  const finalTotal = (order.total && order.total[2]) || 0;
-  const serviceCharge = 0; 
-  // --- END: Extract Totals from Order Object ---
-
-  // New: Extract table number
   const tableNumber = order.tableNumber?.[0] || 'N/A';
-  //
 
-  const openRatingModal = (index) => {
-    setSelectedItem(index);
-    const initialRating = order.rating?.[index] || 0;
-    const initialComment = order.comment?.[index] || '';
-    setRating(initialRating);
-    setComment(initialComment);
-  };
+  // Removed openRatingModal, closeRatingModal, and handleSubmitRating functions.
 
-  const closeRatingModal = () => {
-    setSelectedItem(null);
-  };
-
-  const handleSubmitRating = async () => {
-    if (rating < 1 || rating > 5) {
-      alert('Please give a rating between 1 and 5');
-      return;
-    }
-
-    try {
-      const updatedRatings = [...(order.rating || [])];
-      const updatedComments = [...(order.comment || [])];
-      const updatedRated = [...(order.rated || [])];
-
-      updatedRatings[selectedItem] = rating;
-      updatedComments[selectedItem] = comment;
-      updatedRated[selectedItem] = true;
-
-      await updateRating(order.$id, updatedRatings, updatedComments, updatedRated);
-
-      setOrders((prevOrders) =>
-        prevOrders.map((o) =>
-          o.$id === order.$id
-            ? { ...o, rating: updatedRatings, comment: updatedComments, rated: updatedRated }
-            : o
-        )
-      );
-
-      closeRatingModal();
-      alert('Thank you for your rating!');
-    } catch (error) {
-      console.error('Error submitting rating:', error);
-      alert('Failed to submit rating.');
-    }
-  };
-
-  // Status badge rendering logic remains the same...
-
-  const renderStatusBadge = (status) => {
-    const base = 'px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase';
-    const badgeColors = {
-      [MENU_STATUS.PENDING]: 'bg-blue-600',
-      [MENU_STATUS.PREPARING]: 'bg-yellow-600',
-      [MENU_STATUS.READY]: 'bg-purple-600',
-      [MENU_STATUS.COMPLETED]: 'bg-green-600',
-      [MENU_STATUS.CANCELLED]: 'bg-red-600',
-      [MENU_STATUS.FAILED]: 'bg-gray-600',
+  // --- DARK THEME STATUS RENDERING (ICON + TEXT) ---
+  const renderStatus = (status) => {
+    // Adjusted colors for better visibility on a dark background
+    const statusMap = {
+      [MENU_STATUS.PENDING]: { text: 'Pending', icon: faClock, color: 'text-gray-400' },
+      [MENU_STATUS.PREPARING]: { text: 'Preparing', icon: faHourglassHalf, color: 'text-yellow-400' },
+      [MENU_STATUS.READY]: { text: 'Ready', icon: faCheckCircle, color: 'text-cyan-400' }, // Using a theme color
+      [MENU_STATUS.COMPLETED]: { text: 'Completed', icon: faCheckCircle, color: 'text-green-500' },
+      [MENU_STATUS.CANCELLED]: { text: 'Cancelled', icon: faTimesCircle, color: 'text-fuchsia-400' }, // Using a theme color
+      [MENU_STATUS.FAILED]: { text: 'Failed', icon: faExclamationCircle, color: 'text-red-500' },
     };
 
-    const statusTextMap = {
-      [MENU_STATUS.PENDING]: 'Pending',
-      [MENU_STATUS.PREPARING]: 'Preparing',
-      [MENU_STATUS.READY]: 'Ready',
-      [MENU_STATUS.COMPLETED]: 'Completed',
-      [MENU_STATUS.CANCELLED]: 'Cancelled',
-      [MENU_STATUS.FAILED]: 'Failed',
-    };
+    const s = statusMap[status] || statusMap[MENU_STATUS.PENDING];
 
     return (
-      <span className={`${base} ${badgeColors[status] || 'bg-gray-600'} text-white`}>
-        {statusTextMap[status] || 'Pending'}
-      </span>
+      <div className={`flex items-center space-x-2 text-sm font-medium ${s.color}`}>
+        <FontAwesomeIcon icon={s.icon} className="w-4 h-4" />
+        <span>{s.text}</span>
+      </div>
     );
   };
 
-  const renderPaymentBadge = (status) => {
-    const base = "px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
-    const badgeColors = {
-      pending: "bg-yellow-600",
-      paid: "bg-green-600",
-      expired: "bg-gray-600",
-      failed: "bg-red-600",
+  const renderPaymentStatus = (status) => {
+    const statusKey = status.toLowerCase();
+    const statusMap = {
+      [PAYMENT_STATUS.PENDING]: { text: 'Pending', icon: faClock, color: 'text-yellow-400' },
+      [PAYMENT_STATUS.PAID]: { text: 'Paid', icon: faCheckCircle, color: 'text-green-500' },
+      [PAYMENT_STATUS.EXPIRED]: { text: 'Expired', icon: faBan, color: 'text-gray-500' },
+      [PAYMENT_STATUS.FAILED]: { text: 'Failed', icon: faExclamationCircle, color: 'text-red-500' },
     };
-  
-    const statusTextMap = {
-      pending: "Pending",
-      paid: "Paid",
-      expired: "Expired",
-      failed: "Failed",
-    };
-  
+
+    const s = statusMap[statusKey] || statusMap[PAYMENT_STATUS.FAILED];
+
     return (
-      <span className={`${base} ${badgeColors[status.toLowerCase()] || "bg-gray-600"} text-white`}>
-        {statusTextMap[status.toLowerCase()] || "Unknown"}
-      </span>
+      <div className={`flex items-center space-x-2 text-base font-semibold ${s.color}`}>
+        <FontAwesomeIcon icon={s.icon} className="w-5 h-5" />
+        <span>{s.text}</span>
+      </div>
     );
   };
-  
+  // -----------------------------------------------------------------
+
 
   const parseItemsGroupedByRoom = () => {
     const grouped = {};
+    let nonCompletedCount = 0; // Track items that are NOT completed
+
     (order.items || []).forEach((itemStr, index) => {
       try {
         const item = JSON.parse(itemStr);
+        
+        // **LOGIC UPDATE: Filter to exclude COMPLETED items**
+        if (item.status === MENU_STATUS.COMPLETED) {
+            return; // Skip this item
+        }
+
+        // If we reach here, the item is NOT completed
+        nonCompletedCount++;
+
         const roomId = item.room_id || 'unknown';
         const roomName = item.room_name || 'Unknown Stall';
 
@@ -151,253 +104,162 @@ const OrderCard = ({ order, setOrders, isReadOnly = false }) => {
           };
         }
 
-        // Add the index and original item data for correct rating tracking
-        grouped[roomId].items.push({ 
-          ...item, 
+        grouped[roomId].items.push({
+          ...item,
           index,
-          itemTotal: (Number(item.menuPrice) * (item.quantity || 1)) - (Number(item.discountAmount) || 0) // Item final total
         });
       } catch {
         // skip broken item
       }
     });
-    return grouped;
+
+    // Return the grouped items and the count of non-completed items
+    return { grouped, nonCompletedCount };
   };
 
-  const getRoomSubtotal = (items) =>
-    items.reduce((sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0);
+  const { grouped: groupedItems, nonCompletedCount } = parseItemsGroupedByRoom();
 
-  const getRoomDiscount = (items) =>
-    items.reduce((sum, item) => sum + Number(item.discountAmount || 0), 0);
+  // **CONDITIONAL RENDERING: Hide the entire card if all items are completed**
+  if (nonCompletedCount === 0) {
+      return null;
+  }
 
-  const getRoomFinalTotal = (items) =>
-    items.reduce((sum, item) => sum + item.itemTotal, 0);
-
-  const groupedItems = parseItemsGroupedByRoom();
-
-  /**
-   * New helper function to count discounted items for a specific room.
-   */
-  const getDiscountedItemCount = (roomName) => {
-    const roomEntry = Object.values(groupedItems).find(group => group.roomName === roomName);
-    if (!roomEntry) return 0;
-
-    // Count how many individual item entries have a non-zero discountAmount
-    const count = roomEntry.items.filter(item => (Number(item.discountAmount) || 0) > 0).length;
-    return count;
-  };
-
-  /**
-   * REVISED parsePromos FUNCTION
-   * Stores the full promo string and the descriptive part.
-   */
-  const parsePromos = () => {
-    const roomPromos = {};
-    (order.promos || []).forEach(promoStr => {
-      // Assuming promo strings are like: 'Room Name - Discount Details (Promo Title)'
-      const parts = promoStr.split(' - ');
-      if (parts.length >= 2) {
-        const roomName = parts[0].trim();
-        const details = parts.slice(1).join(' - ').trim(); // Full descriptive part
-
-        if (!roomPromos[roomName]) {
-          roomPromos[roomName] = [];
-        }
-
-        // Store the details part (e.g., "20% off (Launch Discount)")
-        roomPromos[roomName].push(details);
-      }
-    });
-    return roomPromos;
-  };
-
-  const roomPromos = parsePromos();
-  
   return (
-    <div className="px-4">
-      <div className="bg-white text-black max-w-xl mx-auto rounded-lg shadow-lg p-6 font-mono border border-pink-600">
-        <div className="text-center border-b border-dashed border-gray-400 pb-4 mb-4">
-          <h2 className="text-xl font-bold text-pink-600">ORDER RECEIPT</h2>
-          <p className="text-sm">Order ID: #{order.$id}</p>
-          <p className="text-xs text-gray-500 mt-1">{new Date(order.created_at).toLocaleString()}</p>
-        </div>
+    <div className="w-full">
+      {/* Main Card Container: Dark theme, subtle border, and shadow for depth */}
+      <div className="bg-neutral-900 text-white w-full rounded-xl border border-neutral-700 p-6 sm:p-8 shadow-2xl shadow-neutral-950/50">
 
-        <div className="text-sm mb-4">
-          <p className="mb-1">Customer: <strong>{order.name || 'Unknown'}</strong></p>
-          <p className="mb-1">Email: {order.email}</p>
-          
-          
-          <div className="mt-2">
-            Payment Status: {renderPaymentBadge(order.payment_status || "failed")}
+        {/* Order Header */}
+        <div className="pb-6 mb-6 border-b border-neutral-700">
+          <div className="flex justify-between items-start mb-1">
+            <h2 className="text-3xl font-extrabold tracking-tight">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
+                  ORDER #
+              </span>
+              <span className="text-white ml-1">
+                  {order.$id.slice(-8)}
+              </span>
+            </h2>
+            
+            {/* View Receipt Button */}
+            <button
+              onClick={() => setShowReceipt(true)}
+              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-cyan-400 text-sm font-medium rounded-lg transition duration-150 border border-neutral-700 shadow-lg"
+            >
+              <FontAwesomeIcon icon={faReceipt} className="mr-2" />
+              View Receipt
+            </button>
           </div>
-        </div>
+          
+          <p className="text-sm text-gray-400 mb-4">{new Date(order.created_at).toLocaleString()}</p>
 
-        {/* New Table Number Preview Section */}
-        <div className="mt-4 p-3 bg-pink-50 border border-pink-200 rounded-lg flex justify-between items-center">
-            <p className="font-semibold text-pink-700">Table Number:</p>
-            <span className="text-xl font-extrabold text-pink-600 px-3 py-1 bg-white rounded shadow-sm">
-              {tableNumber}
-            </span>
-          </div>
-          {/* End Table Number Preview Section */}
+          {/* Status/Table Details Grid */}
+          <div className="grid grid-cols-2 gap-4">
 
-
-        <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
-          {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => {
-            const subtotal = getRoomSubtotal(items); // Base Subtotal (before room-level discount)
-            const roomDiscount = getRoomDiscount(items); // Total discount for items in this room
-            const roomFinalTotal = getRoomFinalTotal(items); // Final subtotal after discounts
-
-            return (
-              <div key={roomId} className="border-b border-gray-200 pb-4">
-                <h3 className="text-base font-bold text-pink-500 mb-2">{roomName}</h3>
-                <ul className="space-y-1 text-sm">
-                  {items.map((item) => {
-                    const itemRated = order.rated?.[item.index];
-                    const itemRating = order.rating?.[item.index];
-                    const itemComment = order.comment?.[item.index];
-                    const itemPrice = Number(item.menuPrice);
-                    const itemQuantity = item.quantity;
-                    const itemBasePrice = itemPrice * itemQuantity;
-                    const itemDiscount = Number(item.discountAmount) || 0;
-
-                    return (
-                      <li key={item.index}>
-                        <div className="flex justify-between">
-                          <span>{item.menuName} {item.size && `(${item.size})`} × {itemQuantity}</span>
-                          <span>₱{itemBasePrice.toFixed(2)}</span>
-                        </div>
-                        {itemDiscount > 0 && (
-                          <div className="flex justify-end text-xs text-red-500 italic">
-                            Discount: -₱{itemDiscount.toFixed(2)}
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-500">Stall: {item.room_name || 'N/A'}</div>
-                        <div className="mt-1">{renderStatusBadge(item.status || MENU_STATUS.PENDING)}</div>
-
-                        {/* Conditionally hide the rating buttons if in read-only mode */}
-                        {!isReadOnly && item.status === MENU_STATUS.COMPLETED && (
-                          <div className="mt-2">
-                            {itemRated ? (
-                              <div className="text-xs text-green-600">
-                                Rated:
-                                <div className="flex gap-1 mt-1">
-                                  {[1, 2, 3, 4, 5].map((star) => (
-                                    <FontAwesomeIcon
-                                      key={star}
-                                      icon={solidStar}
-                                      className={itemRating >= star ? 'text-yellow-400' : 'text-gray-400'}
-                                    />
-                                  ))}
-                                </div>
-                                {itemComment && <p className="italic text-gray-600 mt-1">"{itemComment}"</p>}
-                                <button
-                                  onClick={() => openRatingModal(item.index)}
-                                  className="mt-2 text-xs text-pink-600 underline hover:text-pink-700"
-                                >
-                                  Edit Rating
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                onClick={() => openRatingModal(item.index)}
-                                className="mt-2 text-xs text-pink-600 underline hover:text-pink-700"
-                              >
-                                Rate Item
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                <div className="mt-2 text-sm">
-                  <p>Base Subtotal: ₱{subtotal.toFixed(2)}</p>
-                  {roomDiscount > 0 && <p className="text-red-500">Item Discount: -₱{roomDiscount.toFixed(2)}</p>}
-                  <p className="font-semibold text-pink-500">Stall Total: ₱{roomFinalTotal.toFixed(2)}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-500">Base Total:</p>
-          <p className="text-lg font-bold text-gray-800">₱{baseTotal.toFixed(2)}</p>
-
-          {/* Displaying the total discount amount */}
-          {discountAmount > 0 && (
-            <div className="mt-2">
-              <p className="text-sm text-gray-500">Total Discount:</p>
-              <p className="text-lg font-bold text-red-500">-₱{discountAmount.toFixed(2)}</p>
+            {/* Payment Status */}
+            <div>
+                <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Payment Status</p>
+                {renderPaymentStatus(order.payment_status || "failed")}
             </div>
-          )}
 
-          {(Object.keys(roomPromos).length > 0) && (
-            <div className="mt-4 text-sm text-left mx-auto max-w-xs text-gray-700">
-              <p className="font-semibold text-center text-pink-500 mb-2">Applied Promos:</p>
-              <ul className="space-y-3">
-                {Object.entries(roomPromos).map(([roomName, promoDetails], idx) => {
-                  const discountedItemCount = getDiscountedItemCount(roomName);
+            {/* Table Number */}
+            <div className='flex flex-col items-end'>
+                <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Table</p>
+                <div className="flex items-center space-x-1 text-2xl font-semibold">
+                    <span className="text-cyan-400 mr-1">#</span>
+                    <span className="text-white">{tableNumber}</span>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Items Grouped by Stall */}
+        <div className="mb-6 space-y-8">
+          <h3 className="text-xl font-semibold text-gray-300">
+            Items Being Processed
+          </h3>
+          {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => (
+            // Stall Group Container: Lighter dark background for distinction
+            <div key={roomId} className="rounded-lg p-4 bg-neutral-800 border border-neutral-700 shadow-inner shadow-neutral-950/30">
+              <h4 className="text-lg font-bold text-gray-100 mb-4 pb-2 border-b border-neutral-700">{roomName}</h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {items.map((item) => {
+                  const itemQuantity = item.quantity;
 
                   return (
-                    <li key={idx}>
-                      <p className="font-bold text-black border-b border-gray-300 pb-1">{roomName}</p>
-                      <ul className="ml-2 mt-1 space-y-0.5">
-                        {promoDetails.map((detail, detailIdx) => (
-                          <li key={detailIdx} className="text-pink-600 italic text-xs">
-                            {/* NEW LOGIC: Prepend the item count */}
-                            &bull; **{discountedItemCount} Item{discountedItemCount !== 1 ? 's' : ''}** applied with {detail}
-                          </li>
-                        ))}
-                      </ul>
-                    </li>
+                    // Item Card
+                    <div
+                      key={item.index}
+                      className="relative border border-neutral-700 rounded-md bg-neutral-900 p-4 flex flex-col items-center text-center transition-all duration-300"
+                    >
+                      {/* Menu Image */}
+                      {item.menuImage && (
+                        <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden relative mb-2 border border-neutral-600">
+                          <Image 
+                            src={item.menuImage}
+                            alt={item.menuName}
+                            width={80}  // Required width
+                            height={80} // Required height
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+
+                      {/* Item Details */}
+                      <div className="flex-grow w-full">
+                        <p className="font-semibold text-white text-base leading-snug">
+                            {item.menuName} {item.size && <span className="text-gray-400 font-normal">({item.size})</span>}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Qty: <span className="font-bold text-cyan-400">{itemQuantity}</span>
+                        </p>
+
+                        <div className="mt-4 pt-3 border-t border-neutral-700">
+                            {/* Status (The focus of this non-rating card) */}
+                            <div className="mb-1">
+                                {renderStatus(item.status || MENU_STATUS.PENDING)}
+                            </div>
+                            
+                            {/* Removed Rating Controls entirely */}
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </ul>
+              </div>
             </div>
-          )}
+          ))}
+        </div>
 
-          <div className="mt-6">
-            <p className="text-sm text-gray-500">Final Total:</p>
-            <p className="text-lg font-bold text-pink-600">₱{finalTotal.toFixed(2)}</p>
-          </div>
+        {/* Order Summary Footer */}
+        <div className="pt-6 mt-6 border-t border-neutral-700 text-center">
+            <p className="text-base text-gray-400 font-light">
+                Thank you for your order!
+            </p>
         </div>
       </div>
 
-      {/* Conditionally hide the rating modal based on the prop */}
-      {!isReadOnly && selectedItem !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70" aria-modal="true" role="dialog">
-          <div className="bg-neutral-800 p-6 rounded-lg w-full max-w-md shadow-lg text-white">
-            <h3 className="text-lg font-bold text-center mb-4 text-pink-500">Rate This Menu Item</h3>
-            <div className="flex justify-center mb-4 gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
+      {/* Removed Rating Modal JSX */}
+
+      {/* Receipt Modal */}
+      {showReceipt && (
+        <div 
+          className="fixed inset-0 z-50 flex items-start justify-center bg-gray-950 bg-opacity-80 backdrop-blur-sm p-4 overflow-y-auto" 
+          aria-modal="true" 
+          role="dialog"
+        >
+            <div className="relative w-full max-w-xl my-8">
+                {/* Close button */}
                 <button
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className={`text-2xl transition ${rating >= star ? 'text-yellow-400' : 'text-gray-600'}`}
-                  aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                    onClick={() => setShowReceipt(false)}
+                    className="absolute -top-3 -right-3 z-10 w-8 h-8 flex items-center justify-center text-white bg-pink-600 hover:bg-pink-700 rounded-full shadow-lg transition"
+                    aria-label="Close Receipt"
                 >
-                  <FontAwesomeIcon icon={solidStar} />
+                    <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
                 </button>
-              ))}
+                <OrderReceipt order={order} />
             </div>
-            <textarea
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-md p-2 text-sm text-white"
-              rows={3}
-              placeholder="Leave a comment (optional)"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-            />
-            <div className="mt-4 flex justify-end gap-2">
-              <button onClick={closeRatingModal} className="px-4 py-2 text-gray-400 hover:text-white text-sm">Cancel</button>
-              <button onClick={handleSubmitRating} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md">
-                Submit
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

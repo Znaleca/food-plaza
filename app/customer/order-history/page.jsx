@@ -1,16 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link'; // Import Link for client-side navigation
+import { useRouter } from 'next/navigation';
 import { Client } from 'appwrite';
+import { ArrowLeft } from 'lucide-react';
 import getUserOrders from '@/app/actions/getUserOrders';
-import OrderCard from '@/components/OrderCard';
+import OrderHistory from '@/components/OrderHistory';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
-const OrderStatusPage = () => {
+const OrderHistoryPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const router = useRouter();
 
   const loadOrders = async () => {
     try {
@@ -41,7 +43,6 @@ const OrderStatusPage = () => {
       `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE}.collections.${process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS}.documents`,
       async (response) => {
         console.log('Realtime update:', response);
-        // Just reload orders when anything changes
         await loadOrders();
       }
     );
@@ -53,39 +54,28 @@ const OrderStatusPage = () => {
   }, []);
 
   return (
-    <div className="w-full -mt-20 min-h-screen bg-neutral-950 text-white">
+    <div className="relative w-full -mt-20 min-h-screen bg-neutral-950 text-white">
+      {/* 🡸 Back Button */}
+      <button
+        onClick={() => router.push('/customer/order-status')}
+        className="absolute top-8 left-4 sm:top-12 sm:left-6 p-3 rounded-full text-white bg-neutral-800/80 hover:bg-neutral-700 transition duration-200 flex items-center justify-center shadow-xl z-10 border border-neutral-700"
+        aria-label="Go back to Order Status"
+        title="Back to Order Status"
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </button>
+
       <section className="w-full py-32 px-4 sm:px-6">
-        <header className="text-center mb-16 mt-12 sm:mt-16 px-4">
+        <header className="text-center mb-28 mt-12 sm:mt-16 px-4">
           <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
             MY ORDERS
           </h2>
-          <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-8">
-            Track your{' '}
+          <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+          Your order{' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-              active meals.
+            history and reviews.
             </span>
           </p>
-
-          {/* --- ENHANCED HISTORY LINK --- */}
-<Link
-  href="/customer/order-history"
-  className="relative inline-flex items-center gap-2 px-8 py-3 text-sm sm:text-base font-semibold rounded-full
-             bg-gradient-to-r from-cyan-500/20 via-fuchsia-500/20 to-cyan-500/20 
-             border border-cyan-400/30 text-cyan-300 
-             hover:from-cyan-500/30 hover:via-fuchsia-500/30 hover:to-cyan-500/30
-             hover:border-fuchsia-500 hover:text-white
-             transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]
-             group"
->
-  <span className="relative z-10">View History and Reviews</span>
-  <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
-
-  {/* Glow effect */}
-  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-cyan-500 
-                   opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500"></span>
-</Link>
-{/* -------------------------------- */}
-
         </header>
 
         {loading ? (
@@ -93,15 +83,11 @@ const OrderStatusPage = () => {
         ) : error ? (
           <p className="text-red-500 text-center">{error}</p>
         ) : orders.length === 0 ? (
-          <div className="text-center">
-            <p className="text-gray-500 text-lg">No active orders found.</p>
-            <p className="text-gray-500 text-sm mt-2">Any completed orders will be in your history.</p>
-          </div>
+          <p className="text-gray-500 text-center">No orders found.</p>
         ) : (
           <div className="space-y-8">
             {orders.map((order) => (
-              // OrderCard will automatically hide if all its items are completed
-              <OrderCard key={order.$id} order={order} setOrders={setOrders} />
+              <OrderHistory key={order.$id} order={order} setOrders={setOrders} />
             ))}
           </div>
         )}
@@ -110,4 +96,4 @@ const OrderStatusPage = () => {
   );
 };
 
-export default OrderStatusPage;
+export default OrderHistoryPage;

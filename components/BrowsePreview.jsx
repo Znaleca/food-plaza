@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import getAllSpaces from '@/app/actions/getAllSpaces';
-import getAllReviews from '@/app/actions/getAllReviews';
+// 1. Import the new server action
+import getAllStallReviews from '@/app/actions/getAllStallReviews'; 
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useRouter } from 'next/navigation';
 import SpaceCard from './SpaceCard';
@@ -24,34 +25,31 @@ export default function BrowsePreview() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 2. Use getAllStallReviews instead of getAllReviews
         const [spaces, reviewData] = await Promise.all([
           getAllSpaces(),
-          getAllReviews(1, 100),
+          getAllStallReviews(),
         ]);
 
-        const allReviews = reviewData?.orders || [];
+        // The structure of reviewData is { reviews: extractedReviews[] }
+        const allReviews = reviewData?.reviews || []; 
         const ratingMap = {};
 
-        allReviews.forEach((order) => {
-          const { items, rated, rating } = order;
-          items.forEach((itemStr, idx) => {
-            if (!rated?.[idx]) return;
-            let item;
-            try {
-              item = JSON.parse(itemStr);
-            } catch {
-              return;
-            }
-            const roomName = item.room_name;
-            if (!roomName) return;
-            if (!ratingMap[roomName]) {
-              ratingMap[roomName] = { total: 0, count: 0 };
-            }
-            const value = Number(rating?.[idx]) || 0;
-            ratingMap[roomName].total += value;
-            ratingMap[roomName].count += 1;
-          });
+        // 3. Update the logic to process the new allReviews structure
+        allReviews.forEach((review) => {
+          const { roomName, rating } = review;
+          
+          if (!roomName || rating === undefined || rating === null) return;
+          
+          if (!ratingMap[roomName]) {
+            ratingMap[roomName] = { total: 0, count: 0 };
+          }
+          
+          const value = Number(rating) || 0;
+          ratingMap[roomName].total += value;
+          ratingMap[roomName].count += 1;
         });
+        // End of updated review processing logic
 
         const enrichedRooms = (spaces || []).map((room) => {
           const ratingData = ratingMap[room.name] || { total: 0, count: 0 };
@@ -76,7 +74,7 @@ export default function BrowsePreview() {
 
     // GSAP ScrollTrigger setup for desktop only
     let st;
-    if (
+    if (typeof window !== 'undefined' && 
       window.innerWidth >= 1024 &&
       containerRef.current &&
       featuredRef.current &&
