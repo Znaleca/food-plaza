@@ -11,7 +11,7 @@ const ORDER_STATUS = {
   PREPARING: "preparing",
   READY: "ready",
   COMPLETED: "completed",
-  CANCELLED: "cancelled",
+  // REMOVED: CANCELLED: "cancelled",
   FAILED: "failed", // The status we want to make unclickable
 };
 
@@ -129,6 +129,10 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
           } else if (newStatus === ORDER_STATUS.READY) {
             message = `Hi ${order.name || "Customer"}, your order from ${roomName} is now ready for pickup. Please proceed to the counter. Thank you for choosing us.`;
             endpoint = "/api/semaphore/order-ready"; // Specific ready endpoint
+          } else if (newStatus === ORDER_STATUS.COMPLETED) {
+            // NEW SMS MESSAGE FOR COMPLETED STATUS
+            message = `Hi ${order.name || "Customer"}, your order is now complete. Thank you for choosing ${roomName}! We'd love to hear your feedback—please consider leaving a review for a better future experience.`;
+            endpoint = "/api/semaphore/order-completed"; // New specific completed endpoint (you may need to create this)
           }
 
           if (message) {
@@ -161,7 +165,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
       preparing: "bg-yellow-500/20 text-yellow-300 border border-yellow-400/50",
       ready: "bg-indigo-500/20 text-indigo-300 border border-indigo-400/50",
       completed: "bg-green-500/20 text-green-300 border border-green-400/50",
-      cancelled: "bg-red-500/20 text-red-300 border border-red-400/50",
+      // REMOVED: cancelled: "bg-red-500/20 text-red-300 border border-red-400/50",
       failed: "bg-gray-500/20 text-gray-300 border border-gray-400/50",
     };
 
@@ -170,7 +174,7 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
       preparing: "Preparing",
       ready: "Ready",
       completed: "Completed",
-      cancelled: "Cancelled",
+      // REMOVED: cancelled: "Cancelled",
       failed: "Failed",
     };
 

@@ -2,13 +2,7 @@
 
 'use client';
 
-const PAYMENT_STATUS = {
-  PENDING: "pending",
-  PAID: "paid",
-  EXPIRED: "expired",
-  FAILED: "failed",
-};
-
+// REMOVED: PAYMENT_STATUS object is no longer needed
 
 // Component for rendering a read-only order receipt.
 const OrderReceipt = ({ order }) => {
@@ -20,31 +14,7 @@ const OrderReceipt = ({ order }) => {
   // --- END: Extract Totals from Order Object ---
 
 
-  // The badge function is kept only for the payment status, which is part of the receipt.
-  const renderPaymentBadge = (status) => {
-    const base = "px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase";
-    const badgeColors = {
-      pending: "bg-yellow-600",
-      paid: "bg-green-600",
-      expired: "bg-gray-600",
-      failed: "bg-red-600",
-    };
-  
-    const statusTextMap = {
-      pending: "Pending",
-      paid: "Paid",
-      expired: "Expired",
-      failed: "Failed",
-    };
-    
-    const statusKey = (status || PAYMENT_STATUS.FAILED).toLowerCase();
-  
-    return (
-      <span className={`${base} ${badgeColors[statusKey] || "bg-gray-600"} text-white`}>
-        {statusTextMap[statusKey] || "Unknown"}
-      </span>
-    );
-  };
+  // REMOVED: renderPaymentBadge function is no longer needed
   
 
   const parseItemsGroupedByRoom = () => {
@@ -139,9 +109,11 @@ const OrderReceipt = ({ order }) => {
           <p className="mb-1">Email: {order.email}</p>
           <p className="mb-1">Table: **{order.tableNumber?.[0] || 'N/A'}**</p>
           
+          {/* REMOVED: Payment Status Block
           <div className="mt-2">
             Payment Status: {renderPaymentBadge(order.payment_status || "failed")}
           </div>
+          */}
         </div>
 
         <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
