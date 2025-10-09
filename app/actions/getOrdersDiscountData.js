@@ -5,10 +5,8 @@ import { Query } from 'appwrite';
 
 /**
  * Fetches all order documents (up to a maximum limit) and aggregates
- * the total discount applied to each unique menu item across all orders.
- *
- * NOTE: For very large order counts (over 2000), consider implementing 
- * pagination logic here to ensure all data is processed.
+ * the total discount applied to each unique menu item across only 
+ * *successfully paid* orders.
  *
  * @returns {Promise<Array<{menuName: string, totalDiscount: number, roomName: string}>>}
  */
@@ -19,10 +17,14 @@ const getOrdersDiscountData = async () => {
     // Set a high limit to fetch comprehensive data for aggregation
     const MAX_DOCS_LIMIT = 2000; 
 
+    // 🛑 MODIFICATION: Filter to only include documents where payment_status is 'paid'
     const response = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
       [
+        // 🟢 NEW: Filter by successful payment status
+        Query.equal('payment_status', 'paid'), 
+        
         // Fetch a large chunk of documents
         Query.limit(MAX_DOCS_LIMIT),
         // We only need the items array, which contains the discount data
@@ -35,6 +37,8 @@ const getOrdersDiscountData = async () => {
     const itemDiscountMap = new Map();
 
     for (const order of response.documents) {
+      // Since we filtered by payment_status='paid' in the query, 
+      // all orders here are successful.
       if (!order.items || !Array.isArray(order.items)) continue;
 
       for (const itemStr of order.items) {

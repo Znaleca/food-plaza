@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import getAllMenu from '@/app/actions/getAllMenu';
 import getOrdersQuantity from '@/app/actions/getOrdersQuantity';
 import getOrdersDiscountData from '@/app/actions/getOrdersDiscountData'; 
+import getOrdersPaymentSummary from '@/app/actions/getOrdersPaymentSummary';
 import {
     FaMoneyBillTrendUp,
     FaBoxOpen,
@@ -64,6 +65,8 @@ const SalesCard = ({ roomName }) => {
   const [stallDocuments, setStallDocuments] = useState([]);
   const [quantities, setQuantities] = useState([]);
   const [discountData, setDiscountData] = useState([]); 
+  // PAYMENT SUMMARY INITIAL STATE (used for stall-specific data)
+  const [paymentSummary, setPaymentSummary] = useState({ paidRevenue: 0, failedRevenue: 0, ordersCount: 0 }); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -77,16 +80,19 @@ const SalesCard = ({ roomName }) => {
       setLoading(true);
       setError(null);
       try {
-        // Fetch all three data sets concurrently
-        const [menuRes, qtyRes, discountRes] = await Promise.all([
+        // Fetch all four data sets concurrently
+        const [menuRes, qtyRes, discountRes, paymentSummaryRes] = await Promise.all([ 
           getAllMenu(),
           getOrdersQuantity(),
-          getOrdersDiscountData(), 
+          getOrdersDiscountData(),
+          // Pass roomName to fetch stall-specific payment data
+          getOrdersPaymentSummary(roomName), 
         ]);
 
         setStallDocuments(menuRes.documents || []);
         setQuantities(qtyRes || []);
-        setDiscountData(discountRes || []); 
+        setDiscountData(discountRes || []);
+        setPaymentSummary(paymentSummaryRes); // Set stall-specific payment summary
 
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -97,7 +103,8 @@ const SalesCard = ({ roomName }) => {
     };
 
     loadData();
-  }, [roomName]);
+  // ADDED roomName to dependency array to refetch when the stall changes
+  }, [roomName]); 
 
   // --- BASE DATA PROCESSING ---
   const allMenuItems = useMemo(() => {
@@ -120,7 +127,7 @@ const SalesCard = ({ roomName }) => {
   }, [discountData, roomName]);
 
 
-  // Enhance menu items with sales data (ALL-TIME) - NOW INCLUDES DISCOUNT
+  // Enhance menu items with sales data (ALL-TIME) - Includes ALL orders, successful or not
   const allTimeEnhancedMenuItems = useMemo(() => {
       return currentStallMenuItems.map(item => {
           const matchingQty = currentStallQuantities.find(qty => qty.menuName === item.name);
@@ -129,36 +136,40 @@ const SalesCard = ({ roomName }) => {
           const count = matchingQty ? matchingQty.count : 0;
           const totalDiscount = matchingDiscount ? matchingDiscount.totalDiscount : 0;
           
-          // Calculate Base Revenue (Gross Sales)
+          // Calculate Base Revenue (Gross Sales) for ALL attempted orders (used for item-level analysis)
           const baseRevenue = (item.price ?? 0) * count; 
           // Final Revenue (Net Sales) is base revenue minus the total discount
           const totalRevenue = baseRevenue - totalDiscount; 
           
           return {
               ...item,
-              count,
-              baseRevenue, // Gross Sales
+              count, // Total attempted orders count
+              baseRevenue, // Gross Sales (ALL attempted orders)
               totalDiscount, 
-              totalRevenue // Net Sales
+              totalRevenue // Net Sales (ALL attempted orders)
           };
       }).sort((a, b) => b.count - a.count); // Sorted by ALL-TIME count descending
   }, [currentStallMenuItems, currentStallQuantities, currentStallDiscountData]);
 
-  // Calculate ALL-TIME totals
+  // Calculate TRUE ALL-TIME totals using paymentSummary
   const totalItemsSold = useMemo(() => allTimeEnhancedMenuItems.reduce((sum, item) => sum + item.count, 0), [allTimeEnhancedMenuItems]);
-  const totalBaseRevenue = useMemo(() => allTimeEnhancedMenuItems.reduce((sum, item) => sum + item.baseRevenue, 0), [allTimeEnhancedMenuItems]); // ALL-TIME Gross
   const totalDiscountApplied = useMemo(() => allTimeEnhancedMenuItems.reduce((sum, item) => sum + item.totalDiscount, 0), [allTimeEnhancedMenuItems]);
-  const totalFinalRevenue = useMemo(() => allTimeEnhancedMenuItems.reduce((sum, item) => sum + item.totalRevenue, 0), [allTimeEnhancedMenuItems]); // ALL-TIME Net
+  
+  // 🟢 TRUE ALL-TIME GROSS REVENUE (Only from successfully paid orders)
+  const totalTrueGrossRevenue = useMemo(() => paymentSummary.paidRevenue, [paymentSummary.paidRevenue]);
+  
+  // 🟢 TRUE ALL-TIME NET REVENUE (True Gross - Discount)
+  const totalTrueFinalRevenue = useMemo(() => totalTrueGrossRevenue - totalDiscountApplied, [totalTrueGrossRevenue, totalDiscountApplied]);
 
-  // Placeholder Calculations for filtering (based on ALL-TIME totals)
-  const avgDailyRevenue = totalFinalRevenue / 30;
-  const avgWeeklyRevenue = totalFinalRevenue / 4;
+  // Placeholder Calculations for filtering (based on TRUE ALL-TIME totals)
+  const avgDailyRevenue = totalTrueFinalRevenue / 30;
+  const avgWeeklyRevenue = totalTrueFinalRevenue / 4;
   const avgDailyDiscount = totalDiscountApplied / 30;
   const avgWeeklyDiscount = totalDiscountApplied / 4;
   
-  // NEW: Placeholder for Gross Revenue filtering
-  const avgDailyBaseRevenue = totalBaseRevenue / 30;
-  const avgWeeklyBaseRevenue = totalBaseRevenue / 4;
+  // Placeholder for True Gross Revenue filtering
+  const avgDailyBaseRevenue = totalTrueGrossRevenue / 30;
+  const avgWeeklyBaseRevenue = totalTrueGrossRevenue / 4;
 
 
   // --- FILTERED DATA FOR CHART & METRICS (SIMULATION) ---
@@ -166,49 +177,52 @@ const SalesCard = ({ roomName }) => {
     if (timeFilter === 'all-time') {
       return {
         items: allTimeEnhancedMenuItems,
-        baseRevenueLabel: formatCurrency(totalBaseRevenue), // ALL-TIME Gross
+        baseRevenueLabel: formatCurrency(totalTrueGrossRevenue), // TRUE ALL-TIME Gross
         discountLabel: formatCurrency(totalDiscountApplied),
-        finalRevenueLabel: formatCurrency(totalFinalRevenue),
+        finalRevenueLabel: formatCurrency(totalTrueFinalRevenue), // TRUE ALL-TIME Net
       };
     }
 
     // SIMULATION LOGIC
-    const baseCount = totalItemsSold;
+    const baseCount = totalItemsSold; // Use ALL-TIME item count as base
 
     // Define the scaling factor for quantity based on the time filter.
     let countScaleFactor;
-    let baseRevenueLabel; // NEW Label
+    let baseRevenueLabel; 
     let discountLabel;
     let finalRevenueLabel;
 
     if (timeFilter === 'today') {
+      // Scale based on 1/30th of items sold, but display the TRUE daily average revenue
       countScaleFactor = baseCount > 0 ? (totalItemsSold / 30) / baseCount : 0;
-      baseRevenueLabel = formatCurrency(avgDailyBaseRevenue); // Daily Gross
+      baseRevenueLabel = formatCurrency(avgDailyBaseRevenue); // Daily True Gross
       discountLabel = formatCurrency(avgDailyDiscount);
-      finalRevenueLabel = formatCurrency(avgDailyRevenue); // Daily Net
+      finalRevenueLabel = formatCurrency(avgDailyRevenue); // Daily True Net
     } else if (timeFilter === 'week') {
+      // Scale based on 1/4th of items sold, but display the TRUE weekly average revenue
       countScaleFactor = baseCount > 0 ? (totalItemsSold / 4) / baseCount : 0;
-      baseRevenueLabel = formatCurrency(avgWeeklyBaseRevenue); // Weekly Gross
+      baseRevenueLabel = formatCurrency(avgWeeklyBaseRevenue); // Weekly True Gross
       discountLabel = formatCurrency(avgWeeklyDiscount);
-      finalRevenueLabel = formatCurrency(avgWeeklyRevenue); // Weekly Net
+      finalRevenueLabel = formatCurrency(avgWeeklyRevenue); // Weekly True Net
     } else if (timeFilter === 'month') {
+      // Month simulates ALL-TIME data (assuming ALL-TIME = 1 month of full data)
       countScaleFactor = 1;
-      baseRevenueLabel = formatCurrency(totalBaseRevenue); // Monthly Gross
+      baseRevenueLabel = formatCurrency(totalTrueGrossRevenue); // Monthly True Gross
       discountLabel = formatCurrency(totalDiscountApplied);
-      finalRevenueLabel = formatCurrency(totalFinalRevenue); // Monthly Net
+      finalRevenueLabel = formatCurrency(totalTrueFinalRevenue); // Monthly True Net
     } else {
       countScaleFactor = 1;
-      baseRevenueLabel = formatCurrency(totalBaseRevenue);
+      baseRevenueLabel = formatCurrency(totalTrueGrossRevenue);
       discountLabel = formatCurrency(totalDiscountApplied);
-      finalRevenueLabel = formatCurrency(totalFinalRevenue);
+      finalRevenueLabel = formatCurrency(totalTrueFinalRevenue);
     }
 
     const simulatedItems = allTimeEnhancedMenuItems.map(item => {
       const simulatedCount = Math.max(0, Math.round(item.count * countScaleFactor));
       const simulatedDiscount = item.totalDiscount * countScaleFactor; 
       
-      const simulatedBaseRevenue = item.price * simulatedCount; // SIMULATED GROSS
-      const simulatedFinalRevenue = simulatedBaseRevenue - simulatedDiscount; // SIMULATED NET
+      const simulatedBaseRevenue = item.price * simulatedCount; // SIMULATED GROSS (before revenue adjustment)
+      const simulatedFinalRevenue = simulatedBaseRevenue - simulatedDiscount; // SIMULATED NET (before revenue adjustment)
       
       return {
         ...item,
@@ -221,11 +235,25 @@ const SalesCard = ({ roomName }) => {
 
     return {
       items: simulatedItems,
+      // The labels are the true revenue averages, not the sum of simulated items
       baseRevenueLabel: baseRevenueLabel,
       discountLabel: discountLabel,
       finalRevenueLabel: finalRevenueLabel,
     };
-  }, [timeFilter, allTimeEnhancedMenuItems, totalItemsSold, totalFinalRevenue, totalDiscountApplied, totalBaseRevenue, avgDailyRevenue, avgWeeklyRevenue, avgDailyDiscount, avgWeeklyDiscount, avgDailyBaseRevenue, avgWeeklyBaseRevenue]);
+  }, [
+    timeFilter, 
+    allTimeEnhancedMenuItems, 
+    totalItemsSold, 
+    totalTrueFinalRevenue, 
+    totalDiscountApplied, 
+    totalTrueGrossRevenue, 
+    avgDailyRevenue, 
+    avgWeeklyRevenue, 
+    avgDailyDiscount, 
+    avgWeeklyDiscount, 
+    avgDailyBaseRevenue, 
+    avgWeeklyBaseRevenue
+  ]);
 
 
   // Data for Chart and Summaries
@@ -236,17 +264,10 @@ const SalesCard = ({ roomName }) => {
     return filteredData.items;
   }, [filteredData.items, timeFilter]);
 
-  const filteredTotalFinalRevenue = useMemo(() => {
-    return filteredData.items.reduce((sum, item) => sum + item.totalRevenue, 0);
-  }, [filteredData.items]);
-  
-  const filteredTotalDiscountApplied = useMemo(() => {
-    return filteredData.items.reduce((sum, item) => sum + item.totalDiscount, 0);
-  }, [filteredData.items]); 
-  
-  const filteredTotalBaseRevenue = useMemo(() => { // NEW FILTERED TOTAL
-    return filteredData.items.reduce((sum, item) => sum + item.baseRevenue, 0);
-  }, [filteredData.items]);
+  // For the summary cards, we use the pre-calculated TRUE revenue labels
+  const filteredTotalFinalRevenueDisplay = filteredData.finalRevenueLabel;
+  const filteredTotalDiscountAppliedDisplay = filteredData.discountLabel; 
+  const filteredTotalBaseRevenueDisplay = filteredData.baseRevenueLabel; // NEW FILTERED TOTAL
 
   const filteredTotalItemsSold = useMemo(() => {
       return filteredData.items.reduce((sum, item) => sum + item.count, 0);
@@ -322,50 +343,82 @@ const SalesCard = ({ roomName }) => {
         {/* MODIFIED: Changed grid to display Gross Revenue next to Final Revenue. */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
 
-          {/* Filtered Items Sold */}
+          {/* Filtered Items Sold (based on item count scale) */}
           <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
             <FaBoxOpen className="w-6 h-6 text-pink-500 mb-1" />
             <p className="text-xl font-semibold text-pink-400">{filteredTotalItemsSold}</p>
             <p className="text-xs text-neutral-400">Orders</p>
           </div>
 
-          {/* Filtered Total Gross Revenue (NEW CARD) */}
+          {/* Filtered Total Gross Revenue (TRUE Gross Revenue) */}
           <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
             <FaMoneyBillTrendUp className="w-6 h-6 text-yellow-400 mb-1" />
-            <p className="text-xl font-semibold text-yellow-400">{formatCurrency(filteredTotalBaseRevenue)}</p>
+            <p className="text-xl font-semibold text-yellow-400">{filteredTotalBaseRevenueDisplay}</p>
             <p className="text-xs text-neutral-400">Gross Revenue</p>
           </div>
           
           {/* Filtered Total Discount Applied */}
           <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
             <FaPercent className="w-6 h-6 text-orange-400 mb-1" />
-            <p className="text-xl font-semibold text-orange-400">{formatCurrency(filteredTotalDiscountApplied)}</p>
+            <p className="text-xl font-semibold text-orange-400">{filteredTotalDiscountAppliedDisplay}</p>
             <p className="text-xs text-neutral-400">Total Discount</p>
           </div>
 
-          {/* Filtered Total Final Revenue (Net) */}
+          {/* Filtered Total Final Revenue (True Net Revenue) */}
           <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
             <FaMoneyBillTrendUp className="w-6 h-6 text-pink-500 mb-1" />
-            <p className="text-xl font-semibold text-pink-400">{formatCurrency(filteredTotalFinalRevenue)}</p>
+            <p className="text-xl font-semibold text-pink-400">{filteredTotalFinalRevenueDisplay}</p>
             <p className="text-xs text-neutral-400">Final Revenue (Net)</p>
           </div>
 
-          {/* ALL-TIME Total Items Sold (Summary) */}
+          {/* ALL-TIME Total Items Sold (Summary - All Attempts) */}
           <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
             <FaBoxOpen className="w-6 h-6 text-neutral-500 mb-1" />
             <p className="text-xl font-semibold text-neutral-400">{totalItemsSold}</p>
-            <p className="text-xs text-neutral-500">All-Time Orders</p>
+            <p className="text-xs text-neutral-500">All-Time Orders (Attempted)</p>
           </div>
 
-          {/* ALL-TIME Total Revenue (Final) (Summary) */}
+          {/* ALL-TIME Total Revenue (True Net) (Summary) */}
           <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
             <FaMoneyBillTrendUp className="w-6 h-6 text-neutral-500 mb-1" />
-            <p className="text-xl font-semibold text-neutral-400">{formatCurrency(totalFinalRevenue)}</p>
+            <p className="text-xl font-semibold text-neutral-400">{formatCurrency(totalTrueFinalRevenue)}</p>
             <p className="text-xs text-neutral-500">All-Time Net Rev.</p>
           </div>
 
         </div>
       </div>
+      
+      {/* ---------------------------------------------------------------- */}
+      {/* 🟢 PAYMENT STATUS REVENUE SUMMARY (Now stall-specific) */}
+      <div className="bg-neutral-900 rounded-xl p-6 mb-8 border-t border-neutral-700/50">
+        <h3 className="text-lg font-bold mb-4 text-center text-white flex items-center justify-center">
+          <FaMoneyBillTrendUp className="w-5 h-5 mr-2 text-green-400" />
+          All-Time Payment Status Revenue Summary <span className="text-pink-400 ml-2">({roomName})</span>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            {/* Total Orders Card */}
+            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center">
+                <FaBoxOpen className="w-6 h-6 text-neutral-400 mb-1" />
+                <p className="text-xl font-semibold text-neutral-300">{paymentSummary.ordersCount}</p>
+                <p className="text-xs text-neutral-500">Total Checkout Attempted</p>
+            </div>
+            
+            {/* Paid Revenue Card (TRUE GROSS REVENUE) */}
+            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center border-2 border-green-500/50">
+                <FaMoneyBillTrendUp className="w-6 h-6 text-green-400 mb-1" />
+                <p className="text-xl font-semibold text-green-400">{formatCurrency(paymentSummary.paidRevenue)}</p>
+                <p className="text-xs text-neutral-400">Successfully Paid (True Gross)</p>
+            </div>
+            
+            {/* Failed Revenue Card */}
+            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center border-2 border-red-500/50">
+                <FaArrowTrendDown className="w-6 h-6 text-red-400 mb-1" />
+                <p className="text-xl font-semibold text-red-400">{formatCurrency(paymentSummary.failedRevenue)}</p>
+                <p className="text-xs text-neutral-400">Payment Failed (Lost Gross)</p>
+            </div>
+        </div>
+      </div>
+      {/* ---------------------------------------------------------------- */}
 
       {/* Sales Chart Section with Filter Control (No change here) */}
       <div className="bg-neutral-900 rounded-xl p-6 mb-8">
@@ -451,7 +504,7 @@ const SalesCard = ({ roomName }) => {
         )}
       </div>
 
-      {/* Best/Least Seller Cards (No change here) */}
+      {/* Best/Least Seller Cards (Uses item-level simulation/all-time data) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* Best Seller Card */}
         <div className="bg-neutral-800 p-4 rounded-xl">
@@ -463,7 +516,8 @@ const SalesCard = ({ roomName }) => {
                     <p className="text-lg font-semibold text-white truncate">{currentBestSeller.name}</p>
                     <p className="text-sm text-neutral-400">Sold: <span className="text-green-300 font-bold">{currentBestSeller.count} orders</span></p>
                     <p className="text-sm text-neutral-400">Discount: <span className="text-orange-300 font-bold">{formatCurrency(currentBestSeller.totalDiscount)}</span></p>
-                    <p className="text-sm text-neutral-400">Final Revenue: <span className="text-green-300 font-bold">{formatCurrency(currentBestSeller.totalRevenue)}</span></p>
+                    {/* Note: Best/Least Seller Revenue is Gross before adjusting for overall payment failures */}
+                    <p className="text-sm text-neutral-400">Simulated Net Rev: <span className="text-green-300 font-bold">{formatCurrency(currentBestSeller.totalRevenue)}</span></p>
                 </>
             ) : (
                 <p className="text-sm text-neutral-500">No items sold in this period.</p>
@@ -480,7 +534,7 @@ const SalesCard = ({ roomName }) => {
                     <p className="text-lg font-semibold text-white truncate">{currentLeastSeller.name}</p>
                     <p className="text-sm text-neutral-400">Sold: <span className="text-red-300 font-bold">{currentLeastSeller.count} orders</span></p>
                     <p className="text-sm text-neutral-400">Discount: <span className="text-orange-300 font-bold">{formatCurrency(currentLeastSeller.totalDiscount)}</span></p>
-                    <p className="text-sm text-neutral-400">Final Revenue: <span className="text-red-300 font-bold">{formatCurrency(currentLeastSeller.totalRevenue)}</span></p>
+                    <p className="text-sm text-neutral-400">Simulated Net Rev: <span className="text-red-300 font-bold">{formatCurrency(currentLeastSeller.totalRevenue)}</span></p>
                 </>
             ) : (
                 <p className="text-sm text-neutral-500">No items with sales data in this period.</p>
@@ -534,7 +588,7 @@ const SalesCard = ({ roomName }) => {
                         <p className="text-sm font-bold text-pink-400">{formatCurrency(item.price)}</p>
                     </div>
 
-                    {/* Gross Revenue */}
+                    {/* Gross Revenue (Simulated/All-Time) */}
                     <div className="flex flex-col items-start pt-2 border-t border-neutral-700/50">
                         <p className="text-xs text-neutral-400">Gross Rev.</p>
                         <p className="text-sm font-bold text-yellow-400">{formatCurrency(item.baseRevenue)}</p>
