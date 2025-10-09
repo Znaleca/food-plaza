@@ -124,6 +124,12 @@ const OrderCard = ({ order, isReadOnly = false }) => {
       return null;
   }
 
+  // --- NEW CHECK FOR RECEIPT BUTTON ---
+  const paymentStatus = order.payment_status?.toLowerCase() || PAYMENT_STATUS.FAILED;
+  const showReceiptButton = paymentStatus !== PAYMENT_STATUS.FAILED;
+  // -----------------------------------
+
+
   return (
     <div className="w-full">
       {/* Main Card Container: Dark theme, subtle border, and shadow for depth */}
@@ -141,14 +147,16 @@ const OrderCard = ({ order, isReadOnly = false }) => {
               </span>
             </h2>
             
-            {/* View Receipt Button */}
-            <button
-              onClick={() => setShowReceipt(true)}
-              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-cyan-400 text-sm font-medium rounded-lg transition duration-150 border border-neutral-700 shadow-lg"
-            >
-              <FontAwesomeIcon icon={faReceipt} className="mr-2" />
-              View Receipt
-            </button>
+            {/* View Receipt Button (Conditionally rendered) */}
+            {showReceiptButton && (
+                <button
+                onClick={() => setShowReceipt(true)}
+                className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-cyan-400 text-sm font-medium rounded-lg transition duration-150 border border-neutral-700 shadow-lg"
+                >
+                <FontAwesomeIcon icon={faReceipt} className="mr-2" />
+                View Receipt
+                </button>
+            )}
           </div>
           
           <p className="text-sm text-gray-400 mb-4">{new Date(order.created_at).toLocaleString()}</p>
@@ -159,7 +167,7 @@ const OrderCard = ({ order, isReadOnly = false }) => {
             {/* Payment Status */}
             <div>
                 <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Payment Status</p>
-                {renderPaymentStatus(order.payment_status || "failed")}
+                {renderPaymentStatus(paymentStatus)}
             </div>
 
             {/* Table Number */}
