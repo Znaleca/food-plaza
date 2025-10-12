@@ -9,7 +9,7 @@ import { FaChevronRight, FaChevronLeft } from "react-icons/fa";
 const adminLinks = [
   { href: "/admin", icon: <FaHome />, label: "Dashboard" },
   { href: "/admin/add", icon: <FaSquarePlus />, label: "Create Stall" },
-  { href: "/admin/create-account", icon: <FaUser />, label: "Create Account" },
+  { href: "/admin/create-account", icon: <FaUser />, label: "Create Lessee Account" },
   { href: "/admin/accounts", icon: <FaUsers />, label: "All Accounts" },
   { href: "/lease/management", icon: <FaHandHoldingDollar />, label: "Lease Management" },
 ];

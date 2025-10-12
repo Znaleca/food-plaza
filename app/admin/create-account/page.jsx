@@ -1,15 +1,14 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useFormState } from 'react-dom';
 import { toast } from 'react-toastify';
 import { useEffect, useState, useRef } from 'react';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaPhone } from 'react-icons/fa';
 import createAccount from '@/app/actions/createAccount';
-import checkUserExists from '@/app/actions/checkUserExists'; // Import the server action
+import checkUserExists from '@/app/actions/checkUserExists';
 
-const CreateAccountPage = () => {
+const CreateFoodStallPage = () => {
   const [state, formAction] = useFormState(createAccount, {});
   const router = useRouter();
 
@@ -31,21 +30,21 @@ const CreateAccountPage = () => {
   useEffect(() => {
     if (state.error) toast.error(state.error);
     if (state.success) {
-      toast.success("Account created! Check your email.");
-      router.push("/admin/accounts");
+      toast.success("Food stall account created successfully!");
+      router.push("/admin/add");
     }
   }, [state, router]);
 
-  // Debounce effect for existence check
+  // Debounced check for existing users
   useEffect(() => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
-    
+
     debounceTimeoutRef.current = setTimeout(async () => {
       let isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
       let isPhoneValid = /^\d{10}$/.test(phone);
-      
+
       if (isEmailValid || isPhoneValid) {
         const result = await checkUserExists(email, `+63${phone}`);
         if (result.error) {
@@ -58,13 +57,9 @@ const CreateAccountPage = () => {
         setEmailTakenError('');
         setPhoneTakenError('');
       }
-    }, 500); // 500ms debounce delay
+    }, 500);
 
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
+    return () => clearTimeout(debounceTimeoutRef.current);
   }, [email, phone]);
 
   const handlePasswordChange = (e) => {
@@ -79,26 +74,23 @@ const CreateAccountPage = () => {
     setMatchError(value !== password ? "Passwords do not match." : "");
   };
 
-  const handleEmailChange = (e) => {
-    const value = e.target.value;
-    setEmail(value);
-  };
-
+  const handleEmailChange = (e) => setEmail(e.target.value);
   const handlePhoneChange = (e) => {
     const value = e.target.value;
     setPhone(value);
     setPhoneError(!/^\d{10}$/.test(value) ? "Phone number must be 10 digits." : "");
   };
-  
+
   const isFormInvalid = !!passwordError || !!matchError || !!phoneError || !!emailTakenError || !!phoneTakenError;
 
   return (
-    <div className="w-full min-h-screen -mt-20 bg-neutral-900 text-white flex flex-col items-center justify-center px-4 py-16">
+    <div className="w-full min-h-screen bg-neutral-900 text-white flex flex-col items-center justify-center px-4 py-16">
       {/* Page Heading */}
-      <div className="mt-12 sm:mt-16 text-center mb-12 px-4">
-        <h2 className="text-lg sm:text-4xl text-pink-600 font-light tracking-widest uppercase">Admin</h2>
-        <p className="mt-4 text-2xl sm:text-6xl font-extrabold text-white leading-tight">
-          Create Users
+      <div className="text-center mb-12 px-4">
+        <h2 className="text-2xl sm:text-6xl font-extrabold text-white leading-tight">
+          Create Lessee Account
+        </h2>
+        <p className="mt-4 text-lg text-neutral-400">
         </p>
       </div>
 
@@ -107,13 +99,13 @@ const CreateAccountPage = () => {
         <form action={formAction} className="space-y-8">
           {/* Nickname */}
           <div className="relative">
-            <label htmlFor="name" className="block text-sm font-medium mb-2">Nickname</label>
+            <label htmlFor="name" className="block text-sm font-medium mb-2">Lessee Nickname</label>
             <div className="relative">
               <input
                 type="text"
                 id="name"
                 name="name"
-                placeholder="Your nickname"
+                placeholder="Enter your stall name"
                 required
                 className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
               />
@@ -141,27 +133,35 @@ const CreateAccountPage = () => {
           </div>
 
           {/* Phone Number */}
-          <div className="relative">
-            <label htmlFor="phone" className="block text-sm font-medium mb-2">Phone Number</label>
-            <div className="relative flex items-center">
-              <span className="px-3 py-3 bg-neutral-900 border border-neutral-700 rounded-l-lg text-neutral-400 flex items-center gap-2">
-                <FaPhone />
-                +63
-              </span>
-              <input
-                type="text"
-                id="phone"
-                name="phone"
-                value={phone}
-                onChange={handlePhoneChange}
-                placeholder="9123456789"
-                required
-                className={`w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 ${phoneError || phoneTakenError ? 'ring-red-500' : 'focus:ring-pink-600'}`}
-              />
-            </div>
-            {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
-            {phoneTakenError && <p className="text-red-500 text-sm mt-1">{phoneTakenError}</p>}
-          </div>
+<div className="relative">
+  <label htmlFor="phone" className="block text-sm font-medium mb-2">Phone Number</label>
+  <div className="relative flex items-center">
+    <span className="px-3 py-3 bg-neutral-900 border border-neutral-700 rounded-l-lg text-neutral-400 flex items-center gap-2">
+      <FaPhone />
+      +63
+    </span>
+    <input
+      type="text"
+      id="phone"
+      name="phone"
+      value={phone}
+      onChange={(e) => {
+        const value = e.target.value.replace(/\D/g, ''); // only allow digits
+        if (value.length <= 10) setPhone(value); // limit to 10 digits
+        setPhoneError(!/^\d{10}$/.test(value) ? "Phone number must be 10 digits." : "");
+      }}
+      placeholder="9123456789"
+      required
+      maxLength={10}
+      className={`w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 ${
+        phoneError || phoneTakenError ? 'ring-red-500' : 'focus:ring-pink-600'
+      }`}
+    />
+  </div>
+  {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
+  {phoneTakenError && <p className="text-red-500 text-sm mt-1">{phoneTakenError}</p>}
+</div>
+
 
           {/* Password */}
           <div className="relative">
@@ -215,21 +215,8 @@ const CreateAccountPage = () => {
             {matchError && <p className="text-red-500 text-sm mt-1">{matchError}</p>}
           </div>
 
-          {/* Role Selection */}
-          <div className="relative">
-            <label htmlFor="label" className="block text-sm font-medium mb-2">Select Role</label>
-            <select
-              id="label"
-              name="label"
-              required
-              className="w-full px-6 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600"
-            >
-              <option value="">-- Select Role --</option>
-              <option value="admin">Admin</option>
-              <option value="customer">Customer</option>
-              <option value="foodstall">Food Stall</option>
-            </select>
-          </div>
+          {/* Hidden Food Stall Role */}
+          <input type="hidden" name="label" value="foodstall" />
 
           {/* Submit Button */}
           <button
@@ -237,20 +224,13 @@ const CreateAccountPage = () => {
             className="w-full py-3 bg-pink-600 hover:bg-pink-700 rounded-lg text-lg font-semibold transition duration-300"
             disabled={isFormInvalid}
           >
-            Register
+            Create Food Stall
           </button>
-
-          {/* Links */}
-          <p className="text-center mt-4 text-sm text-neutral-400">
-            Already have an account?{" "}
-            <Link href="/login" className="text-pink-500 hover:underline">
-              Log in
-            </Link>
-          </p>
+          
         </form>
       </div>
     </div>
   );
 };
 
-export default CreateAccountPage;
+export default CreateFoodStallPage;

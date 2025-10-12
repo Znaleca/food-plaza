@@ -118,9 +118,17 @@ const LeaseSpace = ({ params }) => {
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Update Stall Number Cinema Picker */}
+        {/* Main Content Sections (Stacked vertically) */}
+        {/* Updated class to space-y-8 to ensure single-column stacking on all screen sizes */}
+        <div className="space-y-8">
+          
+          {/* Lease Form (MOVED UP) */}
+          <div className="bg-neutral-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-neutral-800">
+            <h2 className="text-2xl font-bold mb-6 text-white">Manage Lease</h2>
+            <LeaseForm room={room} />
+          </div>
+          
+          {/* Update Stall Number Cinema Picker (MOVED DOWN) */}
           <div className="bg-neutral-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-neutral-800">
             <h2 className="text-2xl font-bold mb-6 text-white">Stall Number</h2>
             <form onSubmit={handleStallNumberChange} className="space-y-6">
@@ -155,12 +163,6 @@ const LeaseSpace = ({ params }) => {
                 Update Number
               </button>
             </form>
-          </div>
-
-          {/* Lease Form */}
-          <div className="bg-neutral-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-neutral-800">
-            <h2 className="text-2xl font-bold mb-6 text-white">Manage Lease</h2>
-            <LeaseForm room={room} />
           </div>
         </div>
       </div>

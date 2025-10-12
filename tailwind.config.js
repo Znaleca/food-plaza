@@ -15,6 +15,11 @@ module.exports = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      // --- ADDED for A4 print reference ---
+      maxWidth: {
+        'a4': '794px', // Standard A4 width for web viewing (96 DPI)
+      },
+      // ------------------------------------
       animation: {
         'spin-slow-on-hover': 'spin 3s linear infinite',
         'fade-in-up': 'fadeInUp 1s ease-out forwards',
@@ -54,5 +59,33 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // --- ADDED CUSTOM PLUGIN FOR PRINT STYLES ---
+    function ({ addUtilities }) {
+      const newUtilities = {
+        '@media print': {
+          // Enforce Times New Roman and 12pt on the contract content
+          'body, .print-preview': {
+            'font-family': '"Times New Roman", Times, serif !important',
+            'font-size': '12pt !important',
+          },
+          // Ensure pages break cleanly and use physical A4 dimensions
+          '.page': {
+            'page-break-after': 'always',
+            'margin': '0 !important',
+            'box-shadow': 'none !important', // Remove shadows for print
+            'border': 'none !important', // Remove borders for print
+            'width': '210mm', // Physical A4 width
+            'height': '297mm', // Physical A4 height
+            'padding': '15mm !important', // A good standard print margin
+          },
+          '.page:last-child': {
+            'page-break-after': 'avoid', // Don't break after the last page
+          },
+        },
+      };
+      addUtilities(newUtilities, ['responsive', 'print']);
+    },
+    // ---------------------------------------------
+  ],
 };

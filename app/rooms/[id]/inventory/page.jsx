@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { getDocumentById } from '@/app/actions/getSpace';
 import updateInventory from '@/app/actions/updateInventory';
@@ -13,11 +13,13 @@ import {
   FaCube,
   FaCubes,
   FaRedo,
+  FaBolt,
 } from 'react-icons/fa';
 import InventoryPreview from '@/components/InventoryPreview';
-import InventoryUpdate from '@/components/InventoryUpdate';
 
 const unitOptions = ['kg', 'g', 'L', 'mL', 'pcs'];
+// Define the separator for combining ingredient name and linked menu items
+const DATA_SEPARATOR = '::'; 
 
 // Function to get the current date in 'YYYY-MM-DD' format based on the Philippines time zone
 const getPhilippinesDate = () => {
@@ -33,11 +35,104 @@ const getPhilippinesDate = () => {
   return `${year}-${month}-${day}`;
 };
 
+// Component for the MULTI-SELECT menu dropdown checkbox
+const MenuLinkDropdown = ({ menuItems, selectedItemsString, onSelect, disabled }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Parse the comma-separated string back into an array of selected names
+  const selectedNames = useMemo(() => 
+    selectedItemsString ? selectedItemsString.split(',').filter(s => s.trim() !== '') : [], 
+    [selectedItemsString]
+  );
+
+  const handleToggle = (name) => {
+    let newSelection;
+    if (selectedNames.includes(name)) {
+      // Remove item
+      newSelection = selectedNames.filter(n => n !== name);
+    } else {
+      // Add item
+      newSelection = [...selectedNames, name];
+    }
+    // Convert array back to a comma-separated string for storage
+    onSelect(newSelection.join(','));
+  };
+
+  const displayText = selectedNames.length > 0 
+    ? `${selectedNames.length} Menu Item${selectedNames.length > 1 ? 's' : ''} Linked`
+    : 'Link to Menu Item(s)';
+
+  return (
+    <div className="relative w-full">
+      <button
+        type="button"
+        className={`flex items-center justify-between w-full px-4 py-2 rounded ${
+            disabled ? 'bg-neutral-700 text-gray-500 cursor-not-allowed' : 'bg-neutral-700 text-white hover:bg-neutral-600'
+        }`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled}
+      >
+        <span className="truncate text-left">{displayText}</span>
+        <FaBolt className={`ml-2 ${disabled ? 'text-gray-500' : 'text-pink-400'}`} />
+      </button>
+
+      {isOpen && !disabled && (
+        <div className="absolute z-20 w-full mt-1 bg-neutral-600 rounded-md shadow-lg max-h-40 overflow-y-auto border border-pink-500">
+          {menuItems.map((menu) => (
+            <div
+              key={menu.index}
+              className="flex items-center px-4 py-2 cursor-pointer hover:bg-neutral-500"
+              onClick={() => handleToggle(menu.name)}
+            >
+              <input
+                type="checkbox"
+                checked={selectedNames.includes(menu.name)}
+                readOnly
+                className="form-checkbox h-4 w-4 text-pink-600 bg-neutral-700 border-neutral-500 rounded"
+              />
+              <span className="ml-3 text-sm">{menu.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Helper to safely parse the stored string into its components
+const parseStoredIngredient = (storedString) => {
+    if (!storedString || typeof storedString !== 'string') {
+        return { ingredientName: '', linkedMenus: '' };
+    }
+    const parts = storedString.split(DATA_SEPARATOR);
+    if (parts.length > 1) {
+        // Everything before the first separator is the ingredient name
+        const ingredientName = parts[0];
+        // Everything after the first separator is the linked menus string
+        const linkedMenus = parts.slice(1).join(DATA_SEPARATOR); 
+        return { ingredientName, linkedMenus };
+    }
+    // If no separator is found, assume the whole string is the ingredient name (for legacy/unlinked items)
+    return { ingredientName: storedString, linkedMenus: '' };
+};
+
+// Helper to combine the components back into the stored string
+const formatStoredIngredient = (ingredientName, linkedMenus) => {
+    // If linkedMenus is empty, just return the ingredientName (for clean storage)
+    if (!linkedMenus.trim()) {
+        return ingredientName;
+    }
+    // Store both parts separated by the unique delimiter
+    return `${ingredientName.trim()}${DATA_SEPARATOR}${linkedMenus}`;
+};
+
+
 const MyInventoryPage = ({ params }) => {
   const { id } = params;
   const router = useRouter();
   const [stall, setStall] = useState(null);
   const [inventory, setInventory] = useState([]);
+  const [menuItems, setMenuItems] = useState([]); // State for menu items
   const [saving, setSaving] = useState(false);
   
   // Get the current date once on load
@@ -49,15 +144,20 @@ const MyInventoryPage = ({ params }) => {
       if (!doc) return toast.error('Stall not found.');
       setStall(doc);
 
+      // Parse and group inventory (existing logic)
       const parsedStocks = (doc.stocks || []).map((str) => {
         const [group, ingredient, quantity, batchDate, expiryDate] = str.split('|');
         const [amount, unit] = quantity?.split(' ') ?? ['', ''];
+        
+        // Use the helper function to separate the stored string
+        const { ingredientName, linkedMenus } = parseStoredIngredient(ingredient);
+
         return {
           group,
-          ingredient,
+          name: ingredientName, // The actual ingredient name
+          linkedMenus, // The comma-separated string of linked menu items
           amount: parseFloat(amount || 0),
           unit,
-          // Use current date if batchDate is missing/invalid, or 'no expiration'
           batchDate: batchDate === 'no expiration' ? currentDate : (batchDate || currentDate),
           expiryDate,
           hasExpiry: expiryDate !== 'no expiration'
@@ -67,7 +167,8 @@ const MyInventoryPage = ({ params }) => {
       const grouped = parsedStocks.reduce((acc, curr) => {
         const existing = acc.find((g) => g.packageName === curr.group);
         const item = {
-          ingredient: curr.ingredient,
+          name: curr.name, // Ingredient Name
+          linkedMenus: curr.linkedMenus, // Linked Menu Items String
           amount: curr.amount,
           unit: curr.unit,
           batchDate: curr.batchDate,
@@ -83,6 +184,13 @@ const MyInventoryPage = ({ params }) => {
       }, []);
 
       setInventory(grouped);
+
+      // Extract menu data for linking
+      const extractedMenu = (doc.menuName || []).map((name, idx) => ({
+        name,
+        index: idx,
+      }));
+      setMenuItems(extractedMenu);
     };
 
     fetchData();
@@ -101,10 +209,10 @@ const MyInventoryPage = ({ params }) => {
   const addIngredient = (pkgIndex) => {
     const updated = [...inventory];
     updated[pkgIndex].items.push({
-      ingredient: '',
+      name: '', // Actual Ingredient Name
+      linkedMenus: '', // Linked Menu Items String
       amount: 0,
       unit: 'kg',
-      // Auto-set the batch date to the current date
       batchDate: currentDate, 
       expiryDate: '',
       hasExpiry: true
@@ -112,7 +220,8 @@ const MyInventoryPage = ({ params }) => {
     setInventory(updated);
   };
 
-  const updateIngredient = (pkgIndex, itemIndex, field, value) => {
+  // Dedicated update function for Ingredient Name and Linked Menus
+  const updateItemField = (pkgIndex, itemIndex, field, value) => {
     const updated = [...inventory];
     
     // Constraint 1: Batch Date is always the current date
@@ -150,17 +259,19 @@ const MyInventoryPage = ({ params }) => {
   };
 
   const handleSave = async () => {
+    // Validation: Ensure the Ingredient Name is filled and at least one Menu Item is linked
     const isValid = inventory.every((group) =>
       group.packageName.trim() &&
       group.items.every((item) =>
-        item.ingredient.trim() &&
+        item.name.trim() &&          // Ingredient Name must be filled
+        item.linkedMenus.trim() &&   // Linked Menu Items must be non-empty
         item.amount !== '' &&
         item.unit
       )
     );
 
     if (!isValid) {
-      toast.error('Please fill in all required fields before saving.');
+      toast.error('Please fill in Package Name, Ingredient Name, Quantity, Unit, and link to at least one Menu Item for all items before saving.');
       return;
     }
 
@@ -171,11 +282,13 @@ const MyInventoryPage = ({ params }) => {
     inventory.forEach((group) => {
       group.items.forEach((item) => {
         const quantity = `${item.amount || ''} ${item.unit || 'kg'}`;
-        // Ensure that the batchDate used for storage is the correct one, or 'no expiration' if applicable
         const storedBatchDate = item.hasExpiry ? (item.batchDate || currentDate) : 'no expiration';
         const expiryDateValue = item.hasExpiry ? (item.expiryDate || '') : 'no expiration';
         
-        const encoded = `${group.packageName}|${item.ingredient}|${quantity}|${storedBatchDate}|${expiryDateValue}`;
+        // Combine Ingredient Name and Linked Menus for storage
+        const storedIngredient = formatStoredIngredient(item.name, item.linkedMenus);
+        
+        const encoded = `${group.packageName}|${storedIngredient}|${quantity}|${storedBatchDate}|${expiryDateValue}`;
         formData.append('stocks[]', encoded);
       });
     });
@@ -191,13 +304,15 @@ const MyInventoryPage = ({ params }) => {
     }
   };
 
-  // Prepare stocks array for InventoryPreview & InventoryUpdate
-  const encodedStocksForPreview = inventory.flatMap(group =>
+  // Prepare stocks array for InventoryPreview (uses the combined stored string)
+  const encodedStocks = inventory.flatMap(group =>
     group.items.map(item => {
       const quantity = `${item.amount || ''} ${item.unit || 'kg'}`;
+      const storedIngredient = formatStoredIngredient(item.name, item.linkedMenus);
       const batchDateValue = item.hasExpiry ? (item.batchDate || currentDate) : 'no expiration';
       const expiryDateValue = item.hasExpiry ? (item.expiryDate || '') : 'no expiration';
-      return `${group.packageName}|${item.ingredient}|${quantity}|${batchDateValue}|${expiryDateValue}`;
+      
+      return `${group.packageName}|${storedIngredient}|${quantity}|${batchDateValue}|${expiryDateValue}`;
     })
   );
 
@@ -220,7 +335,7 @@ const MyInventoryPage = ({ params }) => {
         <span className="font-medium text-lg">Back</span>
       </Link>
 
-      <div className="text-center mb-40">
+      <div className="text-center mb-10">
         <h2 className="text-lg text-pink-600 font-light tracking-widest uppercase">
           <FaCubes className="inline-block mr-2" /> Inventory Management
         </h2>
@@ -229,21 +344,6 @@ const MyInventoryPage = ({ params }) => {
           Group your stocks by supplier, brand, or packaging
         </p>
       </div>
-
-      {/* Inventory Update Component */}
-      <InventoryUpdate
-        stocks={encodedStocksForPreview}
-        onUpdate={(updatedStocks) => {
-          const updatedInventory = [...inventory];
-          updatedInventory.forEach((group) => {
-            group.items.forEach((item) => {
-              const updatedItem = updatedStocks.find((s) => s.ingredient === item.ingredient);
-              if (updatedItem) item.amount = updatedItem.amount;
-            });
-          });
-          setInventory(updatedInventory);
-        }}
-      />
 
       {/* Inventory Packages */}
       <div className="space-y-8 my-10">
@@ -284,20 +384,37 @@ const MyInventoryPage = ({ params }) => {
                       key={itemIndex}
                       className="grid grid-cols-1 sm:grid-cols-6 gap-4 bg-neutral-900 p-4 rounded-lg border border-neutral-700"
                     >
-                      <div className="flex flex-col">
-                        <label className="text-xs text-neutral-400 mb-1">Name</label>
+                      {/* Ingredient Name Input */}
+                      <div className="flex flex-col sm:col-span-3">
+                        <label className="text-xs text-neutral-400 mb-1 flex items-center">
+                            Ingredient Name <span className="text-red-400 ml-1">*</span>
+                        </label>
                         <input
                           type="text"
-                          placeholder="Ingredient"
-                          value={item.ingredient}
+                          placeholder="All-Purpose Flour"
+                          value={item.name}
                           onChange={(e) =>
-                            updateIngredient(pkgIndex, itemIndex, 'ingredient', e.target.value)
+                            updateItemField(pkgIndex, itemIndex, 'name', e.target.value)
                           }
                           className={`bg-neutral-700 text-white px-4 py-2 rounded ${isItemExpired ? 'text-gray-500' : ''}`}
-                          disabled={isItemExpired} // Disable input for expired items
+                          disabled={isItemExpired} 
                         />
                       </div>
-
+                      
+                      {/* Menu Link Dropdown - Multi-Select */}
+                      <div className="flex flex-col sm:col-span-3">
+                        <label className="text-xs text-neutral-400 mb-1 flex items-center">
+                            Linked Menu Item(s) <span className="text-red-400 ml-1">*</span>
+                        </label>
+                        <MenuLinkDropdown
+                            menuItems={menuItems}
+                            selectedItemsString={item.linkedMenus}
+                            onSelect={(str) => updateItemField(pkgIndex, itemIndex, 'linkedMenus', str)}
+                            disabled={isItemExpired}
+                        />
+                      </div>
+                      
+                      {/* Quantity, Unit, Expiry Fields */}
                       <div className="flex flex-col">
                         <label className="text-xs text-neutral-400 mb-1">Quantity</label>
                         <input
@@ -305,10 +422,10 @@ const MyInventoryPage = ({ params }) => {
                           placeholder="Amount"
                           value={item.amount}
                           onChange={(e) =>
-                            updateIngredient(pkgIndex, itemIndex, 'amount', e.target.value)
+                            updateItemField(pkgIndex, itemIndex, 'amount', e.target.value)
                           }
                           className={`bg-neutral-700 text-white px-4 py-2 rounded ${isItemExpired ? 'text-gray-500' : ''}`}
-                          disabled={isItemExpired} // Disable input for expired items
+                          disabled={isItemExpired}
                         />
                       </div>
 
@@ -317,10 +434,10 @@ const MyInventoryPage = ({ params }) => {
                         <select
                           value={item.unit}
                           onChange={(e) =>
-                            updateIngredient(pkgIndex, itemIndex, 'unit', e.target.value)
+                            updateItemField(pkgIndex, itemIndex, 'unit', e.target.value)
                           }
                           className={`bg-neutral-700 text-white px-4 py-2 rounded ${isItemExpired ? 'text-gray-500' : ''}`}
-                          disabled={isItemExpired} // Disable input for expired items
+                          disabled={isItemExpired}
                         >
                           {unitOptions.map((u) => (
                             <option key={u} value={u}>
@@ -335,10 +452,10 @@ const MyInventoryPage = ({ params }) => {
                         <select
                           value={item.hasExpiry ? 'yes' : 'no'}
                           onChange={(e) =>
-                            updateIngredient(pkgIndex, itemIndex, 'hasExpiry', e.target.value === 'yes')
+                            updateItemField(pkgIndex, itemIndex, 'hasExpiry', e.target.value === 'yes')
                           }
                           className="bg-neutral-700 text-white px-4 py-2 rounded"
-                          disabled={isItemExpired} // Disable input for expired items
+                          disabled={isItemExpired}
                         >
                           <option value="yes">Has Expiration</option>
                           <option value="no">No Expiration</option>
@@ -354,7 +471,7 @@ const MyInventoryPage = ({ params }) => {
                               value={item.batchDate}
                               // Constraint 1: Disabled to enforce current date
                               onChange={(e) =>
-                                updateIngredient(pkgIndex, itemIndex, 'batchDate', e.target.value)
+                                updateItemField(pkgIndex, itemIndex, 'batchDate', e.target.value)
                               }
                               className={`bg-neutral-700 text-white px-4 py-2 rounded ${isItemExpired ? 'text-gray-500' : ''}`}
                               disabled={true} 
@@ -368,19 +485,19 @@ const MyInventoryPage = ({ params }) => {
                                 type="date"
                                 value={item.expiryDate}
                                 onChange={(e) =>
-                                  updateIngredient(pkgIndex, itemIndex, 'expiryDate', e.target.value)
+                                  updateItemField(pkgIndex, itemIndex, 'expiryDate', e.target.value)
                                 }
                                 // Constraint 2: Min date is the Batch Date
                                 min={item.batchDate}
                                 className={`bg-neutral-700 text-white px-4 py-2 rounded w-full ${isItemExpired ? 'text-gray-500' : ''}`}
-                                disabled={isItemExpired} // Disable input for expired items
+                                disabled={isItemExpired}
                               />
                               {isItemExpired && (
                                 <button
                                   onClick={() => {
                                     // Renew automatically resets batchDate to currentDate
-                                    updateIngredient(pkgIndex, itemIndex, 'batchDate', currentDate); 
-                                    updateIngredient(pkgIndex, itemIndex, 'expiryDate', '');
+                                    updateItemField(pkgIndex, itemIndex, 'batchDate', currentDate); 
+                                    updateItemField(pkgIndex, itemIndex, 'expiryDate', '');
                                     toast.info('Ingredient renewed! Set the new expiration date.');
                                   }}
                                   className="text-yellow-400 hover:text-yellow-500 text-xs"
@@ -397,7 +514,7 @@ const MyInventoryPage = ({ params }) => {
                       <button
                         onClick={() => removeIngredient(pkgIndex, itemIndex)}
                         className="text-red-400 hover:text-red-600 sm:col-span-6 text-left mt-2"
-                        disabled={isItemExpired} // Disable button for expired items
+                        disabled={isItemExpired}
                       >
                         Remove
                       </button>
@@ -409,7 +526,7 @@ const MyInventoryPage = ({ params }) => {
               <button
                 onClick={() => addIngredient(pkgIndex)}
                 className="mt-4 bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-lg flex items-center"
-                disabled={pkg.items.some(item => isExpired(item))} // Disable button if any item is expired
+                disabled={pkg.items.some(item => isExpired(item))}
               >
                 <FaPlus className="mr-2" />
                 Add Ingredient
@@ -428,7 +545,7 @@ const MyInventoryPage = ({ params }) => {
       </button>
 
       {/* Inventory Preview Chart */}
-      <InventoryPreview stocks={encodedStocksForPreview} />
+      <InventoryPreview stocks={encodedStocks} />
 
       <button
         onClick={handleSave}

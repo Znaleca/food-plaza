@@ -1,9 +1,11 @@
 'use client';
 
 import Link from "next/link";
+// Updated imports: Added FaClipboardUser
 import { FaNewspaper, FaClipboardList, FaCalendarAlt } from "react-icons/fa";
-import { FaChevronLeft } from "react-icons/fa6";
+import { FaChevronLeft, FaClipboardUser } from "react-icons/fa6"; 
 
+// Updated links array with a new entry for "Manage Lessees"
 const links = [
   {
     href: "/lease/card",
@@ -19,6 +21,12 @@ const links = [
     href: "/lease-calendar",
     icon: <FaCalendarAlt className="text-3xl" />,
     label: "Calendar",
+  },
+  {
+    // New link for managing lessees
+    href: "/lessees", // You can adjust the href as needed
+    icon: <FaClipboardUser className="text-3xl" />,
+    label: "Lessee Accounts",
   },
 ];
 

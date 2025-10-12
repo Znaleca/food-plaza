@@ -23,7 +23,6 @@ export default function FoodStallLayout({ children }) {
     { href: '/foodstall/order-status', icon: <FaBagShopping />, label: 'Orders' },
     { href: '/foodstall/approval', icon: <FaHandHoldingDollar />, label: 'Stall Lease' },
     { href: '/rooms/my', icon: <FaStore />, label: 'My Food Stall' },
-    { href: '/foodstall/tables', icon: <FaTableColumns />, label: 'Tables' },
   ];
 
   const links = baseLinks.filter(Boolean);
