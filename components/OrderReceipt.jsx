@@ -1,21 +1,14 @@
-// OrderReceipt.js
-
 'use client';
 
-// REMOVED: PAYMENT_STATUS object is no longer needed
-
 // Component for rendering a read-only order receipt.
-const OrderReceipt = ({ order }) => {
+// ADDED: serviceTypeGroups prop
+const OrderReceipt = ({ order, serviceTypeGroups }) => {
 
   // --- START: Extract Totals from Order Object ---
   const baseTotal = (order.total && typeof order.total[0] === 'number' ? order.total[0] : 0) || 0;
   const discountAmount = Math.abs((order.total && typeof order.total[1] === 'number' ? order.total[1] : 0) || 0); 
   const finalTotal = (order.total && typeof order.total[2] === 'number' ? order.total[2] : 0) || 0;
   // --- END: Extract Totals from Order Object ---
-
-
-  // REMOVED: renderPaymentBadge function is no longer needed
-  
 
   const parseItemsGroupedByRoom = () => {
     const grouped = {};
@@ -93,6 +86,28 @@ const OrderReceipt = ({ order }) => {
 
   const roomPromos = parsePromos();
   
+  // --- NEW: Helper for Service Type Tag in Receipt ---
+  const renderReceiptServiceTypeTag = (serviceType) => {
+    if (!serviceType) return null;
+
+    // Mapping service types to receipt-appropriate styles
+    const serviceMap = {
+      'Dine In': { color: 'text-blue-700', bg: 'bg-blue-100', border: 'border-blue-300' },
+      'Take Out': { color: 'text-purple-700', bg: 'bg-purple-100', border: 'border-purple-300' },
+    };
+
+    const s = serviceMap[serviceType];
+
+    if (!s) return null;
+
+    return (
+      <span className={`inline-flex items-center ml-2 px-2 py-0.5 text-xs font-semibold rounded ${s.color} ${s.bg} border ${s.border}`}>
+        {serviceType}
+      </span>
+    );
+  };
+  // ----------------------------------------------------
+  
   return (
     <div> 
       {/* FIX: Reduced padding from p-6 to pt-1 pb-6 px-6 to leave room for the absolute close button */}
@@ -108,12 +123,6 @@ const OrderReceipt = ({ order }) => {
           <p className="mb-1">Customer: <strong>{order.name || 'Unknown'}</strong></p>
           <p className="mb-1">Email: {order.email}</p>
           <p className="mb-1">Table: **{order.tableNumber?.[0] || 'N/A'}**</p>
-          
-          {/* REMOVED: Payment Status Block
-          <div className="mt-2">
-            Payment Status: {renderPaymentBadge(order.payment_status || "failed")}
-          </div>
-          */}
         </div>
 
         <div className="mb-4 border-t border-b border-gray-300 py-4 space-y-6">
@@ -121,10 +130,17 @@ const OrderReceipt = ({ order }) => {
             const subtotal = getRoomSubtotal(items); 
             const roomDiscount = getRoomDiscount(items); 
             const roomFinalTotal = getRoomFinalTotal(items); 
+            // NEW: Get the display service type for the current stall
+            const displayServiceType = serviceTypeGroups?.[roomId]?.displayServiceType || null;
+
 
             return (
               <div key={roomId} className="border-b border-gray-200 pb-4">
-                <h3 className="text-base font-bold text-pink-500 mb-2">{roomName}</h3>
+                <h3 className="text-base font-bold text-pink-500 mb-2 flex items-center">
+                    {roomName}
+                    {/* NEW: Render Service Type Tag */}
+                    {renderReceiptServiceTypeTag(displayServiceType)}
+                </h3>
                 <ul className="space-y-1 text-sm">
                   {items.map((item) => {
                     const itemPrice = Number(item.menuPrice);

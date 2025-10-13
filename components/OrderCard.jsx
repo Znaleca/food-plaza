@@ -331,7 +331,8 @@ const OrderCard = ({ order, isReadOnly = false }) => {
                 >
                     <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
                 </button>
-                <OrderReceipt order={order} />
+                {/* PASSING GROUPED ITEMS WITH SERVICE TYPE DATA */}
+                <OrderReceipt order={order} serviceTypeGroups={groupedItems} />
             </div>
         </div>
       )}
