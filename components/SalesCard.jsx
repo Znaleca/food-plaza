@@ -5,6 +5,8 @@ import getAllMenu from '@/app/actions/getAllMenu';
 import getOrdersQuantity from '@/app/actions/getOrdersQuantity';
 import getOrdersDiscountData from '@/app/actions/getOrdersDiscountData'; 
 import getOrdersPaymentSummary from '@/app/actions/getOrdersPaymentSummary';
+// 🟢 NEW IMPORT
+import getLatestOrderTransaction from '@/app/actions/getLatestOrderTransaction';
 import {
     FaMoneyBillTrendUp,
     FaBoxOpen,
@@ -67,6 +69,9 @@ const SalesCard = ({ roomName }) => {
   const [discountData, setDiscountData] = useState([]); 
   // PAYMENT SUMMARY INITIAL STATE (used for stall-specific data)
   const [paymentSummary, setPaymentSummary] = useState({ paidRevenue: 0, failedRevenue: 0, ordersCount: 0 }); 
+  // 🟢 NEW STATE FOR LATEST TRANSACTION
+  const [latestTransaction, setLatestTransaction] = useState(null); 
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -80,19 +85,23 @@ const SalesCard = ({ roomName }) => {
       setLoading(true);
       setError(null);
       try {
-        // Fetch all four data sets concurrently
-        const [menuRes, qtyRes, discountRes, paymentSummaryRes] = await Promise.all([ 
+        // Fetch all five data sets concurrently
+        // 🟢 ADDED latest transaction fetch
+        const [menuRes, qtyRes, discountRes, paymentSummaryRes, latestTxnRes] = await Promise.all([ 
           getAllMenu(),
           getOrdersQuantity(),
           getOrdersDiscountData(),
           // Pass roomName to fetch stall-specific payment data
           getOrdersPaymentSummary(roomName), 
+          getLatestOrderTransaction(roomName),
         ]);
 
         setStallDocuments(menuRes.documents || []);
         setQuantities(qtyRes || []);
         setDiscountData(discountRes || []);
         setPaymentSummary(paymentSummaryRes); // Set stall-specific payment summary
+        // 🟢 Set new state
+        setLatestTransaction(latestTxnRes); 
 
       } catch (err) {
         console.error('Failed to fetch dashboard data:', err);
@@ -340,7 +349,6 @@ const SalesCard = ({ roomName }) => {
       <div className="bg-neutral-900 rounded-xl p-6 mb-8">
         <h2 className="text-xl font-bold mb-4 text-center text-pink-500">{getFilterTitle(timeFilter)}</h2>
         
-        {/* MODIFIED: Changed grid to display Gross Revenue next to Final Revenue. */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
 
           {/* Filtered Items Sold (based on item count scale) */}
@@ -389,6 +397,45 @@ const SalesCard = ({ roomName }) => {
       </div>
       
       {/* ---------------------------------------------------------------- */}
+      {/* 🟢 NEW: LATEST TRANSACTION SUMMARY */}
+      <div className="bg-neutral-900 rounded-xl p-6 mb-8 border-t border-b border-pink-700/50">
+        <h3 className="text-lg font-bold mb-4 text-center text-white flex items-center justify-center">
+            <FaClock className="w-5 h-5 mr-2 text-pink-500" />
+            Latest Successful Transaction <span className="text-pink-400 ml-2">({roomName})</span>
+        </h3>
+        {latestTransaction ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            
+            {/* Latest Final Amount */}
+            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center border-2 border-pink-500/50">
+                <FaMoneyBillTrendUp className="w-6 h-6 text-pink-400 mb-1" />
+                <p className="text-xl font-semibold text-pink-400">{formatCurrency(latestTransaction.finalAmount)}</p>
+                <p className="text-xs text-neutral-400">Latest Money Received (Net)</p>
+            </div>
+            
+            {/* Latest Discount Applied */}
+            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center border-2 border-orange-500/50">
+                <FaPercent className="w-6 h-6 text-orange-400 mb-1" />
+                <p className="text-xl font-semibold text-orange-400">{formatCurrency(latestTransaction.discountAmount)}</p>
+                <p className="text-xs text-neutral-400">Latest Discount Applied</p>
+            </div>
+            
+            {/* Timestamp */}
+            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center">
+                 <FaCalendarWeek className="w-6 h-6 text-neutral-500 mb-1" />
+                <p className="text-sm font-semibold text-neutral-400">
+                    {new Date(latestTransaction.timestamp).toLocaleDateString()}
+                </p>
+                <p className="text-xs text-neutral-500">Transaction Date/Time</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-neutral-500 bg-neutral-800 p-4 rounded-lg">No latest successful transaction found for this stall.</p>
+        )}
+      </div>
+      {/* ---------------------------------------------------------------- */}
+
+
       {/* 🟢 PAYMENT STATUS REVENUE SUMMARY (Now stall-specific) */}
       <div className="bg-neutral-900 rounded-xl p-6 mb-8 border-t border-neutral-700/50">
         <h3 className="text-lg font-bold mb-4 text-center text-white flex items-center justify-center">
