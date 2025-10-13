@@ -14,6 +14,9 @@ import checkAuth from '@/app/actions/checkAuth';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
 
+// Array for the options
+const DINE_TAKE_OUT_OPTIONS = ['Dine In', 'Take Out'];
+
 const OrderCartPage = () => {
   const [cart, setCart] = useState([]);
   const [groupedCart, setGroupedCart] = useState({});
@@ -30,6 +33,9 @@ const OrderCartPage = () => {
   const [cartCount, setCartCount] = useState(0);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  
+  // ⭐ NEW STATE: To hold the dine-in or take-out choice per room
+  const [dineTakeOutPerRoom, setDineTakeOutPerRoom] = useState({}); 
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -56,9 +62,13 @@ const OrderCartPage = () => {
 
       const roomIds = [...new Set(savedCart.map(item => item.room_id))];
       const names = {};
+      const initialDineTakeOut = {}; // New object for dine/take out
+      
       for (const roomId of roomIds) {
         const room = await getSingleSpace(roomId);
         names[roomId] = room?.name || 'Unknown Room';
+        // ⭐ NEW: Default to 'Dine In' for all rooms
+        initialDineTakeOut[roomId] = 'Dine In'; 
       }
 
       const enrichedCart = savedCart.map(item => ({
@@ -69,6 +79,8 @@ const OrderCartPage = () => {
       setRoomNames(names);
       setCart(enrichedCart);
       groupItemsByRoom(enrichedCart);
+      // ⭐ NEW: Set initial dine/take out state
+      setDineTakeOutPerRoom(initialDineTakeOut); 
     };
 
     if (!loadingAuth) {
@@ -169,7 +181,7 @@ const OrderCartPage = () => {
     setOpenVoucherRoom(null);
   };
 
-  // NEW HANDLER: To cancel an active voucher
+  // Handler to cancel an active voucher
   const handleCancelVoucher = async (roomId, voucherId) => {
     try {
         await useVoucher(voucherId, false); // API call to release the voucher
@@ -207,6 +219,14 @@ const OrderCartPage = () => {
         }
         return updated;
     });
+  };
+  
+  // ⭐ NEW HANDLER: To manage the dine-in/take-out choice per room
+  const handleDineTakeOutChange = (roomId, value) => {
+    setDineTakeOutPerRoom(prev => ({
+        ...prev,
+        [roomId]: value,
+    }));
   };
 
   const calculateTotal = useMemo(() => {
@@ -369,7 +389,7 @@ const OrderCartPage = () => {
   };
   
   // =========================================================================
-  // ⭐ NEW LOGIC: Prepare the cart for checkout with per-item discounts
+  // ⭐ UPDATED LOGIC: Prepare the cart for checkout with per-item discounts AND Dine/Take Out choice
   // =========================================================================
   const checkoutCart = useMemo(() => {
     const finalCart = [];
@@ -381,6 +401,8 @@ const OrderCartPage = () => {
       if (selectedItems[itemKey]) {
         const voucher = activeVouchersPerRoom[item.room_id];
         const isSpecialDiscountActiveForItem = activeSpecialDiscountItems[itemKey];
+        // ⭐ Get the selected Dine/Take Out status for this room
+        const dineTakeOut = dineTakeOutPerRoom[item.room_id] || 'Dine In';
         
         const itemPrice = Number(item.menuPrice) * (item.quantity || 1);
         let discountAmount = 0;
@@ -397,16 +419,17 @@ const OrderCartPage = () => {
         // 3. Add the enriched item to the final cart
         finalCart.push({
           ...item,
-          // Crucial new property: the calculated discount for this item
-          discountAmount: discountAmount, 
+          discountAmount: discountAmount,
+          // ⭐ CRUCIAL NEW PROPERTY: Dine/Take Out status
+          dineTakeOut: dineTakeOut, 
         });
       }
     });
 
     return finalCart;
-  }, [cart, selectedItems, activeVouchersPerRoom, activeSpecialDiscountItems]);
+  }, [cart, selectedItems, activeVouchersPerRoom, activeSpecialDiscountItems, dineTakeOutPerRoom]);
   // =========================================================================
-  // ⭐ END NEW LOGIC
+  // ⭐ END UPDATED LOGIC
   // =========================================================================
 
 
@@ -451,27 +474,48 @@ const OrderCartPage = () => {
                 const hasSelectedItems = items.some(item => selectedItems[`${roomId}-${item.menuName}-${item.size || 'One-size'}`]);
                 
                 const { discountedSubtotal, discountLabel, voucher } = getRoomSubtotals(roomId, items);
+                const currentDineTakeOut = dineTakeOutPerRoom[roomId] || 'Dine In'; // ⭐ Get current selection
 
                 return (
                   <div key={roomId} className="p-6 rounded-xl bg-neutral-900 border border-neutral-800 shadow-lg">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-                      <div className="flex items-center mb-2 sm:mb-0">
-                        <input
-                          type="checkbox"
-                          checked={isRoomSelected}
-                          onChange={() => handleRoomSelectAllChange(roomId)}
-                          className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent"
-                        />
-                        <h2 className="ml-2 text-xl font-semibold text-white tracking-wide">{roomNames[roomId] || roomName}</h2>
+                      <div className="flex items-center flex-wrap gap-x-6 gap-y-2">
+                        {/* Checkbox and Room Name */}
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={isRoomSelected}
+                            onChange={() => handleRoomSelectAllChange(roomId)}
+                            className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent"
+                          />
+                          <h2 className="ml-2 text-xl font-semibold text-white tracking-wide">{roomNames[roomId] || roomName}</h2>
+                        </div>
+                        
+                        {/* ⭐ NEW: Dine In / Take Out Selector */}
+                        <div className="flex items-center">
+                          <label htmlFor={`dine-takeout-${roomId}`} className="text-sm text-gray-400 mr-2">Order Type:</label>
+                          <select
+                            id={`dine-takeout-${roomId}`}
+                            value={currentDineTakeOut}
+                            onChange={(e) => handleDineTakeOutChange(roomId, e.target.value)}
+                            className="bg-neutral-800 border border-neutral-700 text-white text-sm rounded-lg focus:ring-cyan-400 focus:border-cyan-400 p-1.5"
+                          >
+                            {DINE_TAKE_OUT_OPTIONS.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {/* ⭐ END NEW SELECTOR */}
                       </div>
-                      <div className="flex items-center space-x-4">
+                      
+                      <div className="flex items-center space-x-4 mt-2 sm:mt-0">
                         {hasSelectedItems && isAuthenticated && (
                           <>
                             {voucher ? (
                               // CANCEL VOUCHER BUTTON
                               <button
                                 onClick={() => handleCancelVoucher(roomId, voucher.$id)}
-                                className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors duration-200 flex items-center"
+                                className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors duration-200 flex items-center whitespace-nowrap"
                               >
                                 <FaXmark className="mr-2" /> Cancel Voucher
                               </button>
@@ -479,7 +523,7 @@ const OrderCartPage = () => {
                               // APPLY VOUCHER BUTTON
                               <button
                                 onClick={() => setOpenVoucherRoom(roomId)}
-                                className="text-sm font-medium text-cyan-400 hover:text-fuchsia-500 transition-colors duration-200 flex items-center"
+                                className="text-sm font-medium text-cyan-400 hover:text-fuchsia-500 transition-colors duration-200 flex items-center whitespace-nowrap"
                               >
                                 <FaTag className="mr-2" /> Apply Voucher
                               </button>
@@ -522,23 +566,23 @@ const OrderCartPage = () => {
                               {/* Special Discount Toggle (Visible only if no room voucher is active) */}
                               {specialDiscountData && isAuthenticated && isItemSelected && !voucher && (
                                <button
-  onClick={() =>
-    handleToggleSpecialDiscountItem(roomId, item.menuName, item.size)
-  }
-  className={`text-sm font-medium transition-colors duration-200 flex items-center ${
-    isSpecialDiscountActiveForItem
-      ? 'text-fuchsia-500'
-      : 'text-cyan-400 hover:text-fuchsia-500'
-  }`}
-  title={
-    isSpecialDiscountActiveForItem
-      ? 'Cancel Special Discount'
-      : 'Apply Special Discount (20% Off)'
-  }
->
-  <FaIdCard className="mr-2" size={14} />
-  {isSpecialDiscountActiveForItem ? 'Special Discount Applied' : 'Apply Special Discount'}
-</button>
+                                 onClick={() =>
+                                   handleToggleSpecialDiscountItem(roomId, item.menuName, item.size)
+                                 }
+                                 className={`text-sm font-medium transition-colors duration-200 flex items-center ${
+                                   isSpecialDiscountActiveForItem
+                                     ? 'text-fuchsia-500'
+                                     : 'text-cyan-400 hover:text-fuchsia-500'
+                                 }`}
+                                 title={
+                                   isSpecialDiscountActiveForItem
+                                     ? 'Cancel Special Discount'
+                                     : 'Apply Special Discount (20% Off)'
+                                 }
+                               >
+                                 <FaIdCard className="mr-2" size={14} />
+                                 {isSpecialDiscountActiveForItem ? 'Discount Applied' : 'Apply Discount'}
+                               </button>
 
                               )}
                               
@@ -628,7 +672,7 @@ const OrderCartPage = () => {
 
               <div className="mt-8">
                 <CheckoutButton
-                  cart={checkoutCart} // ⭐ Using the enriched cart with discountAmount
+                  cart={checkoutCart} 
                   total={calculateTotal}
                   selectedItems={selectedItems}
                   groupedCart={groupedCart}

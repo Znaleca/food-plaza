@@ -3,8 +3,7 @@
 import { createAdminClient } from '@/config/appwrite';
 import checkAuth from './checkAuth';
 import { ID, Query } from 'node-appwrite';
-import getMenuCapacityAndUpdateAvailability from '@/app/actions/getMenuCapacityAndUpdateAvailability'; // Import for post-deduction sync
-// Import adjustIngredientStock if needed for reference, but we'll inline similar logic for batching
+import getMenuCapacityAndUpdateAvailability from '@/app/actions/getMenuCapacityAndUpdateAvailability';
 
 const DB_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
 const COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ROOMS; // Assuming this is the stalls collection
@@ -32,6 +31,9 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
     let baseTotal = 0;
     let discountAmount = 0;
     let finalTotal = 0;
+    
+    // ⭐ UPDATED MAP: To track service type per stall
+    const serviceTypeMap = {}; 
 
     const cleanedCart = cart.map((item) => {
       const quantity = Number(item.quantity || 1);
@@ -41,6 +43,15 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       baseTotal += itemBase;
       discountAmount += itemDiscount;
       finalTotal += itemBase - itemDiscount;
+      
+      // ⭐ Capture the service type per room (stall)
+      if (item.room_id) {
+          // This ensures we only record one service type per stall, even if it has multiple items
+          serviceTypeMap[item.room_id] = {
+              type: item.dineTakeOut,
+              roomName: item.room_name || `Room ${item.room_id}`
+          };
+      }
 
       return {
         ...item,
@@ -56,6 +67,12 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       const itemWithRoomName = cleanedCart.find(item => item.room_id === roomId);
       const roomName = itemWithRoomName?.room_name || `Room ${roomId}`;
       return `${roomName} - ${voucher?.title || 'Special Discount'} (${voucher?.discount || ''}% off)`;
+    });
+    
+    // ⭐ NEW: Build service type strings for the Appwrite attribute "serviceType"
+    const serviceTypeStrings = Object.entries(serviceTypeMap).map(([roomId, data]) => {
+        // Format: "Stall Name: Dine In" or "Stall Name: Take Out"
+        return `${data.roomName}: ${data.type}`;
     });
 
     // Update redeemed users for each voucher (skip special discounts)
@@ -81,14 +98,14 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
             promo.$id,
             {
               redeemed: redeemedList,
-              updated_at: new Date().toISOString(),
+              // REMOVED: updated_at: new Date().toISOString(), (Assuming Appwrite handles $updatedAt)
             }
           );
         }
       }
     }
 
-    // Build order payload (removed service charge)
+    // Build order payload
     const orderPayload = {
       user_id: userId,
       name: user.name || 'Unknown User',
@@ -96,19 +113,31 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
       phone: user.phone || 'No phone',
       status: ['order-placed'],
       items: stringifiedItems,
-      total: [baseTotal, -discountAmount, finalTotal], // ✅ service charge removed
+      total: [baseTotal, -discountAmount, finalTotal],
       promos: promoStrings,
-      created_at: new Date().toISOString(),
+      serviceType: serviceTypeStrings,
+      // REMOVED: created_at: new Date().toISOString(), (Use $createdAt if possible, otherwise keep it if manually tracked)
     };
+
+    // NOTE: Keeping 'created_at' in orderPayload because you might be using it
+    // as a custom attribute, or it's needed for initial creation. Appwrite
+    // will set $createdAt automatically, but we'll leave your original
+    // created_at field unless you confirm it's not a custom attribute.
+    
+    // *** The fix focuses on the update document call that is throwing the error. ***
 
     const response = await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
       ID.unique(),
-      orderPayload
+      {
+          ...orderPayload,
+          // If created_at is NOT a custom attribute in your schema, you can remove it here
+          created_at: new Date().toISOString(),
+      }
     );
 
-    // ✅ NEW: Deduct from menuQuantity and ingredient stocks after order creation
+    // ✅ Deduct from menuQuantity and ingredient stocks after order creation
     await deductStockForOrder(cleanedCart, databases);
 
     return {
@@ -126,16 +155,16 @@ const processCheckout = async (cart, spaceId = null, voucherMap = {}) => {
   }
 };
 
-// ✅ NEW HELPER: Deduct stock for all items in the order (batched by stall)
+// ✅ HELPER: Deduct stock for all items in the order (batched by stall)
 const deductStockForOrder = async (cleanedCart, databases) => {
   // Group deductions by stall (room_id)
   const deductionsByStall = {};
   cleanedCart.forEach((item) => {
     const stallId = item.room_id;
-    const menuName = item.menuName; // Assumes cart item has menuName
+    const menuName = item.menuName;
     const quantity = item.quantity;
 
-    if (!stallId || !menuName || quantity <= 0) return; // Skip invalid items
+    if (!stallId || !menuName || quantity <= 0) return;
 
     if (!deductionsByStall[stallId]) {
       deductionsByStall[stallId] = {};
@@ -204,7 +233,8 @@ const deductStockForOrder = async (cleanedCart, databases) => {
     await databases.updateDocument(DB_ID, ROOMS_COLLECTION_ID, stallId, {
       menuQuantity: updatedMenuQuantity,
       stocks: updatedStocks,
-      updated_at: new Date().toISOString(),
+      // FIX: Removed manual 'updated_at' attribute. Appwrite handles the $updatedAt timestamp automatically.
+      // updated_at: new Date().toISOString(), 
     });
 
     // Step 4: Re-sync menu availability based on new ingredient stocks (using your existing function)
@@ -216,5 +246,3 @@ const deductStockForOrder = async (cleanedCart, databases) => {
 };
 
 export default processCheckout;
-
-//wowzers

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { FaPhone, FaExclamationTriangle } from 'react-icons/fa';
+import { FaPhone, FaExclamationTriangle } from 'react-icons/fa'; 
+import { FaUtensils, FaBagShopping } from 'react-icons/fa6';
+
 import checkAuth from '@/app/actions/checkAuth';
 
 // Format PHP currency
@@ -14,7 +16,7 @@ const formatCurrency = (amount) =>
   }).format(amount);
 
 const CheckoutButton = ({
-  cart,
+  cart, // This now contains the 'dineTakeOut' property per item
   total,
   selectedItems,
   groupedCart = {},
@@ -85,7 +87,7 @@ const CheckoutButton = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: cart, // This now includes discountAmount per item
+          items: cart, // This now includes discountAmount and dineTakeOut per item
           user,
           totalAmount: total,
           voucherMap,
@@ -137,13 +139,18 @@ const CheckoutButton = ({
 
     const discountedSubtotal = subtotalBeforeDiscount - totalDiscount;
     const roomPromo = activeVouchersPerRoom[roomId];
+    
+    // ⭐ NEW: Extract the dineTakeOut status. Since it's per room, all items in roomItems will have the same value.
+    const dineTakeOut = roomItems[0]?.dineTakeOut || 'Dine In';
 
     return { 
       items: roomItems, 
       subtotal: subtotalBeforeDiscount, 
       discountedSubtotal, 
       totalDiscount,
-      promo: roomPromo
+      promo: roomPromo,
+      // ⭐ NEW: Include order type in the summary
+      dineTakeOut: dineTakeOut, 
     };
   };
 
@@ -157,7 +164,7 @@ const CheckoutButton = ({
   }, {});
   // --- END LOGIC ---
 
-  // --- NEW LOGIC FOR PROMOS DISPLAY ---
+  // --- LOGIC FOR PROMOS DISPLAY ---
   const getGroupedPromos = () => {
     const grouped = {};
     const itemDiscountCount = {};
@@ -198,7 +205,7 @@ const CheckoutButton = ({
   };
 
   const groupedPromos = getGroupedPromos();
-  // --- END NEW LOGIC FOR PROMOS DISPLAY ---
+  // --- END LOGIC FOR PROMOS DISPLAY ---
 
 
   return (
@@ -244,7 +251,7 @@ const CheckoutButton = ({
             {/* ITEMS PER ROOM */}
             <div className="space-y-8">
               {Object.entries(groupedCheckoutCart).map(([roomId, items]) => {
-                const { subtotal, discountedSubtotal, totalDiscount, promo } = getRoomSummary(roomId);
+                const { subtotal, discountedSubtotal, totalDiscount, promo, dineTakeOut } = getRoomSummary(roomId); // ⭐ dineTakeOut is extracted here
                 
                 // Determine the discount label based on the active promo for the room
                 let discountLabel = '';
@@ -256,13 +263,24 @@ const CheckoutButton = ({
                     // This handles scenarios where only some items in a room got a special discount
                     discountLabel = '(Item Discounts Applied)';
                 }
-
+                
+                // ⭐ Helper for icon
+                const Icon = dineTakeOut === 'Dine In' ? FaUtensils : FaBagShopping;
+                const iconColor = dineTakeOut === 'Dine In' ? 'text-cyan-400' : 'text-fuchsia-400';
 
                 return (
                   <div key={roomId} className="border-b border-neutral-700 pb-4">
-                    <h3 className="text-lg font-bold text-white mb-2">
-                      {roomNames[roomId] || groupedCart[roomId]?.roomName || 'Unknown Room'}
-                    </h3>
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-bold text-white">
+                        {roomNames[roomId] || groupedCart[roomId]?.roomName || 'Unknown Room'}
+                        </h3>
+                        {/* ⭐ NEW: Display Dine/Take Out Status */}
+                        <span className={`flex items-center text-sm font-semibold ${iconColor}`}>
+                            <Icon className="mr-1 w-4 h-4" />
+                            {dineTakeOut}
+                        </span>
+                        {/* ⭐ END NEW DISPLAY */}
+                    </div>
 
                     <ul className="text-sm space-y-2">
                       {items.map((item, idx) => (

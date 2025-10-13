@@ -1,14 +1,10 @@
-// OrderCard.js
-
 'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// Removed solidStar, kept status/control icons
-import { faCheckCircle, faClock, faHourglassHalf, faTimesCircle, faExclamationCircle, faBan, faReceipt, faXmark } from '@fortawesome/free-solid-svg-icons'; 
-// Removed updateRating import
-import OrderReceipt from './OrderReceipt'; // Assume OrderReceipt.js is in the same directory
+import { faCheckCircle, faClock, faHourglassHalf, faTimesCircle, faExclamationCircle, faBan, faReceipt, faXmark, faUtensils, faBagShopping } from '@fortawesome/free-solid-svg-icons'; 
+import OrderReceipt from './OrderReceipt';
 
 const MENU_STATUS = {
   PENDING: 'pending',
@@ -26,24 +22,47 @@ const PAYMENT_STATUS = {
   FAILED: "failed",
 };
 
-// Removed setOrders as it's no longer needed without rating updates
+const SERVICE_TYPES = {
+  DINE_IN: 'Dine In',
+  TAKEOUT: 'Take Out',
+};
+
+// Helper function to determine the service type based on a string (case-insensitive)
+const getServiceType = (serviceTypeStr) => {
+    if (serviceTypeStr.toLowerCase().includes('dine in')) {
+        return SERVICE_TYPES.DINE_IN;
+    }
+    if (serviceTypeStr.toLowerCase().includes('take out')) {
+        return SERVICE_TYPES.TAKEOUT;
+    }
+    return null; // Default or unknown
+}
+
 const OrderCard = ({ order, isReadOnly = false }) => {
-  // Removed state related to rating (selectedItem, rating, comment)
   const [showReceipt, setShowReceipt] = useState(false); 
 
   const tableNumber = order.tableNumber?.[0] || 'N/A';
+  
+  // NEW: Process the service types array into a map for easy lookup
+  const serviceTypeMap = (order.serviceType || []).reduce((acc, serviceStr) => {
+    // Expected format: "Stall Name: Service Type"
+    const [stallName, type] = serviceStr.split(':').map(s => s.trim());
+    if (stallName && type) {
+        // Find the room name from the grouped items later, but for now use the stallName part
+        acc[stallName] = getServiceType(type);
+    }
+    return acc;
+  }, {});
 
-  // Removed openRatingModal, closeRatingModal, and handleSubmitRating functions.
 
   // --- DARK THEME STATUS RENDERING (ICON + TEXT) ---
   const renderStatus = (status) => {
-    // Adjusted colors for better visibility on a dark background
     const statusMap = {
       [MENU_STATUS.PENDING]: { text: 'Pending', icon: faClock, color: 'text-gray-400' },
       [MENU_STATUS.PREPARING]: { text: 'Preparing', icon: faHourglassHalf, color: 'text-yellow-400' },
-      [MENU_STATUS.READY]: { text: 'Ready', icon: faCheckCircle, color: 'text-cyan-400' }, // Using a theme color
+      [MENU_STATUS.READY]: { text: 'Ready', icon: faCheckCircle, color: 'text-cyan-400' }, 
       [MENU_STATUS.COMPLETED]: { text: 'Completed', icon: faCheckCircle, color: 'text-green-500' },
-      [MENU_STATUS.CANCELLED]: { text: 'Cancelled', icon: faTimesCircle, color: 'text-fuchsia-400' }, // Using a theme color
+      [MENU_STATUS.CANCELLED]: { text: 'Cancelled', icon: faTimesCircle, color: 'text-fuchsia-400' },
       [MENU_STATUS.FAILED]: { text: 'Failed', icon: faExclamationCircle, color: 'text-red-500' },
     };
 
@@ -80,19 +99,13 @@ const OrderCard = ({ order, isReadOnly = false }) => {
 
   const parseItemsGroupedByRoom = () => {
     const grouped = {};
-    let nonCompletedCount = 0; // Track items that are NOT completed
+    let totalItemCount = 0; 
 
     (order.items || []).forEach((itemStr, index) => {
       try {
         const item = JSON.parse(itemStr);
         
-        // **LOGIC UPDATE: Filter to exclude COMPLETED items**
-        if (item.status === MENU_STATUS.COMPLETED) {
-            return; // Skip this item
-        }
-
-        // If we reach here, the item is NOT completed
-        nonCompletedCount++;
+        totalItemCount++;
 
         const roomId = item.room_id || 'unknown';
         const roomName = item.room_name || 'Unknown Stall';
@@ -101,7 +114,15 @@ const OrderCard = ({ order, isReadOnly = false }) => {
           grouped[roomId] = {
             roomName,
             items: [],
+            // Initialize an array to track all service types for this stall
+            serviceTypesFound: new Set(),
           };
+        }
+        
+        // Find the service type for this stall using the map we created
+        const serviceType = serviceTypeMap[roomName] || null;
+        if (serviceType) {
+            grouped[roomId].serviceTypesFound.add(serviceType);
         }
 
         grouped[roomId].items.push({
@@ -113,26 +134,57 @@ const OrderCard = ({ order, isReadOnly = false }) => {
       }
     });
 
-    // Return the grouped items and the count of non-completed items
-    return { grouped, nonCompletedCount };
+    // Post-process to determine the final service type to display
+    Object.keys(grouped).forEach(roomId => {
+        const stallGroup = grouped[roomId];
+        const types = Array.from(stallGroup.serviceTypesFound);
+        
+        // If all items for this stall share the same service type (or one exists), assign it.
+        // We will only display it if there's exactly one type found.
+        if (types.length === 1) {
+            stallGroup.displayServiceType = types[0];
+        } else {
+            // If the stall has items with mixed service types, or none are found, don't display a single label.
+            stallGroup.displayServiceType = null;
+        }
+        delete stallGroup.serviceTypesFound; // Clean up
+    });
+
+    return { grouped, totalItemCount };
   };
 
-  const { grouped: groupedItems, nonCompletedCount } = parseItemsGroupedByRoom();
+  const { grouped: groupedItems, totalItemCount } = parseItemsGroupedByRoom();
 
-  // **CONDITIONAL RENDERING: Hide the entire card if all items are completed**
-  if (nonCompletedCount === 0) {
+  if (totalItemCount === 0) {
       return null;
   }
 
-  // --- NEW CHECK FOR RECEIPT BUTTON ---
   const paymentStatus = order.payment_status?.toLowerCase() || PAYMENT_STATUS.FAILED;
   const showReceiptButton = paymentStatus !== PAYMENT_STATUS.FAILED;
-  // -----------------------------------
+  
+  // --- NEW RENDER FUNCTION FOR SERVICE TYPE TAG ---
+  const renderServiceTypeTag = (serviceType) => {
+    const serviceMap = {
+        [SERVICE_TYPES.DINE_IN]: { text: 'Dine In', icon: faUtensils, color: 'text-cyan-400' },
+        [SERVICE_TYPES.TAKEOUT]: { text: 'Take Out', icon: faBagShopping, color: 'text-fuchsia-400' },
+    };
+    
+    const s = serviceMap[serviceType];
+
+    if (!s) return null;
+
+    return (
+      <span className={`inline-flex items-center space-x-1 ml-3 px-3 py-1 text-sm font-semibold rounded-full ${s.color} bg-neutral-700/50 border border-neutral-600`}>
+        <FontAwesomeIcon icon={s.icon} className="w-3 h-3" />
+        <span>{s.text}</span>
+      </span>
+    );
+  };
+  // ------------------------------------------------
 
 
   return (
     <div className="w-full">
-      {/* Main Card Container: Dark theme, subtle border, and shadow for depth */}
       <div className="bg-neutral-900 text-white w-full rounded-xl border border-neutral-700 p-6 sm:p-8 shadow-2xl shadow-neutral-950/50">
 
         {/* Order Header */}
@@ -147,7 +199,7 @@ const OrderCard = ({ order, isReadOnly = false }) => {
               </span>
             </h2>
             
-            {/* View Receipt Button (Conditionally rendered) */}
+            {/* View Receipt Button */}
             {showReceiptButton && (
                 <button
                 onClick={() => setShowReceipt(true)}
@@ -184,38 +236,55 @@ const OrderCard = ({ order, isReadOnly = false }) => {
         {/* Items Grouped by Stall */}
         <div className="mb-6 space-y-8">
           <h3 className="text-xl font-semibold text-gray-300">
-            Items Being Processed
+            Order Items
           </h3>
-          {Object.entries(groupedItems).map(([roomId, { roomName, items }]) => (
+          {Object.entries(groupedItems).map(([roomId, { roomName, items, displayServiceType }]) => (
             // Stall Group Container: Lighter dark background for distinction
             <div key={roomId} className="rounded-lg p-4 bg-neutral-800 border border-neutral-700 shadow-inner shadow-neutral-950/30">
-              <h4 className="text-lg font-bold text-gray-100 mb-4 pb-2 border-b border-neutral-700">{roomName}</h4>
-
+              
+              {/* STALL NAME WITH CONDITIONAL SERVICE TYPE TAG */}
+              <h4 className="text-lg font-bold text-gray-100 mb-4 pb-2 border-b border-neutral-700 flex items-center">
+                {roomName}
+                {displayServiceType && renderServiceTypeTag(displayServiceType)}
+              </h4>
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {items.map((item) => {
                   const itemQuantity = item.quantity;
+                  const isCompleted = item.status === MENU_STATUS.COMPLETED;
 
                   return (
-                    // Item Card
                     <div
                       key={item.index}
-                      className="relative border border-neutral-700 rounded-md bg-neutral-900 p-4 flex flex-col items-center text-center transition-all duration-300"
+                      className={`relative border border-neutral-700 rounded-md bg-neutral-900 p-4 flex flex-col items-center text-center transition-all duration-300 ${isCompleted ? 'opacity-70' : ''}`}
                     >
+                      {/* --- COMPLETED WATERMARK/OVERLAY --- */}
+                      {isCompleted && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                          <span 
+                            className="text-4xl font-extrabold text-green-500 opacity-20 transform rotate-12 select-none uppercase"
+                          >
+                            Completed
+                          </span>
+                        </div>
+                      )}
+                      {/* ---------------------------------- */}
+
                       {/* Menu Image */}
                       {item.menuImage && (
                         <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden relative mb-2 border border-neutral-600">
                           <Image 
                             src={item.menuImage}
                             alt={item.menuName}
-                            width={80}  // Required width
-                            height={80} // Required height
+                            width={80} 
+                            height={80}
                             className="object-cover"
                           />
                         </div>
                       )}
 
                       {/* Item Details */}
-                      <div className="flex-grow w-full">
+                      <div className="flex-grow w-full relative z-20"> 
                         <p className="font-semibold text-white text-base leading-snug">
                             {item.menuName} {item.size && <span className="text-gray-400 font-normal">({item.size})</span>}
                         </p>
@@ -224,12 +293,10 @@ const OrderCard = ({ order, isReadOnly = false }) => {
                         </p>
 
                         <div className="mt-4 pt-3 border-t border-neutral-700">
-                            {/* Status (The focus of this non-rating card) */}
+                            {/* Status */}
                             <div className="mb-1">
                                 {renderStatus(item.status || MENU_STATUS.PENDING)}
                             </div>
-                            
-                            {/* Removed Rating Controls entirely */}
                         </div>
                       </div>
                     </div>
@@ -247,8 +314,6 @@ const OrderCard = ({ order, isReadOnly = false }) => {
             </p>
         </div>
       </div>
-
-      {/* Removed Rating Modal JSX */}
 
       {/* Receipt Modal */}
       {showReceipt && (

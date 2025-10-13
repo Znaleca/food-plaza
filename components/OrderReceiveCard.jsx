@@ -5,6 +5,8 @@ import updateTableNumber from "@/app/actions/updateTableNumber";
 import updateOrderStatus from "@/app/actions/updateOrderStatus";
 import ManageTable from "./ManageTable";
 import ViewReceipt from "./ViewReceipt"; // Import the new component
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUtensils, faBagShopping } from '@fortawesome/free-solid-svg-icons'; // Import icons
 
 const ORDER_STATUS = {
   PENDING: "pending",
@@ -20,6 +22,24 @@ const PAYMENT_STATUS = {
   PAID: "paid",
   FAILED: "failed",
 };
+
+// --- NEW CONSTANTS AND HELPER FUNCTION ---
+const SERVICE_TYPES = {
+    DINE_IN: 'Dine In',
+    TAKEOUT: 'Take Out',
+};
+
+// Helper function to determine the service type based on a string (case-insensitive)
+const getServiceType = (serviceTypeStr) => {
+    if (serviceTypeStr.toLowerCase().includes('dine in')) {
+        return SERVICE_TYPES.DINE_IN;
+    }
+    if (serviceTypeStr.toLowerCase().includes('take out')) {
+        return SERVICE_TYPES.TAKEOUT;
+    }
+    return null; // Default or unknown
+}
+// -----------------------------------------
 
 const maskPhone = (phone) => {
   if (!phone) return "No phone";
@@ -43,6 +63,18 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   const [showReceipt, setShowReceipt] = useState(false);
 
   const paymentStatus = order.payment_status || PAYMENT_STATUS.FAILED;
+
+  // --- NEW SERVICE TYPE LOGIC ---
+  let currentStallServiceType = null;
+  // Iterate through the serviceType array to find the match for the current roomName
+  (order.serviceType || []).forEach(serviceStr => {
+      // Expected format: "Stall Name: Service Type"
+      const [stallName, type] = serviceStr.split(':').map(s => s.trim());
+      if (stallName === roomName) {
+          currentStallServiceType = getServiceType(type);
+      }
+  });
+  // ------------------------------
 
   // Auto mark items as failed if payment failed or reset to pending if paid
   useEffect(() => {
@@ -213,6 +245,26 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
       </span>
     );
   };
+  
+  // --- NEW RENDER FUNCTION FOR SERVICE TYPE TAG ---
+  const renderServiceTypeTag = (serviceType) => {
+    const serviceMap = {
+        [SERVICE_TYPES.DINE_IN]: { text: 'Dine In', icon: faUtensils, color: 'text-cyan-400' },
+        [SERVICE_TYPES.TAKEOUT]: { text: 'Take Out', icon: faBagShopping, color: 'text-fuchsia-400' },
+    };
+    
+    const s = serviceMap[serviceType];
+
+    if (!s) return null;
+
+    return (
+      <span className={`inline-flex items-center space-x-1 ml-3 px-3 py-1 text-sm font-semibold rounded-full ${s.color} bg-neutral-700/50 border border-neutral-600`}>
+        <FontAwesomeIcon icon={s.icon} className="w-3 h-3" />
+        <span>{s.text}</span>
+      </span>
+    );
+  };
+  // ------------------------------------------------
 
   // Filter and parse items relevant to the current roomName/stall
   const parsedItems = order.items
@@ -243,6 +295,14 @@ const OrderReceiveCard = ({ order, refreshOrders, roomName }) => {
   return (
     <div className="rounded-xl p-4 bg-neutral-900 text-white space-y-6">
       <div className="flex flex-col gap-4">
+        
+        {/* Stall Name & Service Type (New section) */}
+        <div className="flex items-center pb-2 border-b border-neutral-800">
+            <h1 className="text-xl font-bold text-pink-400">{roomName}</h1>
+            {currentStallServiceType && renderServiceTypeTag(currentStallServiceType)}
+        </div>
+        {/* End Stall Name & Service Type */}
+
         <div className="space-y-1">
           <h2 className="text-base font-semibold">Order ID: {order.$id}</h2>
           <p className="text-sm text-neutral-300">
