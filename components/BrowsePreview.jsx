@@ -150,6 +150,9 @@ export default function BrowsePreview() {
                     room={room}
                     averageRating={room.averageRating}
                     reviewCount={room.reviewCount}
+                    // --- PASSING THE NEW PROP ---
+                    isStallOpen={room.operatingStatus !== false}
+                    // --- END PROP PASSING ---
                   />
                 ))
               )}

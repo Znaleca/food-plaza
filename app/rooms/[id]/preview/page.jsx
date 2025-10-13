@@ -6,7 +6,9 @@ import updateAvailability from '@/app/actions/updateAvailability';
 import adjustIngredientStock from '@/app/actions/adjustIngredientStock';
 // --- MODIFIED IMPORT: Use the combined function ---
 import getMenuCapacityAndUpdateAvailability from '@/app/actions/getMenuCapacityAndUpdateAvailability';
-// --- END MODIFIED IMPORT ---
+// --- NEW IMPORT: For overall stall status ---
+import updateOperatingStatus from '@/app/actions/updateOperatingStatus';
+// --- END NEW IMPORT ---
 
 import SalesCard from '@/components/SalesCard';
 import CustomerRatingCard from '@/components/CustomerRatingCard';
@@ -22,8 +24,10 @@ const PreviewStallPage = ({ params }) => {
   const [stall, setStall] = useState(null);
   const [loading, setLoading] = useState(true);
   const [menuAvailability, setMenuAvailability] = useState([]);
-  const [menuQuantity, setMenuQuantity] = useState([]); // State for menu quantity
-  const [saving, setSaving] = useState(false); // New state to prevent double clicks
+  const [menuQuantity, setMenuQuantity] = useState([]); 
+  const [saving, setSaving] = useState(false);
+  // --- NEW STATE: Overall operating status ---
+  const [stallOpen, setStallOpen] = useState(false); 
 
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
@@ -33,6 +37,9 @@ const PreviewStallPage = ({ params }) => {
       try {
         const data = await getSingleSpace(id);
         setStall(data);
+        // --- NEW LOGIC: Initialize stallOpen state ---
+        // Default to true if the field is missing/null/undefined
+        setStallOpen(data.operatingStatus !== false); 
         
         const menuCount = data.menuName?.length || 0;
         let initialAvailability = data.menuAvailability || new Array(menuCount).fill(true);
@@ -77,7 +84,8 @@ const PreviewStallPage = ({ params }) => {
 
     fetchStallAndCapacity();
   }, [id]);
-
+  
+  // Existing functions...
   const toURL = (fid) =>
     `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${fid}/view?project=${projectId}`;
 
@@ -99,6 +107,12 @@ const PreviewStallPage = ({ params }) => {
     })) || [];
 
   const toggleAvailability = async (index) => {
+    // Prevent manual toggle if the stall is currently closed
+    if (!stallOpen) {
+        toast.warn("The stall is currently Closed. Open the stall before toggling menu availability.");
+        return;
+    }
+
     const updated = [...menuAvailability];
     updated[index] = !updated[index];
     setMenuAvailability(updated);
@@ -169,6 +183,8 @@ const PreviewStallPage = ({ params }) => {
         }));
         
         // After any quantity change, the availability *might* change, so we must re-run capacity check.
+        // NOTE: This check will also respect the overall stallOpen status, but the stallOpen status will also 
+        // override this with the toggleOperatingStatus function below.
         const capacityResult = await getMenuCapacityAndUpdateAvailability({ stallId: stall.$id });
 
         if(capacityResult.success) {
@@ -191,6 +207,63 @@ const PreviewStallPage = ({ params }) => {
         setSaving(false);
     }
   };
+  
+  // --- NEW FUNCTION: To open/close the entire stall ---
+  const toggleOperatingStatus = async () => {
+      if (saving) return;
+      setSaving(true);
+      
+      const newStatus = !stallOpen;
+      
+      try {
+          // 1. Update overall operating status
+          const statusResult = await updateOperatingStatus({
+              id: stall.$id,
+              status: newStatus,
+          });
+
+          if (!statusResult.success) {
+              toast.error(statusResult.error || 'Failed to update stall status.');
+              setSaving(false);
+              return;
+          }
+
+          // 2. If closing, set all menu items to unavailable
+          if (!newStatus) {
+              const allUnavailable = new Array(menuData.length).fill(false);
+              const availabilityResult = await updateAvailability({
+                  id: stall.$id,
+                  menuAvailability: allUnavailable,
+              });
+
+              if (availabilityResult.success) {
+                  setMenuAvailability(allUnavailable);
+                  toast.info("All menu items are now unavailable.");
+              } else {
+                  // Log error but proceed with status change as it succeeded
+                  console.error('Failed to update all menu availability on close:', availabilityResult.error);
+                  toast.warn("Stall closed, but failed to mark all menu items as unavailable in the database.");
+              }
+          }
+          
+          // 3. Update local state
+          setStallOpen(newStatus);
+          toast.success(`Stall is now ${newStatus ? 'Open' : 'Closed'}.`);
+          
+          // 4. Update the local stall object to reflect the change
+          setStall(prevStall => ({
+              ...prevStall,
+              operatingStatus: newStatus
+          }));
+          
+      } catch (err) {
+          console.error('Failed to toggle operating status:', err);
+          toast.error('Unexpected error occurred while changing stall status.');
+      } finally {
+          setSaving(false);
+      }
+  };
+  // --- END NEW FUNCTION ---
 
 
   if (loading)
@@ -214,6 +287,24 @@ const PreviewStallPage = ({ params }) => {
         <FaChevronLeft className="mr-2" />
         <span className="font-medium text-lg">Back</span>
       </Link>
+
+      {/* --- NEW UI: Open/Closed Toggle --- */}
+      <div className="flex justify-between items-center bg-neutral-900 rounded-xl p-4 mb-8 border border-neutral-800">
+        <h3 className="text-xl font-semibold">Stall Status</h3>
+        <button
+          onClick={toggleOperatingStatus}
+          disabled={saving}
+          className={`px-6 py-2 rounded-full font-bold transition-all duration-300 shadow-md ${
+            stallOpen
+              ? 'bg-green-600 hover:bg-green-700'
+              : 'bg-red-600 hover:bg-red-700'
+          }`}
+        >
+          {saving ? 'Processing...' : stallOpen ? 'Open' : 'Closed'}
+        </button>
+      </div>
+      {/* --- END NEW UI --- */}
+
 
       <div className="mt-12 sm:mt-16 text-center mb-8 px-4">
         <h2 
@@ -273,7 +364,8 @@ const PreviewStallPage = ({ params }) => {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-7">
                 {items.map((m) => {
                   const hasSizes = m.small > 0 || m.medium > 0 || m.large > 0;
-                  const isAvailable = menuAvailability[m.index];
+                  // Use combined availability logic: item must be individually available AND the stall must be open
+                  const isAvailable = menuAvailability[m.index] && stallOpen; 
                   const currentQuantity = menuQuantity[m.index] ?? 0;
 
                   return (
@@ -287,13 +379,13 @@ const PreviewStallPage = ({ params }) => {
                       <button
                         onClick={() => toggleAvailability(m.index)}
                         className={`absolute top-2 left-2 text-white text-[10px] px-2 py-1 rounded font-bold z-10 transition-colors ${
-                          isAvailable 
+                          menuAvailability[m.index] 
                             ? 'bg-green-600 hover:bg-green-700' 
                             : 'bg-red-600 hover:bg-red-700'
                         }`}
-                        disabled={saving}
+                        disabled={saving || !stallOpen} // Disable if saving OR if stall is closed
                       >
-                        {isAvailable ? 'Available' : 'Not Available'}
+                        {menuAvailability[m.index] ? 'Available' : 'Not Available'}
                       </button>
 
                       {m.image && (

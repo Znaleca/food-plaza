@@ -5,18 +5,33 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/context/authContext';
 import getAllReservations from '@/app/actions/getAllReservations';
 import getMySpaces from '@/app/actions/getMySpaces';
-import approveBooking from '@/app/actions/approveBooking';
-import declineBooking from '@/app/actions/declineBooking';
 import ReservationTicket from '@/components/reservationTicket';
-import PreviewFile from '@/components/PreviewFile';
-import UploadContract from '@/components/UploadContract';
-import { FaFilePdf, FaEyeSlash, FaTriangleExclamation } from 'react-icons/fa6';
+import UploadDocuments from '@/components/UploadDocuments';
+import { FaFileContract } from 'react-icons/fa'; 
+
+// Appwrite endpoint and bucket
+const APPWRITE_ENDPOINT = process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT;
+const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
+
+// Required document names
+const REQUIRED_DOCUMENTS = [
+  'DTI',
+  'Business Permit',
+  'Safety and Sanitary Inspection (BFP)',
+  'BIR',
+  'Lease Agreement',
+];
 
 const ApprovalPage = () => {
   const { currentUser } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [myRoomIds, setMyRoomIds] = useState([]);
   const [openPreview, setOpenPreview] = useState(null);
+  const [activePreviewDoc, setActivePreviewDoc] = useState(null);
+  
+  // NEW STATE: For the main contract PDF viewer
+  const [showMainPdfViewer, setShowMainPdfViewer] = useState(false); 
+  const ACCENT_BG_CLASS = 'bg-yellow-500 text-neutral-900 hover:bg-yellow-400';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,46 +54,71 @@ const ApprovalPage = () => {
     fetchData();
   }, []);
 
-  const handleApprove = async (bookingId) => {
-    const response = await approveBooking(bookingId);
-    if (response.success) {
-      toast.success('Lease approved!');
+  // --- MODIFIED: Accepts the new document list to update state ---
+  const handleDocumentsUploaded = (bookingId, newDocuments) => {
+    // Only update if the server action returned the new list
+    if (newDocuments) {
       setBookings((prev) =>
         prev.map((b) =>
-          b.$id === bookingId ? { ...b, status: 'approved' } : b
+          b.$id === bookingId ? { ...b, documents: newDocuments } : b
         )
       );
-    } else {
-      toast.error(response.error);
+      // Reset preview after a successful upload to ensure the new file is loaded on view
+      setOpenPreview(null);
+      setActivePreviewDoc(null);
     }
   };
-
-  const handleDecline = async (bookingId) => {
-    const response = await declineBooking(bookingId);
-    if (response.success) {
-      toast.success('Lease declined!');
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.$id === bookingId ? { ...b, status: 'declined' } : b
-        )
-      );
-    } else {
-      toast.error(response.error);
-    }
-  };
-
-  const handleContractUploaded = (bookingId, fileId, fileType) => {
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.$id === bookingId ? { ...b, pdf_attachment: fileId, file_type: fileType } : b
-      )
-    );
-  };
+  // -------------------------------------------------------------
 
   const isExpired = (checkOut) => {
     if (!checkOut) return false;
     return new Date() > new Date(checkOut);
   };
+
+  // Parse JSON strings from booking.documents
+  const parseDocuments = (documents) => {
+    if (!documents || documents.length === 0) return [];
+    try {
+      if (typeof documents[0] === 'string') {
+        return documents.map((docString) => JSON.parse(docString));
+      }
+      return documents;
+    } catch (error) {
+      console.error('Error parsing booking documents:', error);
+      return [];
+    }
+  };
+
+  const allDocumentsAreReady = (booking) => {
+    const uploadedNames = new Set(
+      parseDocuments(booking.documents).map((doc) => doc.name)
+    );
+    return REQUIRED_DOCUMENTS.every((docName) => uploadedNames.has(docName));
+  };
+
+  // HANDLER FOR PREVIEW TOGGLE - MUST BE PASSED TO CHILD
+  const handlePreviewToggle = (bookingId, docName) => {
+    const isCurrentlyOpen =
+      openPreview === bookingId && activePreviewDoc === docName;
+    if (isCurrentlyOpen) {
+      setOpenPreview(null);
+      setActivePreviewDoc(null);
+    } else {
+      setOpenPreview(bookingId);
+      setActivePreviewDoc(docName);
+    }
+  };
+
+  // Helper icons - NOW PASSED TO CHILD
+  const CheckMark = ({ className }) => (
+    <span className={`font-bold ${className}`}>✓</span>
+  );
+  const Dot = ({ className }) => (
+    <span className={`text-[10px] ${className}`}>•</span>
+  );
+  const Warning = ({ className }) => (
+    <span className={`font-bold ${className}`}>!</span>
+  );
 
   return (
     <div className="min-h-screen bg-neutral-900 text-white p-4 sm:p-6">
@@ -88,7 +128,7 @@ const ApprovalPage = () => {
           MY STALL
         </h2>
         <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold">
-          Lease
+          Lease Management
         </p>
       </div>
 
@@ -101,7 +141,20 @@ const ApprovalPage = () => {
         ) : (
           bookings.map((booking) => {
             const expired = isExpired(booking.check_out);
-            const isOpen = openPreview === booking.$id;
+            const uploadedDocuments = parseDocuments(booking.documents);
+            const documentsReady = allDocumentsAreReady(booking);
+            
+            // Check if the current booking's documents are being previewed
+            const isPreviewOpen = openPreview === booking.$id;
+
+            // Get fileId for the active preview document
+            const previewFileId = uploadedDocuments.find(
+                (d) => d.name === activePreviewDoc
+            )?.fileId;
+
+            // NEW: Check for the old 'pdf_attachment' field
+            const pdfLink = booking.pdf_attachment;
+
 
             return (
               <div
@@ -111,81 +164,103 @@ const ApprovalPage = () => {
                 {/* Reservation Ticket */}
                 <ReservationTicket booking={booking} showActions={false} />
 
-                {/* Contract Section */}
-                <div className="space-y-3">
-                  {booking.pdf_attachment ? (
-                    <>
-                      <button
-                        onClick={() =>
-                          setOpenPreview(isOpen ? null : booking.$id)
-                        }
-                        className="flex w-full sm:w-auto items-center justify-center gap-2 px-4 py-2 rounded-lg bg-neutral-800 text-sm font-medium text-white shadow-md hover:bg-pink-600 transition"
-                      >
-                        {isOpen ? (
-                          <>
-                            <FaEyeSlash className="text-gray-200" />
-                            Hide Contract
-                          </>
-                        ) : (
-                          <>
-                            <FaFilePdf className="text-red-500" />
-                            Show Contract
-                          </>
-                        )}
-                      </button>
-
-                      {isOpen && (
-                        <div className="rounded-lg p-3 bg-neutral-900 shadow-inner">
-                          <PreviewFile
-                            bookingId={booking.$id}
-                            fileId={booking.pdf_attachment}
-                            fileType={booking.file_type}
-                          />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <p className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-900/30 border border-yellow-700 px-3 py-2 rounded-md">
-                      <FaTriangleExclamation /> You must upload the contract
-                      before approving.
-                    </p>
-                  )}
-
-                  {/* Upload Contract (only when pending) */}
-                  {booking.status === 'pending' && (
-                    <UploadContract
-                      bookingId={booking.$id}
-                      onUploaded={(fileId, fileType) =>
-                        handleContractUploaded(booking.$id, fileId, fileType)
-                      }
-                    />
-                  )}
-                </div>
-
-                {/* Action Buttons */}
-                {booking.status === 'pending' && !expired && (
-                  <div className="flex flex-col sm:flex-row sm:space-x-4 gap-3 justify-end">
+                {/* View Signed PDF Contract Button (Uses old 'pdf_attachment' field) */}
+                {pdfLink && (
+                  <div className="flex flex-col sm:flex-row gap-3 mt-6">
                     <button
-                      onClick={() => handleApprove(booking.$id)}
-                      disabled={!booking.pdf_attachment}
-                      className={`px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform
-                        ${
-                          booking.pdf_attachment
-                            ? 'bg-pink-600 text-white hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500'
-                            : 'bg-neutral-700 text-gray-400 cursor-not-allowed'
-                        }`}
+                      onClick={() => setShowMainPdfViewer(true)} // Toggle state
+                      className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded text-sm font-semibold transition-all ${ACCENT_BG_CLASS}`}
                     >
-                      Approve
-                    </button>
-
-                    <button
-                      onClick={() => handleDecline(booking.$id)}
-                      className="bg-neutral-800 text-white px-6 py-3 rounded-lg w-full sm:w-auto text-center shadow-md transition-all duration-200 ease-in-out transform hover:scale-[1.02] hover:bg-gradient-to-r hover:from-yellow-500 hover:to-pink-500"
-                    >
-                      Decline
+                      <FaFileContract />
+                      <span>View Main Signed Contract</span>
                     </button>
                   </div>
                 )}
+
+                {/* Main Signed Contract PDF Viewer */}
+                {showMainPdfViewer && pdfLink && (
+                    <div className="rounded-lg p-3 bg-neutral-900 shadow-inner mt-4">
+                        <h4 className="text-sm font-bold mb-2 text-gray-300 flex justify-between items-center">
+                            <span>Main Signed Contract</span>
+                            <button
+                                onClick={() => setShowMainPdfViewer(false)}
+                                className="text-red-500 hover:text-red-400 text-xs font-semibold"
+                            >
+                                Close Viewer
+                            </button>
+                        </h4>
+                        <iframe
+                            src={pdfLink} 
+                            className="w-full h-[600px] rounded-md border border-neutral-700"
+                            title="Main Signed Contract"
+                        />
+                    </div>
+                )}
+                
+
+                {/* Documents Section - Now handled by UploadDocuments */}
+                <div className="space-y-4">
+                  
+                  {/* The combined Document List / Upload Form */}
+                  <UploadDocuments
+                    bookingId={booking.$id}
+                    // --- UPDATED PROP CALL ---
+                    onUploaded={handleDocumentsUploaded} // Use the modified handler
+                    // -------------------------
+                    uploadedDocuments={uploadedDocuments}
+                    requiredDocuments={REQUIRED_DOCUMENTS} // Pass required docs list
+                    // Pass the necessary state and handlers for preview
+                    openPreview={openPreview} 
+                    activePreviewDoc={activePreviewDoc}
+                    handlePreviewToggle={handlePreviewToggle}
+                    // Pass helper icons for consistency
+                    CheckMark={CheckMark}
+                    Dot={Dot}
+                    Warning={Warning}
+                    File={() => <span>[PDF]</span>} 
+                    Hide={() => <span>[HIDE]</span>}
+                  />
+
+                  {/* Status Message (Kept in parent for consistency) */}
+                  {documentsReady ? (
+                    <p className="flex items-center gap-2 text-green-400 text-sm bg-green-900/30 border border-green-700 px-3 py-2 rounded-md">
+                      <CheckMark className='text-xl' /> All required documents have been uploaded.
+                    </p>
+                  ) : (
+                    <p className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-900/30 border border-yellow-700 px-3 py-2 rounded-md">
+                      <Warning className='text-xl' /> Please upload all required documents.
+                    </p>
+                  )}
+
+                  {/* PDF Preview (Kept in parent as it manages the iframe) */}
+                  {isPreviewOpen && activePreviewDoc && previewFileId && (
+                    <div className="rounded-lg p-3 bg-neutral-900 shadow-inner">
+                      <h4 className="text-sm font-bold mb-2 text-gray-300">
+                        Previewing: {activePreviewDoc}
+                      </h4>
+                      {(() => {
+                        const previewUrl = `${APPWRITE_ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${previewFileId}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`;
+
+                        return (
+                          <iframe
+                            src={previewUrl}
+                            className="w-full h-[600px] rounded-md border border-neutral-700"
+                            title={activePreviewDoc}
+                          />
+                        );
+                      })()}
+                    </div>
+                  )}
+                  {/* Handle missing file case in preview */}
+                  {isPreviewOpen && activePreviewDoc && !previewFileId && (
+                    <div className="rounded-lg p-3 bg-neutral-900 shadow-inner">
+                        <p className="text-gray-400">
+                            File not found for this document.
+                        </p>
+                    </div>
+                  )}
+
+                </div>
               </div>
             );
           })

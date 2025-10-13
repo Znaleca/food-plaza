@@ -42,8 +42,16 @@ function RoomSpace({ params }) {
 
   const menuImageUrls = (room?.menuImages || []).map(toURL);
 
+  // Check the overall stall status. Default to true (Open) if the field is missing/undefined.
+  // The 'operatingStatus' attribute is assumed to be a boolean: true for Open, false for Closed.
+  const isStallOpen = room?.operatingStatus !== false;
+
+  // The individual menu availability array is now only used if the stall is open.
   const menuAvailability =
-    Array.isArray(room?.menuAvailability) && room.menuAvailability.length === room.menuName?.length
+    // If the stall is closed, treat all items as unavailable
+    !isStallOpen
+      ? new Array(room?.menuName?.length || 0).fill(false)
+      : Array.isArray(room?.menuAvailability) && room.menuAvailability.length === room.menuName?.length
       ? room.menuAvailability
       : new Array(room?.menuName?.length || 0).fill(true);
 
@@ -61,6 +69,7 @@ function RoomSpace({ params }) {
       smallFee: room.menuSmall?.[idx] ?? 0,
       mediumFee: room.menuMedium?.[idx] ?? 0,
       largeFee: room.menuLarge?.[idx] ?? 0,
+      // Use the calculated availability based on overall stall status
       isAvailable: menuAvailability[idx] ?? true,
       idx,
     })) || [];
@@ -85,6 +94,12 @@ function RoomSpace({ params }) {
   useEffect(() => {
     if (!room) return;
 
+    // We only fetch best sellers if the stall is open to avoid showing unorderable items
+    if (!isStallOpen) {
+        setTopItems([]);
+        return;
+    }
+
     // check cache first
     if (bestSellersCache[id]) {
       setTopItems(bestSellersCache[id]);
@@ -103,7 +118,8 @@ function RoomSpace({ params }) {
             const found = menuData.find(
               (m) => m.menuId === item.menuId || m.name === item.menuName
             );
-            if (!found) return null;
+            // Only include the item if it exists in the menu AND is available
+            if (!found || !found.isAvailable) return null; 
             return {
               name: found.name,
               count: item.count,
@@ -120,7 +136,8 @@ function RoomSpace({ params }) {
     };
 
     fetchBestSellers();
-  }, [room, id, menuData]); // Added menuData dependency back since it is computed outside useEffect
+    // Added menuData and isStallOpen dependency
+  }, [room, id, menuData, isStallOpen]); 
 
   if (loading)
     return (
@@ -135,9 +152,12 @@ function RoomSpace({ params }) {
   const imageUrls = (room.images || []).map(toURL);
 
   const handleSelectMenu = (menuItem) => {
-    // Note: Recommended menus currently filters by main type.
+    // Check item availability again before showing the pop-up (extra safety)
+    if (!menuItem.isAvailable) return;
+
+    // Recommended menus should also only include available items
     const recommendedMenus = menuData.filter(
-      (m) => m.type === menuItem.type && m.menuId !== menuItem.menuId
+      (m) => m.type === menuItem.type && m.menuId !== menuItem.menuId && m.isAvailable
     );
 
     setSelectedMenu({
@@ -173,6 +193,19 @@ function RoomSpace({ params }) {
         <p className="mt-2 text-3xl sm:text-5xl font-extrabold leading-tight">{room.name}</p>
       </div>
 
+      {/* --- NEW: Stall Closed Alert --- */}
+      {!isStallOpen && (
+        <div className="mx-4 sm:mx-8 p-4 mb-8 text-center bg-red-800/70 border border-red-600 rounded-lg shadow-lg">
+          <p className="text-2xl font-bold text-white uppercase tracking-wider">
+            Stall is Closed
+          </p>
+          <p className="text-sm text-red-100 mt-1">
+            We are currently not accepting orders. Please check back later!
+          </p>
+        </div>
+      )}
+      {/* --- END NEW: Stall Closed Alert --- */}
+
       <div className="w-full">
         <SpacesImage imageUrls={imageUrls} />
       </div>
@@ -201,11 +234,12 @@ function RoomSpace({ params }) {
       </div>
 
       <div className="px-4 sm:px-8">
+        {/* Pass isStallOpen to BestSellers if needed for styling/logic */}
         <BestSellers
           topItems={topItems}
           menuData={menuData}
           room={room}
-          setSelectedMenu={setSelectedMenu}
+          setSelectedMenu={handleSelectMenu}
         />
       </div>
 
@@ -234,6 +268,7 @@ function RoomSpace({ params }) {
                       <div
                         key={m.idx}
                         onClick={() => {
+                          // Interaction is only allowed if the item is available
                           if (!m.isAvailable) return;
                           handleSelectMenu(m);
                         }}
