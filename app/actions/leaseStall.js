@@ -20,7 +20,7 @@ async function leaseStall(previousState, formData) {
     const fname = formData.get('fname');
     const gender = formData.get('gender');
     const residentialAddress = formData.get('residentialAddress');
-    const phoneNumber = formData.get('phoneNumber'); // keep as string
+    const phoneNumber = formData.get('phoneNumber');
     const socialMediaAccount = formData.get('socialMediaAccount');
     const checkInDate = formData.get('check_in_date');
     const checkInTime = formData.get('check_in_time');
@@ -28,6 +28,10 @@ async function leaseStall(previousState, formData) {
     const checkOutTime = formData.get('check_out_time');
     const roomId = formData.get('room_id');
     const pdf = formData.get('attachment');
+    
+    // Retrieve the uploaded validID file and type
+    const validIDFile = formData.get('validID'); 
+    const idType = formData.get('idType'); // NEW: Retrieve ID Type
 
     // Validate phone number (exactly 11 digits)
     if (!/^[0-9]{11}$/.test(phoneNumber)) {
@@ -57,6 +61,26 @@ async function leaseStall(previousState, formData) {
       );
       pdfFileId = uploaded.$id;
     }
+    
+    // Upload the Valid ID file (Image Only)
+    let uploadedValidID = null;
+    if (validIDFile instanceof File && validIDFile.size > 0) {
+        const validTypes = ['image/jpeg', 'image/png'];
+        if (validTypes.includes(validIDFile.type)) {
+            const uploaded = await storage.createFile(
+                process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS, 
+                ID.unique(),
+                validIDFile
+            );
+            uploadedValidID = uploaded.$id;
+        } else {
+            return { error: 'Invalid file type for Valid ID. Must be JPG or PNG.' };
+        }
+    }
+    
+    if (!uploadedValidID) {
+        return { error: 'Valid ID file is required and could not be processed.' };
+    }
 
     await databases.createDocument(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
@@ -66,7 +90,7 @@ async function leaseStall(previousState, formData) {
         fname,
         gender,
         residentialAddress,
-        phoneNumber, // ✅ string type (must match Appwrite schema)
+        phoneNumber, 
         socialMediaAccount,
         check_in: checkInDateTime,
         check_out: checkOutDateTime,
@@ -75,6 +99,8 @@ async function leaseStall(previousState, formData) {
         stallNumber,
         status: 'pending',
         pdf_attachment: pdfFileId,
+        validID: uploadedValidID,
+        idType, // NEW: Store the ID type
       }
     );
 
@@ -83,7 +109,7 @@ async function leaseStall(previousState, formData) {
   } catch (err) {
     console.error('Leasing Error:', err);
     return {
-      error: err.response?.message || 'An unexpected error occurred during leasing.',
+      error: err.message || err.response?.message || 'An unexpected error occurred during leasing.',
     };
   }
 }

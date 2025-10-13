@@ -5,6 +5,25 @@ import { toast } from 'react-toastify';
 import leaseStall from '@/app/actions/leaseStall';
 import { useEffect, useState } from 'react';
 
+// List of real, valid government-issued IDs in the Philippines
+const VALID_ID_TYPES = [
+  'Philippine Identification Card (PhilID) / ePhilID',
+  'Philippine Passport (DFA)',
+  'Driver\'s License (LTO) - Non-Prof/Prof',
+  'Unified Multi-Purpose Identification (UMID) Card',
+  'Professional Regulation Commission (PRC) ID',
+  'Social Security System (SSS) Card',
+  'Government Service Insurance System (GSIS) e-Card',
+  'Postal ID (PVC Card)',
+  'Voter\'s ID (COMELEC)',
+  'Senior Citizen ID (OSCA/LGU)',
+  'Persons with Disability (PWD) ID',
+  'Overseas Workers Welfare Administration (OWWA) E-Card',
+  'Seafarer\'s Record Book (SRB) / SID (MARINA)',
+  'Integrated Bar of the Philippines (IBP) ID',
+  'Taxpayer Identification Number (TIN) ID (w/ Photo)',
+];
+
 const LeaseForm = ({ room }) => {
   const router = useRouter();
   const [minStartDate, setMinStartDate] = useState('');
@@ -139,6 +158,34 @@ const LeaseForm = ({ room }) => {
             <label htmlFor="socialMediaAccount" className="block text-sm font-medium text-white">Social Media Link (Optional)</label>
             <input type="url" id="socialMediaAccount" name="socialMediaAccount" maxLength={100} placeholder="https://facebook.com/your-profile" className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm sm:text-sm" />
           </div>
+        </div>
+
+        {/* NEW: Valid ID Type Dropdown */}
+        <div>
+          <label htmlFor="idType" className="block text-sm font-medium text-white">Valid ID Type *</label>
+          <select id="idType" name="idType" required className="mt-1 block w-full px-3 py-2 bg-white text-black border border-gray-600 rounded-md shadow-sm sm:text-sm">
+            <option value="">-- Select Valid ID Type --</option>
+            {VALID_ID_TYPES.map((id, index) => (
+              <option key={index} value={id}>{id}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Valid ID File Input (Image Only) */}
+        <div>
+          <label htmlFor="validID" className="block text-sm font-medium text-white">Upload Valid ID (JPG or PNG) *</label>
+          <input
+            type="file"
+            id="validID"
+            name="validID"
+            required
+            accept="image/jpeg,image/png" // Only accepts JPG and PNG
+            capture="environment" // Hint for mobile devices to open the camera
+            className="mt-1 block w-full text-sm text-white file:mr-4 file:py-2 file:px-4
+              file:rounded-md file:border-0 file:text-sm file:font-semibold
+              file:bg-pink-500 file:text-white hover:file:bg-pink-600 transition duration-300"
+          />
+          <p className="text-xs text-gray-400 mt-1">Accepted formats: JPG, PNG. Max file size recommended: 5MB. Must match the type selected above.</p>
         </div>
 
         {/* Start Date & Duration */}
