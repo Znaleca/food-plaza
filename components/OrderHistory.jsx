@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar as solidStar, faCheckCircle, faClock, faHourglassHalf, faTimesCircle, faExclamationCircle, faBan, faReceipt, faXmark, faStore } from '@fortawesome/free-solid-svg-icons'; 
 import updateRating from '@/app/actions/updateRating';
 
+
 const MENU_STATUS = {
   PENDING: 'pending',
   PREPARING: 'preparing',
@@ -38,7 +39,7 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   
-  // *** NEW: Stall-level rating state ***
+  // *** Stall-level rating state ***
   const [selectedStallId, setSelectedStallId] = useState(null);
   const [stallRating, setStallRating] = useState(0);
   const [stallComment, setStallComment] = useState('');
@@ -48,8 +49,10 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
   // --- Item Rating Logic (Unchanged) ---
   const openRatingModal = (index) => {
     setSelectedItem(index);
-    const initialRating = order.rating?.[index] || 0;
-    const initialComment = order.comment?.[index] || '';
+    
+    const initialRating = (order.rating && order.rating[index] > 0) ? order.rating[index] : 0;
+    const initialComment = (order.comment && order.comment[index]) || '';
+    
     setRating(initialRating);
     setComment(initialComment);
   };
@@ -67,12 +70,24 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
     }
 
     try {
-      const updatedRatings = [...(order.rating || [])];
-      const updatedComments = [...(order.comment || [])];
-      const updatedRated = [...(order.rated || [])];
+      const totalItems = (order.items || []).length;
+      
+      const updatedRatings = Array.from({ length: totalItems }, (_, index) => {
+        if (index === selectedItem) {
+          return rating;
+        }
+        const existingRating = order.rating?.[index];
+        return (typeof existingRating === 'number' && existingRating >= 1 && existingRating <= 5)
+          ? existingRating 
+          : null;
+      });
 
-      updatedRatings[selectedItem] = rating;
-      updatedComments[selectedItem] = comment;
+      const updatedComments = [...(order.comment || [])];
+      updatedComments.length = totalItems;
+      updatedComments[selectedItem] = comment || null;
+      
+      const updatedRated = [...(order.rated || [])];
+      updatedRated.length = totalItems;
       updatedRated[selectedItem] = true;
 
       await updateRating(order.$id, {
@@ -101,17 +116,15 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
   // -----------------------------
 
 
-  // --- NEW: Stall Rating Logic (Modified for String Array) ---
+  // --- Stall Rating Logic ---
   const openStallRatingModal = (stallId) => {
-    setSelectedItem(null); // Ensure item modal is closed
+    setSelectedItem(null); 
     setSelectedStallId(stallId);
     
-    // 🟣 MODIFIED: Parse existing string array reviews
     const parsedReviews = (order.stallReviews || [])
         .map(safeParseStallReview)
         .filter(r => r !== null);
     
-    // Find the existing stall review data for this stall
     const stallReview = parsedReviews.find(r => r.roomId === stallId) || {};
 
     setStallRating(stallReview.rating || 0);
@@ -124,6 +137,7 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
     setStallComment('');
   };
 
+  // 🔴 UPDATED FUNCTION
   const handleSubmitStallRating = async () => {
     if (stallRating < 1 || stallRating > 5) {
       alert('Please give a rating between 1 and 5');
@@ -131,44 +145,70 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
     }
 
     try {
-      // Find the stall's current data from groupedItems (to get roomName)
       const roomData = groupedItems[selectedStallId];
       if (!roomData) {
           throw new Error("Stall data not found.");
       }
       
+      // --- STALL DATA PREPARATION (Unchanged) ---
       const newStallReviewObject = {
         roomId: selectedStallId,
         roomName: roomData.roomName,
         rating: stallRating,
         comment: stallComment,
+        user_id: order.user_id,
         rated_at: new Date().toISOString(),
       };
       
-      // 🟣 MODIFIED: Parse existing reviews to manage the array
       const parsedReviews = (order.stallReviews || [])
         .map(safeParseStallReview)
         .filter(r => r !== null);
 
-      // 1. Update the main array of stall review OBJECTS
       const updatedStallReviewObjects = [
-        ...parsedReviews.filter(r => r.roomId !== selectedStallId), // Remove old review for this stall
-        newStallReviewObject, // Add new review object
+        ...parsedReviews.filter(r => r.roomId !== selectedStallId),
+        newStallReviewObject,
       ];
       
-      // 2. 🟣 MODIFIED: Convert back to an array of JSON STRINGS for Appwrite
       const updatedStallReviewsStrings = updatedStallReviewObjects.map(obj => JSON.stringify(obj));
 
+      // --- 🟢 BUNDLE ITEM DATA FOR VALIDATION (THE FIX) ---
+      // We must send the existing item rating data (sanitized) to pass Appwrite's validation.
+      const totalItems = (order.items || []).length;
+
+      // Sanitize item ratings: ensure any 0 or invalid values are converted to null.
+      const sanitizedItemRatings = Array.from({ length: totalItems }, (_, index) => {
+        const existingRating = order.rating?.[index];
+        return (typeof existingRating === 'number' && existingRating >= 1 && existingRating <= 5)
+          ? existingRating
+          : null;
+      });
+
+      // Ensure other item arrays have the correct length.
+      const sanitizedItemComments = [...(order.comment || [])];
+      sanitizedItemComments.length = totalItems;
+
+      const sanitizedItemRatedStatus = [...(order.rated || [])];
+      sanitizedItemRatedStatus.length = totalItems;
+      // --- End of Fix ---
+
+      // 🟢 SEND COMBINED PAYLOAD
       await updateRating(order.$id, {
+          // Stall data
           stall: {
-              reviews: updatedStallReviewsStrings // Send array of strings
+              reviews: updatedStallReviewsStrings
+          },
+          // Item data (to pass validation)
+          item: {
+              ratings: sanitizedItemRatings,
+              comments: sanitizedItemComments,
+              ratedStatus: sanitizedItemRatedStatus,
           }
       });
 
       setOrders((prevOrders) =>
         prevOrders.map((o) =>
           o.$id === order.$id
-            ? { ...o, stallReviews: updatedStallReviewsStrings } // Update local state with strings
+            ? { ...o, stallReviews: updatedStallReviewsStrings }
             : o
         )
       );
@@ -185,7 +225,6 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
 
   // --- Status Rendering (Unchanged) ---
   const renderStatus = (status) => {
-    // ... (unchanged)
     const statusMap = {
       [MENU_STATUS.PENDING]: { text: 'Pending', icon: faClock, color: 'text-gray-400' },
       [MENU_STATUS.PREPARING]: { text: 'Preparing', icon: faHourglassHalf, color: 'text-yellow-400' },
@@ -194,9 +233,7 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
       [MENU_STATUS.CANCELLED]: { text: 'Cancelled', icon: faTimesCircle, color: 'text-fuchsia-400' }, 
       [MENU_STATUS.FAILED]: { text: 'Failed', icon: faExclamationCircle, color: 'text-red-500' },
     };
-
     const s = statusMap[status] || statusMap[MENU_STATUS.PENDING];
-
     return (
       <div className={`flex items-center space-x-2 text-sm font-medium ${s.color}`}>
         <FontAwesomeIcon icon={s.icon} className="w-4 h-4" />
@@ -206,7 +243,6 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
   };
 
   const renderPaymentStatus = (status) => {
-    // ... (unchanged)
     const statusKey = status.toLowerCase();
     const statusMap = {
       [PAYMENT_STATUS.PENDING]: { text: 'Pending', icon: faClock, color: 'text-yellow-400' },
@@ -214,9 +250,7 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
       [PAYMENT_STATUS.EXPIRED]: { text: 'Expired', icon: faBan, color: 'text-gray-500' },
       [PAYMENT_STATUS.FAILED]: { text: 'Failed', icon: faExclamationCircle, color: 'text-red-500' },
     };
-
     const s = statusMap[statusKey] || statusMap[PAYMENT_STATUS.FAILED];
-
     return (
       <div className={`flex items-center space-x-2 text-base font-semibold ${s.color}`}>
         <FontAwesomeIcon icon={s.icon} className="w-5 h-5" />
@@ -227,22 +261,20 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
   // -----------------------------------
 
 
-  // --- Item Grouping and Stall Status Check (Modified for String Array) ---
+  // --- Item Grouping and Stall Status Check (Unchanged) ---
   const parseItemsGroupedByRoom = () => {
     const grouped = {};
     const items = (order.items || []).map((itemStr, index) => {
         try {
             return { ...JSON.parse(itemStr), index };
         } catch {
-            return null; // skip broken item
+            return null;
         }
     }).filter(item => item !== null);
     
-    // 🟣 MODIFIED: Parse stall reviews once
     const parsedReviews = (order.stallReviews || [])
         .map(safeParseStallReview)
         .filter(r => r !== null);
-
 
     items.forEach((item) => {
       const roomId = item.room_id || 'unknown';
@@ -270,9 +302,7 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
       }
     });
 
-    // Add stall review status to each group
     Object.keys(grouped).forEach(roomId => {
-        // 🟣 MODIFIED: Look up in the parsed array
         const stallReview = parsedReviews.find(r => r.roomId === roomId);
         grouped[roomId].isStallRated = !!stallReview;
         grouped[roomId].stallRating = stallReview?.rating || 0;
@@ -293,13 +323,10 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
       return null;
   }
 
-
+  // --- JSX REMAINS UNCHANGED FROM HERE DOWN ---
   return (
     <div className="w-full">
-      {/* Main Card Container (Unchanged) */}
       <div className="bg-neutral-900 text-white w-full rounded-xl border border-neutral-700 p-6 sm:p-8 shadow-2xl shadow-neutral-950/50">
-
-        {/* Order Header (Unchanged) */}
         <div className="pb-6 mb-6 border-b border-neutral-700">
           <div className="flex justify-between items-start mb-1">
             <h2 className="text-3xl font-extrabold tracking-tight">
@@ -311,15 +338,12 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
               </span>
             </h2>
           </div>
-          
           <p className="text-sm text-gray-400 mb-4">{new Date(order.created_at).toLocaleString()}</p>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
                 <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Payment Status</p>
                 {renderPaymentStatus(order.payment_status || "failed")}
             </div>
-
             <div className='flex flex-col items-end'>
                 <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Table</p>
                 <div className="flex items-center space-x-1 text-2xl font-semibold">
@@ -330,24 +354,18 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
           </div>
         </div>
 
-        {/* Items Grouped by Stall (Stall Header and Item Card are unchanged, as they rely on the logic above) */}
         <div className="mb-6 space-y-8">
           <h3 className="text-xl font-semibold text-gray-300">
             Completed Items Ready for Rating
           </h3>
-          
           {completedItemGroups.map(([roomId, { roomName, items, isReadyForStallReview, isStallRated, stallRating, totalRated, totalToRate }]) => (
               <div key={roomId} className="rounded-lg p-4 bg-neutral-800 border border-neutral-700 shadow-inner shadow-neutral-950/30">
-                
-                {/* Stall Header with Review Button (Unchanged) */}
                 <div className="mb-4 pb-2 border-b border-neutral-700 flex justify-between items-center flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                         <FontAwesomeIcon icon={faStore} className="w-5 h-5 text-fuchsia-400" />
                         <h4 className="text-lg font-bold text-gray-100">{roomName}</h4>
                     </div>
-
                     <div className='flex items-center gap-4'>
-                        {/* Stall Rating Button/Display */}
                         {!isReadOnly && (
                             <div className="flex-shrink-0">
                                 {isReadyForStallReview ? (
@@ -388,16 +406,12 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
                         )}
                     </div>
                 </div>
-
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {items.filter(item => item.status === MENU_STATUS.COMPLETED).map((item) => {
                     const itemRated = order.rated?.[item.index];
                     const itemRating = order.rating?.[item.index];
                     const itemQuantity = item.quantity;
-
                     return (
-                      // Item Card (Unchanged)
                       <div
                         key={item.index}
                         className="relative border border-neutral-700 rounded-md bg-neutral-900 p-4 flex flex-col items-center text-center transition-all duration-300"
@@ -420,7 +434,6 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
                           <p className="text-sm text-gray-500 mt-1">
                               Qty: <span className="font-bold text-cyan-400">{itemQuantity}</span>
                           </p>
-
                           <div className="mt-4 pt-3 border-t border-neutral-700">
                               <div className="mb-3">
                                   {renderStatus(item.status || MENU_STATUS.COMPLETED)}
@@ -468,19 +481,16 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
               </div>
             ))}
         </div>
-
-        {/* Order Summary Footer (Unchanged) */}
         <div className="pt-6 mt-6 border-t border-neutral-700 text-center">
             <p className="text-base text-gray-400 font-light">
                 Thank you for your order!
             </p>
         </div>
       </div>
-
-      {/* Item Rating Modal (Unchanged) */}
+      
+      {/* Modals are unchanged */}
       {!isReadOnly && selectedItem !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950 bg-opacity-70 backdrop-blur-sm p-4" aria-modal="true" role="dialog">
-            {/* ... Item Rating Modal JSX (Unchanged) ... */}
             <div className="bg-neutral-900 p-8 rounded-xl w-full max-w-md border border-fuchsia-500/50 shadow-2xl shadow-fuchsia-500/20 transition-all duration-300 scale-100 ease-out">
                 <button 
                     onClick={closeRatingModal} 
@@ -528,8 +538,6 @@ const OrderHistory = ({ order, setOrders, isReadOnly = false }) => {
             </div>
         </div>
       )}
-      
-      {/* Stall Rating Modal (Unchanged - uses state values set by modified logic) */}
       {!isReadOnly && selectedStallId !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-950 bg-opacity-70 backdrop-blur-sm p-4" aria-modal="true" role="dialog">
             <div className="bg-neutral-900 p-8 rounded-xl w-full max-w-md border border-cyan-500/50 shadow-2xl shadow-cyan-500/20 transition-all duration-300 scale-100 ease-out">
