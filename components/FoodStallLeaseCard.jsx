@@ -92,10 +92,12 @@ const FoodStallLeaseCard = ({ reservations }) => {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-2xl font-semibold text-white">
-                      {res.room_id?.name || 'Unnamed Stall'}
+                      {/* FIX: Use res.room?.name */}
+                      {res.room?.name || 'Unnamed Stall'}
                     </h3>
                     <p className="text-sm text-neutral-400">
-                      Stall #{res.room_id?.stallNumber || 'N/A'}
+                      {/* FIX: Use res.room?.stallNumber */}
+                      Stall #{res.room?.stallNumber || 'N/A'}
                     </p>
                   </div>
                   <span

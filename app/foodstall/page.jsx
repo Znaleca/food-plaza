@@ -27,8 +27,8 @@ const FoodStallPage = () => {
           // Fetch all reservations
           const fetchedReservations = await getAllReservations();
 
-          // Filter reservations by the selected room name
-          const filteredReservations = fetchedReservations.filter(reservation => reservation.room_id?.name === selectedRoom.name);
+          // FIX: Filter reservations by the room name in the attached 'room' object
+          const filteredReservations = fetchedReservations.filter(reservation => reservation.room?.name === selectedRoom.name);
           setReservations(filteredReservations);
 
           await getAllOrders(1, 100);
