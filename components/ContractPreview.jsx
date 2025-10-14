@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Printer, Download } from 'lucide-react';
+// Import the X icon for the Close button
+import { Printer, Download, X } from 'lucide-react'; 
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -49,7 +50,8 @@ const Bold = ({ children }) => (
   <span style={{ fontWeight: 'bold' }}>{children}</span>
 );
 
-const ContractPreview = ({ booking }) => {
+// Added onClose prop for the Close button functionality
+const ContractPreview = ({ booking, onClose }) => {
   const contractRef = useRef(null);
   
   // --- RENTAL CONSTANT ---
@@ -158,24 +160,21 @@ const ContractPreview = ({ booking }) => {
   // --- Contract Markup (Food Court Focus) ---
   return (
     <div className="relative z-50 text-gray-800">
-      <div className="flex justify-center gap-4 mb-8">
-        <button
-          onClick={() => generatePDF('print')}
-          className="px-8 py-3 bg-gray-700 text-white font-semibold rounded-lg shadow-md hover:bg-gray-800 transition duration-200 ease-in-out flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          aria-label="Print Contract"
-        >
-          <Printer className="w-5 h-5" />
-          <span className="hidden sm:inline">Print 2-Page Agreement</span>
-        </button>
-        <button
-          onClick={() => generatePDF('download')}
-          className="px-8 py-3 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition duration-200 ease-in-out flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-400"
-          aria-label="Download PDF"
-        >
-          <Download className="w-5 h-5" />
-          <span className="hidden sm:inline">Download 2-Page PDF</span>
-        </button>
-      </div>
+      
+      {/* --- NEW: Close Button at the Top Right --- */}
+      {onClose && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={onClose}
+            className="p-3 bg-red-600 text-white font-semibold rounded-full shadow-lg hover:bg-red-700 transition duration-200 ease-in-out flex items-center gap-2 focus:outline-none focus:ring-4 focus:ring-red-300"
+            aria-label="Close Preview"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+      {/* -------------------------------------- */}
+
 
       <div
         ref={contractRef}
@@ -328,6 +327,27 @@ const ContractPreview = ({ booking }) => {
           </p>
         </div>
       </div>
+      
+      {/* --- MOVED: Download and Print Buttons Below the Contract --- */}
+      <div className="flex justify-center gap-4 mt-8">
+        <button
+          onClick={() => generatePDF('print')}
+          className="px-8 py-3 bg-gray-700 text-white font-semibold rounded-lg shadow-md hover:bg-gray-800 transition duration-200 ease-in-out flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          aria-label="Print Contract"
+        >
+          <Printer className="w-5 h-5" />
+          <span className="hidden sm:inline">Print 2-Page Agreement</span>
+        </button>
+        <button
+          onClick={() => generatePDF('download')}
+          className="px-8 py-3 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition duration-200 ease-in-out flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          aria-label="Download PDF"
+        >
+          <Download className="w-5 h-5" />
+          <span className="hidden sm:inline">Download 2-Page PDF</span>
+        </button>
+      </div>
+      {/* ----------------------------------------------------------- */}
     </div>
   );
 };
