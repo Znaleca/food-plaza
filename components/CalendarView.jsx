@@ -143,7 +143,8 @@ const CalendarView = () => {
                     <ul className="text-xs space-y-1">
                       {dayEvents.slice(0, 2).map((event) => (
                         <li key={event.$id} className="text-yellow-400 truncate">
-                          • {event.room_id?.name || 'Stall'} #{event.room_id?.stallNumber}
+                          {/* UPDATED: Using 'event.room' instead of 'event.room_id' */}
+                          • {event.room?.name || 'Stall'} #{event.room?.stallNumber}
                         </li>
                       ))}
                       {dayEvents.length > 2 && (
@@ -206,7 +207,8 @@ const CalendarView = () => {
                       {/* Stall + Status */}
                       <div className="flex justify-between items-center flex-wrap gap-2">
                         <p className="text-lg font-semibold text-yellow-300">
-                          {event.room_id?.name} #{event.room_id?.stallNumber}
+                          {/* UPDATED: Using 'event.room' instead of 'event.room_id' */}
+                          {event.room?.name} #{event.room?.stallNumber}
                         </p>
                         <span
                           className={`text-xs font-bold uppercase px-3 py-1 rounded-full border ${badgeClass} tracking-wide`}
