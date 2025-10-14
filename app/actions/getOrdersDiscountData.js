@@ -14,15 +14,15 @@ const getOrdersDiscountData = async () => {
   try {
     const { databases } = await createAdminClient();
     
-    // Set a high limit to fetch comprehensive data for aggregation
-    const MAX_DOCS_LIMIT = 2000; 
+    // Set a high limit to fetch comprehensive data for aggregation (Appwrite max limit)
+    const MAX_DOCS_LIMIT = 5000; 
 
     // 🛑 MODIFICATION: Filter to only include documents where payment_status is 'paid'
     const response = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
       [
-        // 🟢 NEW: Filter by successful payment status
+        // 🟢 Filter by successful payment status
         Query.equal('payment_status', 'paid'), 
         
         // Fetch a large chunk of documents
@@ -37,8 +37,6 @@ const getOrdersDiscountData = async () => {
     const itemDiscountMap = new Map();
 
     for (const order of response.documents) {
-      // Since we filtered by payment_status='paid' in the query, 
-      // all orders here are successful.
       if (!order.items || !Array.isArray(order.items)) continue;
 
       for (const itemStr of order.items) {

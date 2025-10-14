@@ -27,7 +27,8 @@ const getOrdersPaymentSummary = async (roomName) => {
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
       [
-        Query.limit(1000), // Adjust limit based on your expected volume
+        // OPTIMIZATION: Use Appwrite's max limit (5000) for full data processing
+        Query.limit(5000), 
         Query.orderDesc('$createdAt'),
       ]
     );

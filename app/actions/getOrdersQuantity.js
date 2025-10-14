@@ -1,6 +1,10 @@
 'use server';
 
 import { createAdminClient } from '@/config/appwrite';
+import { Query } from 'appwrite';
+
+// Max documents to fetch in one request (Appwrite limit)
+const MAX_DOCS_LIMIT = 5000; 
 
 const getOrdersQuantity = async () => {
   try {
@@ -9,18 +13,21 @@ const getOrdersQuantity = async () => {
     const response = await databases.listDocuments(
       process.env.NEXT_PUBLIC_APPWRITE_DATABASE,
       process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS,
-      []
+      [
+        // FIX: Set a high query limit to fetch all documents
+        Query.limit(MAX_DOCS_LIMIT), 
+      ]
     );
 
     const itemCount = {};
 
     response.documents.forEach((order) => {
       const { items } = order;
-      if (!Array.isArray(items)) return; // safety
+      if (!Array.isArray(items)) return; 
 
       items.forEach((itemStr) => {
         try {
-          const item = JSON.parse(itemStr); // parse string to object
+          const item = JSON.parse(itemStr); 
 
           const key = item.menuId || item.menuName;
           const qty = Number(item.quantity) || 1;
@@ -43,7 +50,7 @@ const getOrdersQuantity = async () => {
       });
     });
 
-    return Object.values(itemCount); // returns [{ menuId, menuName, roomId, roomName, count }]
+    return Object.values(itemCount); 
   } catch (error) {
     console.error('Failed to fetch order quantities:', error);
     return [];
