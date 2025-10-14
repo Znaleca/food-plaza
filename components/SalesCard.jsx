@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import getAllMenu from '@/app/actions/getAllMenu';
 import getOrdersQuantity from '@/app/actions/getOrdersQuantity';
-import getOrdersDiscountData from '@/app/actions/getOrdersDiscountData'; 
+import getOrdersDiscountData from '@/app/actions/getOrdersDiscountData';
 import getOrdersPaymentSummary from '@/app/actions/getOrdersPaymentSummary';
 import getLatestOrderTransaction from '@/app/actions/getLatestOrderTransaction';
 import {
@@ -17,10 +17,8 @@ import {
     FaBullseye,
     FaPercent
 } from 'react-icons/fa6';
-
 // --- IMPORT THE NEWLY CREATED CHART COMPONENT ---
 import RevenueDoughnutChart from './RevenueDoughnutChart';
-
 
 // Utility function to convert Appwrite file ID to a view URL
 const toURL = (fid) => {
@@ -28,31 +26,6 @@ const toURL = (fid) => {
     const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
     if (!fid || !bucketId || !projectId) return null;
     return `https://cloud.appwrite.io/v1/storage/buckets/${bucketId}/files/${fid}/view?project=${projectId}`;
-};
-
-// --- UTILITY TO EXTRACT ALL MENU ITEMS FROM ALL STALLS ---
-const extractAllMenuItems = (stallDocuments) => {
-  const allItems = [];
-
-  stallDocuments.forEach(stall => {
-    const menuNames = stall.menuName || [];
-    const menuPrices = stall.menuPrice || [];
-    const menuTypes = stall.menuType || [];
-    const menuImages = stall.menuImages || [];
-
-    for (let i = 0; i < menuNames.length; i++) {
-      allItems.push({
-        id: `${stall.$id}_${i}`,
-        name: menuNames[i] || 'Unnamed Item',
-        price: menuPrices[i] ?? 0,
-        type: menuTypes[i] || 'Other',
-        imageURL: toURL(menuImages[i]),
-        stallName: stall.name,
-      });
-    }
-  });
-
-  return allItems;
 };
 
 // Utility function for currency formatting (Philippines Pesos)
@@ -66,12 +39,61 @@ const formatCurrency = (amount) => {
 };
 
 
+// --- UTILITY TO EXTRACT ALL MENU ITEMS FROM ALL STALLS (MODIFIED) ---
+const extractAllMenuItems = (stallDocuments) => {
+  const allItems = [];
+  stallDocuments.forEach(stall => {
+    const menuNames = stall.menuName || [];
+    const menuPrices = stall.menuPrice || [];
+    const menuTypes = stall.menuType || [];
+    const menuImages = stall.menuImages || [];
+    // --- NEW: Extract Size Fees ---
+    const menuSmall = stall.menuSmall || [];
+    const menuMedium = stall.menuMedium || [];
+    const menuLarge = stall.menuLarge || [];
+    // --- END NEW ---
+
+    for (let i = 0; i < menuNames.length; i++) {
+    
+      const basePrice = menuPrices[i] ?? 0;
+      const smallFee = menuSmall[i] ?? 0;
+      const mediumFee = menuMedium[i] ?? 0;
+      const largeFee = menuLarge[i] ?? 0;
+      
+      // Calculate Max Fee for Gross Revenue estimation
+      const maxExtraFee = Math.max(smallFee, mediumFee, largeFee, 0);
+
+      allItems.push({
+        id: `${stall.$id}_${i}`,
+        name: menuNames[i] || 'Unnamed Item',
+  
+        price: basePrice, // Base Price
+        type: menuTypes[i] || 'Other',
+        imageURL: toURL(menuImages[i]),
+        stallName: stall.name,
+        // --- Store calculated prices for display ---
+        smallPrice: basePrice + smallFee,
+        mediumPrice: basePrice + mediumFee,
+        largePrice: basePrice + largeFee,
+        // --- Store the fees to check which fields are actually used ---
+        smallFee: smallFee,
+        mediumFee: mediumFee,
+        largeFee: largeFee,
+        // --- Max Fee for Revenue estimation ---
+        maxExtraFee: maxExtraFee,
+      });
+    }
+  });
+  return allItems;
+};
+
+// --- SALES CARD COMPONENT ---
 const SalesCard = ({ roomName }) => {
   const [stallDocuments, setStallDocuments] = useState([]);
   const [quantities, setQuantities] = useState([]);
-  const [discountData, setDiscountData] = useState([]); 
+  const [discountData, setDiscountData] = useState([]);
   // PAYMENT SUMMARY INITIAL STATE (used for stall-specific data)
-  const [paymentSummary, setPaymentSummary] = useState({ paidRevenue: 0, failedRevenue: 0, ordersCount: 0 }); 
+  const [paymentSummary, setPaymentSummary] = useState({ paidRevenue: 0, failedRevenue: 0, ordersCount: 0 });
   // NEW STATE FOR LATEST TRANSACTION
   const [latestTransaction, setLatestTransaction] = useState(null); 
   
@@ -79,7 +101,8 @@ const SalesCard = ({ roomName }) => {
   const [error, setError] = useState(null);
 
   // --- STATE FOR FILTERING ---
-  const [timeFilter, setTimeFilter] = useState('all-time'); // 'all-time', 'today', 'week', 'month'
+  const [timeFilter, setTimeFilter] = useState('all-time');
+  // 'all-time', 'today', 'week', 'month'
 
   useEffect(() => {
     if (!roomName) return;
@@ -92,6 +115,7 @@ const SalesCard = ({ roomName }) => {
         const [menuRes, qtyRes, discountRes, paymentSummaryRes, latestTxnRes] = await Promise.all([ 
           getAllMenu(),
           getOrdersQuantity(),
+      
           getOrdersDiscountData(),
           // Pass roomName to fetch stall-specific payment data
           getOrdersPaymentSummary(roomName), 
@@ -102,6 +126,7 @@ const SalesCard = ({ roomName }) => {
         setQuantities(qtyRes || []);
         setDiscountData(discountRes || []);
         setPaymentSummary(paymentSummaryRes); // Set stall-specific payment summary
+ 
         // Set new state
         setLatestTransaction(latestTxnRes); 
 
@@ -114,8 +139,8 @@ const SalesCard = ({ roomName }) => {
     };
 
     loadData();
-  // ADDED roomName to dependency array to refetch when the stall changes
-  }, [roomName]); 
+    // ADDED roomName to dependency array to refetch when the stall changes
+  }, [roomName]);
 
   // --- BASE DATA PROCESSING ---
   const allMenuItems = useMemo(() => {
@@ -126,7 +151,7 @@ const SalesCard = ({ roomName }) => {
       if (!roomName) return [];
       return allMenuItems.filter(item => item.stallName === roomName);
   }, [allMenuItems, roomName]);
-  
+
   const currentStallQuantities = useMemo(() => {
       if (!roomName) return [];
       return quantities.filter(qty => qty.roomName === roomName);
@@ -137,7 +162,6 @@ const SalesCard = ({ roomName }) => {
     return discountData.filter(disc => disc.roomName === roomName);
   }, [discountData, roomName]);
 
-
   // Enhance menu items with sales data (ALL-TIME) - Includes ALL orders, successful or not
   const allTimeEnhancedMenuItems = useMemo(() => {
       return currentStallMenuItems.map(item => {
@@ -147,10 +171,12 @@ const SalesCard = ({ roomName }) => {
           const count = matchingQty ? matchingQty.count : 0;
           const totalDiscount = matchingDiscount ? matchingDiscount.totalDiscount : 0;
           
-          // Calculate Base Revenue (Gross Sales) for ALL attempted orders (used for item-level analysis)
-          const baseRevenue = (item.price ?? 0) * count; 
+          // --- CALCULATE BASE REVENUE (Gross Sales) using BasePrice + MaxExtraFee ---
+          const priceWithMaxFee = (item.price ?? 0) + (item.maxExtraFee ?? 0);
+          const baseRevenue = priceWithMaxFee * count; 
           // Final Revenue (Net Sales) is base revenue minus the total discount
           const totalRevenue = baseRevenue - totalDiscount; 
+    
           
           return {
               ...item,
@@ -181,7 +207,6 @@ const SalesCard = ({ roomName }) => {
   // Placeholder for True Gross Revenue filtering
   const avgDailyBaseRevenue = totalTrueGrossRevenue / 30;
   const avgWeeklyBaseRevenue = totalTrueGrossRevenue / 4;
-
 
   // --- FILTERED DATA FOR CHART & METRICS (SIMULATION) ---
   const filteredData = useMemo(() => {
@@ -232,7 +257,10 @@ const SalesCard = ({ roomName }) => {
       const simulatedCount = Math.max(0, Math.round(item.count * countScaleFactor));
       const simulatedDiscount = item.totalDiscount * countScaleFactor; 
       
-      const simulatedBaseRevenue = item.price * simulatedCount; // SIMULATED GROSS (before revenue adjustment)
+      // Use the calculated price (Base + Max Fee)
+      const priceForSimulation = (item.price ?? 0) + (item.maxExtraFee ?? 0);
+      
+      const simulatedBaseRevenue = priceForSimulation * simulatedCount; // SIMULATED GROSS (before revenue adjustment)
       const simulatedFinalRevenue = simulatedBaseRevenue - simulatedDiscount; // SIMULATED NET (before revenue adjustment)
       
       return {
@@ -242,7 +270,7 @@ const SalesCard = ({ roomName }) => {
         totalDiscount: simulatedDiscount,
         totalRevenue: simulatedFinalRevenue
       };
-    }).sort((a, b) => b.count - a.count); 
+    }).sort((a, b) => b.count - a.count);
 
     return {
       items: simulatedItems,
@@ -265,7 +293,6 @@ const SalesCard = ({ roomName }) => {
     avgDailyBaseRevenue, 
     avgWeeklyBaseRevenue
   ]);
-
 
   // Data for Chart and Summaries
   const chartItems = useMemo(() => {
@@ -319,6 +346,50 @@ const SalesCard = ({ roomName }) => {
     }
   };
 
+  // --- REVISED: Dynamic Price Rendering Function ---
+  const renderPriceDetails = (item) => {
+    // Check if the item has any size variations based on non-zero fees.
+    const hasSizeVariations = item.smallFee > 0 || item.mediumFee > 0 || item.largeFee > 0;
+
+    // If there are no size variations (it's a one-size item), display a single price spanning the full width.
+    if (!hasSizeVariations) {
+        return (
+            <div key="base-price" className="flex flex-col items-start col-span-2">
+                <p className="text-xs text-neutral-400">Price</p>
+                <p className="text-sm font-bold text-pink-400">{formatCurrency(item.price)}</p>
+            </div>
+        );
+    }
+
+    // If there are size variations, display them in their own encapsulated grid.
+    // This container spans 2 columns to ensure the following elements (Gross Rev, etc.) start on a new row.
+    return (
+        <div className="col-span-2 grid grid-cols-2 gap-x-3 gap-y-2">
+            {/* Always display Small price, as it's the base */}
+            <div key="small" className="flex flex-col items-start">
+                <p className="text-xs text-neutral-400">Small</p>
+                <p className="text-sm font-bold text-pink-400">{formatCurrency(item.smallPrice)}</p>
+            </div>
+            
+            {/* Conditionally display Medium price only if it has an additional fee */}
+            {item.mediumFee > 0 && (
+                 <div key="medium" className="flex flex-col items-end">
+                    <p className="text-xs text-neutral-400">Medium</p>
+                    <p className="text-sm font-bold text-pink-400">{formatCurrency(item.mediumPrice)}</p>
+                </div>
+            )}
+
+            {/* Conditionally display Large price only if it has an additional fee */}
+            {item.largeFee > 0 && (
+                <div key="large" className="flex flex-col items-start">
+                    <p className="text-xs text-neutral-400">Large</p>
+                    <p className="text-sm font-bold text-pink-400">{formatCurrency(item.largePrice)}</p>
+                </div>
+            )}
+        </div>
+    );
+  };
+  // --- END REVISED FUNCTION ---
 
   // --- RENDER LOGIC ---
 
@@ -342,7 +413,6 @@ const SalesCard = ({ roomName }) => {
       </button>
     </div>
   );
-
 
   return (
     <div className="min-h-screen bg-neutral-900 text-white p-6">
@@ -422,11 +492,12 @@ const SalesCard = ({ roomName }) => {
                 <p className="text-md font-bold text-green-400 mb-4 flex items-center">
                     <FaStar className="w-5 h-5 mr-2" /> BEST SELLER ({timeFilter.toUpperCase().replace('-', ' ')})
                 </p>
-                {currentBestSeller ? (
+                {currentBestSeller ?
+                (
                     <>
                         <p className="text-2xl font-bold text-white truncate mb-2">{currentBestSeller.name}</p>
                         <div className="space-y-1">
-                            <p className="text-sm text-neutral-400">Items Sold: <span className="text-green-300 font-bold">{currentBestSeller.count} items</span></p>
+                          <p className="text-sm text-neutral-400">Items Sold: <span className="text-green-300 font-bold">{currentBestSeller.count} items</span></p>
                             <p className="text-sm text-neutral-400">Gross Rev: <span className="text-yellow-300 font-bold">{formatCurrency(currentBestSeller.baseRevenue)}</span></p>
                             <p className="text-sm text-neutral-400">Discount: <span className="text-orange-300 font-bold">{formatCurrency(currentBestSeller.totalDiscount)}</span></p>
                         </div>
@@ -445,11 +516,12 @@ const SalesCard = ({ roomName }) => {
                 <p className="text-md font-bold text-red-400 mb-4 flex items-center">
                     <FaArrowTrendDown className="w-5 h-5 mr-2" /> LEAST SELLER ({timeFilter.toUpperCase().replace('-', ' ')})
                 </p>
-                {currentLeastSeller ? (
+                {currentLeastSeller ?
+                (
                     <>
                         <p className="text-2xl font-bold text-white truncate mb-2">{currentLeastSeller.name}</p>
                         <div className="space-y-1">
-                            <p className="text-sm text-neutral-400">Items Sold: <span className="text-red-300 font-bold">{currentLeastSeller.count} items</span></p>
+                          <p className="text-sm text-neutral-400">Items Sold: <span className="text-red-300 font-bold">{currentLeastSeller.count} items</span></p>
                             <p className="text-sm text-neutral-400">Gross Rev: <span className="text-yellow-300 font-bold">{formatCurrency(currentLeastSeller.baseRevenue)}</span></p>
                             <p className="text-sm text-neutral-400">Discount: <span className="text-orange-300 font-bold">{formatCurrency(currentLeastSeller.totalDiscount)}</span></p>
                         </div>
@@ -474,7 +546,8 @@ const SalesCard = ({ roomName }) => {
             <FaClock className="w-5 h-5 mr-2 text-pink-500" />
             Latest Successful Transaction <span className="text-pink-400 ml-2">({roomName})</span>
         </h3>
-        {latestTransaction ? (
+        {latestTransaction ?
+        (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             
             {/* Latest Final Amount */}
@@ -495,7 +568,7 @@ const SalesCard = ({ roomName }) => {
             <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center">
                  <FaCalendarWeek className="w-6 h-6 text-neutral-500 mb-1" />
                 <p className="text-sm font-semibold text-neutral-400">
-                    {new Date(latestTransaction.timestamp).toLocaleDateString()}
+                     {new Date(latestTransaction.timestamp).toLocaleDateString()}
                 </p>
                 <p className="text-xs text-neutral-500">Transaction Date/Time</p>
             </div>
@@ -542,7 +615,8 @@ const SalesCard = ({ roomName }) => {
       <div className="bg-neutral-900 rounded-xl p-6 mb-8">
 
         <div className="flex flex-col md:flex-row md:justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-pink-400 flex items-center mb-3 md:mb-0">
+       
+          <h3 className="text-lg font-semibold text-pink-400 flex items-center mb-3 md:mb-0">
                 {getFilterIcon(timeFilter)} Total Order Count per Menu Item
             </h3>
 
@@ -584,13 +658,14 @@ const SalesCard = ({ roomName }) => {
         </div>
 
         {/* --- CHART VISUALIZATION (All Items) --- */}
-        {chartItems.length > 0 && chartMaxCount > 0 ? (
+        {chartItems.length > 0 && chartMaxCount > 0 ?
+        (
           // --- BEGIN SCROLLABLE CONTAINER ---
           <div className="w-full overflow-x-auto">
             <div className="h-64 flex flex-col justify-end p-2 bg-neutral-800 rounded-lg relative min-w-[1200px]">
                 {/* Guide Lines */}
                 <div className="absolute inset-0 p-2 border-l border-neutral-700">
-                    <div className="absolute top-1/2 w-full h-px bg-neutral-700/50"></div>
+                  <div className="absolute top-1/2 w-full h-px bg-neutral-700/50"></div>
                 </div>
 
                 <div className="flex justify-start items-end h-full pt-4 relative z-10 space-x-2">
@@ -598,20 +673,22 @@ const SalesCard = ({ roomName }) => {
                     <div key={item.id} className="flex flex-col items-center min-w-[50px] max-w-[100px] h-full relative group">
                       <div
                         style={{
-                          height: `${(item.count / chartMaxCount) * 100}%`
-                        }}
+                           height: `${(item.count / chartMaxCount) * 100}%`
+                          }}
                         className="w-full rounded-t-lg bg-pink-600 hover:bg-pink-500 transition-all duration-300 ease-out flex items-start justify-center"
                       >
                          <div className="absolute top-0 transform -translate-y-full text-xs font-bold text-white bg-neutral-700/80 px-2 py-1 rounded-md whitespace-nowrap">
                             {item.count} items
-                        </div>
+                         </div>
                       </div>
-                      <div className="text-xs text-center mt-2 text-neutral-400 w-full line-clamp-2" title={item.name}>
+                      <div className="text-xs text-center mt-2 text-neutral-400 w-full line-clamp-2" 
+                        title={item.name}>
                         {item.name}
                       </div>
                     </div>
                   ))}
                 </div>
+  
                 {/* X-Axis Base Line */}
                 <div className="h-px bg-neutral-700 mt-2"></div>
             </div>
@@ -628,7 +705,8 @@ const SalesCard = ({ roomName }) => {
           Menu Item Sales Detail ({getFilterTitle(timeFilter)})
         </h3>
 
-        {filteredData.items.length > 0 ? (
+        {filteredData.items.length > 0 ?
+        (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredData.items.map(item => (
               <div
@@ -638,7 +716,7 @@ const SalesCard = ({ roomName }) => {
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="relative p-0.5 rounded-full bg-gradient-to-br from-pink-500 to-purple-600">
                     <img
-                      src={item.imageURL || '/placeholder-food.png'}
+                       src={item.imageURL || '/placeholder-food.png'}
                       alt={item.name}
                       className="w-16 h-16 rounded-full object-cover border-2 border-neutral-800"
                       crossOrigin="anonymous"
@@ -655,38 +733,34 @@ const SalesCard = ({ roomName }) => {
 
                 {/* Sales Metrics Grid (FIXED LAYOUT) */}
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-neutral-700/50">
-                    
+          
                     {/* Units Sold (Items) */}
                     <div className="flex flex-col items-start">
-                        <p className="text-xs text-neutral-400">Items Sold</p>
+                         <p className="text-xs text-neutral-400">Items Sold</p>
                         <p className="text-sm font-bold text-green-400">{item.count}</p>
                     </div>
+           
+                    {/* Size Prices (DYNAMIC SECTION) */}
+                    {renderPriceDetails(item)}
                     
-                    {/* Price */}
-                    <div className="flex flex-col items-end">
-                        <p className="text-xs text-neutral-400">Price</p>
-                        <p className="text-sm font-bold text-pink-400">{formatCurrency(item.price)}</p>
-                    </div>
-
-                    {/* Gross Revenue (All-Time) */}
-                    <div className="flex flex-col items-start pt-2 border-t border-neutral-700/50">
-                        <p className="text-xs text-neutral-400">Gross Rev.</p>
+                    {/* Gross Revenue (Max Estimate) */}
+                    <div className="flex flex-col items-start pt-2 border-t border-neutral-700/50 col-span-1">
+                        <p className="text-xs text-neutral-400">Gross Rev. (Max Est.)</p>
                         <p className="text-sm font-bold text-yellow-400">{formatCurrency(item.baseRevenue)}</p>
                     </div>
-                    
+       
                     {/* Total Discount */}
-                    <div className="flex flex-col items-end pt-2 border-t border-neutral-700/50">
-                        <p className="text-xs text-neutral-400">Discount</p>
+                    <div className="flex flex-col items-end pt-2 border-t border-neutral-700/50 col-span-1">
+                         <p className="text-xs text-neutral-400">Discount</p>
                         <p className="text-sm font-bold text-orange-400">{formatCurrency(item.totalDiscount)}</p>
                     </div>
                 </div>
-                
+        
                 {/* Final Revenue (NET) - Separated and Prominent */}
                 <div className="pt-4 mt-4 border-t border-neutral-700/50 flex flex-col items-center bg-neutral-700/30 p-2 rounded-lg">
                     <p className="text-sm text-neutral-300 font-semibold uppercase">Net Revenue</p>
                     <p className="text-xl font-extrabold text-blue-400">{formatCurrency(item.totalRevenue)}</p>
                 </div>
-
               </div>
             ))}
           </div>

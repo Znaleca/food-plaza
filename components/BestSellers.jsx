@@ -1,3 +1,5 @@
+// BestSellers.js (File 2)
+
 'use client';
 
 import { FaMedal } from 'react-icons/fa6';
@@ -31,17 +33,12 @@ const BestSellers = ({ topItems, menuData, room, setSelectedMenu }) => {
               key={found.menuId} // Use the stable menuId for the key
               onClick={() => {
                 if (!isAvailable) return;
-                setSelectedMenu({
-                  name: found.name,
-                  price: found.price,
-                  image: found.image,
-                  roomName: room.name,
-                  description: found.description,
-                  smallFee: found.smallFee,
-                  mediumFee: found.mediumFee,
-                  largeFee: found.largeFee,
-                  menuId: found.menuId, // Pass the unique ID
-                });
+                
+                // --- MODIFIED HERE ---
+                // Call the parent's handler (handleSelectMenu) with the full menu item object.
+                // The parent will handle setting the state and calculating recommendedMenus.
+                setSelectedMenu(found);
+                // --- END MODIFIED ---
               }}
               className={`relative border border-neutral-800 rounded-xl bg-neutral-900 p-6 flex flex-col items-center transition-all duration-300 ${
                 isAvailable

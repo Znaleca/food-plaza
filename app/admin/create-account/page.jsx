@@ -105,7 +105,7 @@ const CreateFoodStallPage = () => {
                 type="text"
                 id="name"
                 name="name"
-                placeholder="Enter your stall name"
+                placeholder="Enter Nickname"
                 required
                 className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
               />
@@ -224,7 +224,7 @@ const CreateFoodStallPage = () => {
             className="w-full py-3 bg-pink-600 hover:bg-pink-700 rounded-lg text-lg font-semibold transition duration-300"
             disabled={isFormInvalid}
           >
-            Create Food Stall
+            Create Lessee Account
           </button>
           
         </form>

@@ -208,7 +208,7 @@ const PreviewStallPage = ({ params }) => {
     }
   };
   
-  // --- NEW FUNCTION: To open/close the entire stall ---
+  // --- MODIFIED FUNCTION: To open/close the entire stall and restore menu availability on open ---
   const toggleOperatingStatus = async () => {
       if (saving) return;
       setSaving(true);
@@ -227,9 +227,13 @@ const PreviewStallPage = ({ params }) => {
               setSaving(false);
               return;
           }
+          
+          let successMessage = `Stall is now ${newStatus ? 'Open' : 'Closed'}.`;
 
-          // 2. If closing, set all menu items to unavailable
+
+          // 2. Handle menu availability based on new status
           if (!newStatus) {
+              // If CLOSING, set all menu items to unavailable
               const allUnavailable = new Array(menuData.length).fill(false);
               const availabilityResult = await updateAvailability({
                   id: stall.$id,
@@ -238,17 +242,41 @@ const PreviewStallPage = ({ params }) => {
 
               if (availabilityResult.success) {
                   setMenuAvailability(allUnavailable);
-                  toast.info("All menu items are now unavailable.");
+                  successMessage += " All menu items are now unavailable.";
               } else {
                   // Log error but proceed with status change as it succeeded
                   console.error('Failed to update all menu availability on close:', availabilityResult.error);
                   toast.warn("Stall closed, but failed to mark all menu items as unavailable in the database.");
               }
+          } else {
+              // If OPENING, re-run the capacity check to set availability based on stock
+              const capacityResult = await getMenuCapacityAndUpdateAvailability({ stallId: stall.$id });
+
+              if(capacityResult.success) {
+                  // Update client state with the very latest, capacity-driven availability
+                  const newAvailability = capacityResult.data.map(capacity => capacity > 0);
+                  setMenuAvailability(newAvailability);
+                  
+                  // NOTE: Availability in the database is updated by the server action
+                  if (capacityResult.availabilityUpdated) {
+                      successMessage += " Menu availability synced with stock levels.";
+                  } else {
+                      successMessage += " Menu availability retained prior stock-based settings.";
+                  }
+
+              } else {
+                  console.error('Failed to restore menu capacity/availability on open:', capacityResult.error);
+                  toast.warn("Stall opened, but failed to restore menu availability based on stock.");
+                  // Fallback: If capacity check fails, default all to available
+                  const allAvailable = new Array(menuData.length).fill(true);
+                  setMenuAvailability(allAvailable);
+              }
           }
+
           
           // 3. Update local state
           setStallOpen(newStatus);
-          toast.success(`Stall is now ${newStatus ? 'Open' : 'Closed'}.`);
+          toast.success(successMessage);
           
           // 4. Update the local stall object to reflect the change
           setStall(prevStall => ({
@@ -263,7 +291,7 @@ const PreviewStallPage = ({ params }) => {
           setSaving(false);
       }
   };
-  // --- END NEW FUNCTION ---
+  // --- END MODIFIED FUNCTION ---
 
 
   if (loading)
