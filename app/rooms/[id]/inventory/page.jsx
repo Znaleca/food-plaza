@@ -17,7 +17,19 @@ import {
 } from 'react-icons/fa';
 import InventoryPreview from '@/components/InventoryPreview';
 
-const unitOptions = ['kg', 'g', 'L', 'mL', 'pcs'];
+const unitOptions = [
+  // Weight
+  'kg', 'g', 'mg', 'lb', 'oz',
+
+  // Volume
+  'L', 'mL', 'cup', 'tbsp', 'tsp', 'fl oz', 'pt', 'qt', 'gal',
+
+  // Count / Pieces
+  'pcs', 'pack', 'dozen', 'slice', 'bottle', 'can', 'box', 'tray', 'stick',
+
+  // Other
+  'serving', 'bar', 'bag', 'roll'
+];
 // Define the separator for combining ingredient name and linked menu items
 const DATA_SEPARATOR = '::'; 
 
