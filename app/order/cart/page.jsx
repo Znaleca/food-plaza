@@ -331,7 +331,7 @@ const OrderCartPage = () => {
         map[roomId] = voucher;
       } else if (hasActiveSpecialDiscountItem) {
         map[roomId] = {
-          title: 'Special Discount Applied',
+          title: 'PWD / Senior Discount Applied',
           discount: 20,
           roomName: roomNames[roomId] || groupedCart[roomId].roomName,
           isSpecial: true,
@@ -576,12 +576,12 @@ const OrderCartPage = () => {
                                  }`}
                                  title={
                                    isSpecialDiscountActiveForItem
-                                     ? 'Cancel Special Discount'
-                                     : 'Apply Special Discount (20% Off)'
+                                     ? 'Cancel PWD / Senior Discount'
+                                     : 'Apply PWD / Senior Discount (20% Off)'
                                  }
                                >
                                  <FaIdCard className="mr-2" size={14} />
-                                 {isSpecialDiscountActiveForItem ? 'Discount Applied' : 'Apply Discount'}
+                                 {isSpecialDiscountActiveForItem ? 'PWD / Senior Discount Applied' : 'PWD / Senior Discount'}
                                </button>
 
                               )}
@@ -632,7 +632,7 @@ const OrderCartPage = () => {
                               </span>
                               {isSpecialDiscountActiveForItem && !voucher && (
                                 <span className="text-xs text-fuchsia-400 mt-1 font-medium">
-                                  20% Special Discount
+                                  20% PWD / Senior Discount
                                 </span>
                               )}
                             </div>

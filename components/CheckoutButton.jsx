@@ -256,7 +256,7 @@ const CheckoutButton = ({
                 // Determine the discount label based on the active promo for the room
                 let discountLabel = '';
                 if (promo?.isSpecial) {
-                    discountLabel = `(${promo.discount}% - Special)`;
+                    discountLabel = `(${promo.discount}% - PWD / Senior Discount)`;
                 } else if (promo) {
                     discountLabel = `(${promo.discount}% - ${promo.title})`;
                 } else if (totalDiscount > 0) {
