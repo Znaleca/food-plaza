@@ -2,13 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
-// NOTE: Assuming your action file is correctly located at this path
 import updateDocuments from '@/app/actions/updateDocuments'; 
 import { useState } from 'react';
 import { 
     FaCheckCircle, 
     FaTimesCircle, 
-    FaFileAlt, // The file icon we'll use for verified status now
+    FaFileAlt, 
     FaEye, 
     FaEyeSlash, 
     FaEdit, 
@@ -16,10 +15,12 @@ import {
     FaSpinner,
     FaArrowUp,
     FaHourglassHalf,
-    FaCloudUploadAlt 
+    FaCloudUploadAlt,
+    FaCommentAlt,
+    FaInfoCircle // New icon for tenant comment prompt
 } from 'react-icons/fa';
 
-// Helper function to render status badge with icons (no change needed here)
+// Helper function to render status badge with icons (No change)
 const StatusBadge = ({ status }) => {
     let Icon = FaHourglassHalf; 
     let color = 'text-yellow-400';
@@ -61,7 +62,7 @@ const StatusBadge = ({ status }) => {
     );
 }
 
-// Simple component to display the file name and a link to view the temporary PDF (no change needed here)
+// Simple component to display the file name and a link to view the temporary PDF (No change)
 const FilePreview = ({ fileItem }) => {
   if (!fileItem) return null;
 
@@ -94,18 +95,26 @@ const UploadDocuments = ({
     activePreviewDoc,  
     handlePreviewToggle, 
 }) => {
-  // ... (Hooks and state initialization remain the same)
   const [selectedFiles, setSelectedFiles] = useState({});
   const [isEditing, setIsEditing] = useState({}); 
   const [isLoading, setIsLoading] = useState(false);
+  // NEW STATE: To store the tenant's comment for each document being uploaded
+  const [uploadComment, setUploadComment] = useState({}); 
 
-  // ... (handleSubmit and handleFileChange remain the same)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (Object.keys(selectedFiles).length === 0) return; 
     
     setIsLoading(true);
     const formData = new FormData(e.target);
+    
+    // Manually append the comments to the FormData
+    Object.entries(uploadComment).forEach(([inputName, comment]) => {
+        // Only append if a file for this inputName is selected
+        if(selectedFiles[inputName]) {
+            formData.append(`comment_${inputName}`, comment);
+        }
+    });
 
     const res = await updateDocuments(bookingId, formData, requiredDocuments); 
 
@@ -116,6 +125,7 @@ const UploadDocuments = ({
     });
     setSelectedFiles({}); 
     setIsEditing({}); 
+    setUploadComment({}); // Clear comments after submission
     setIsLoading(false);
 
     if (res.error) {
@@ -142,16 +152,22 @@ const UploadDocuments = ({
         ...prev,
         [inputName]: { file: file, url: fileUrl, name: file.name }
       }));
+      // Keep existing comment or start new one when file is selected
     } else {
       setSelectedFiles(prev => {
         const newState = { ...prev };
         delete newState[inputName];
         return newState;
       });
+      // Clear comment if file is deselected
+      setUploadComment(prev => {
+          const newState = { ...prev };
+          delete newState[inputName];
+          return newState;
+      });
     }
   };
 
-  // ... (handleEditToggle remains the same)
   const handleEditToggle = (inputName, docName) => {
     const shouldEdit = !isEditing[inputName];
 
@@ -161,6 +177,11 @@ const UploadDocuments = ({
             if (newState[inputName]?.url) {
                 URL.revokeObjectURL(newState[inputName].url);
             }
+            delete newState[inputName];
+            return newState;
+        });
+        setUploadComment(prev => {
+            const newState = { ...prev };
             delete newState[inputName];
             return newState;
         });
@@ -197,11 +218,13 @@ const UploadDocuments = ({
             
             const alreadyUploaded = !!existingDoc;
             const currentStatus = existingDoc?.status || 'submitted'; 
+            const denialComment = existingDoc?.comment || ''; 
             
             const normalizedStatus = currentStatus.toLowerCase();
             const isVerified = normalizedStatus === 'verified' || normalizedStatus === 'approved';
             const isDenied = normalizedStatus === 'denied' || normalizedStatus === 'rejected';
             
+            // Show file input if no file is uploaded OR if we're in editing mode
             const showFileInput = !alreadyUploaded || isEditing[inputName];
             
             const isSelectedForPreview = isBookingPreviewOpen && activePreviewDoc === docName;
@@ -209,11 +232,10 @@ const UploadDocuments = ({
             let DocIcon = FaFileAlt;
             let iconColor = 'text-gray-500';
 
-            // --- MODIFIED LOGIC HERE: Remove FaCheckCircle for 'verified' ---
             if (alreadyUploaded) {
                 if (isVerified) {
-                    DocIcon = FaFileAlt; // Use the standard file icon for verified
-                    iconColor = 'text-green-500'; // Keep the color green
+                    DocIcon = FaFileAlt;
+                    iconColor = 'text-green-500';
                 } else if (isDenied) {
                     DocIcon = FaTimesCircle;
                     iconColor = 'text-red-500';
@@ -222,7 +244,6 @@ const UploadDocuments = ({
                     iconColor = 'text-yellow-500';
                 }
             }
-            // ----------------------------------------------------------------
 
             const statusMessage = isVerified 
                 ? "Your document is **Verified**. Replacement is not permitted."
@@ -266,7 +287,6 @@ const UploadDocuments = ({
                                 <button
                                     type="button"
                                     onClick={() => handlePreviewToggle(bookingId, docName)}
-                                    // Disable if currently editing a file
                                     disabled={isEditing[inputName]} 
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                                         isSelectedForPreview
@@ -302,8 +322,19 @@ const UploadDocuments = ({
                             )}
                         </div>
                     </div>
+                    
+                    {/* Admin Denial Comment Display */}
+                    {isDenied && denialComment && (
+                        <div className="mb-4 p-3 text-sm bg-red-900/30 border-l-4 border-red-500 text-red-300 rounded-lg shadow-inner">
+                            <div className="flex items-center font-bold mb-1">
+                                <FaCommentAlt className="inline mr-2 text-red-500 flex-shrink-0" />
+                                Admin's Reason for Denial:
+                            </div>
+                            <p className='ml-5 text-gray-200'>{denialComment}</p>
+                        </div>
+                    )}
 
-                    {/* Conditionally render the file input or status message */}
+                    {/* Conditionally render the file input, comment field, or status message */}
                     {showFileInput ? (
                         <>
                             <div className="relative mt-2">
@@ -324,8 +355,27 @@ const UploadDocuments = ({
                                 </div>
                             </div>
                             
-                            {/* Preview Section */}
+                            {/* File Preview */}
                             <FilePreview fileItem={fileItem} />
+
+                            {/* NEW: Tenant Comment Field (Appears only if a file is selected) */}
+                            {fileItem && (
+                                <div className="mt-4 p-3 bg-neutral-900 border border-neutral-700 rounded-lg">
+                                    <label htmlFor={`comment-${inputName}`} className="flex items-center text-sm font-semibold text-gray-300 mb-2">
+                                        <FaInfoCircle className='mr-2 text-pink-500' />
+                                        Add a Note for the Administrator (Optional):
+                                    </label>
+                                    <textarea
+                                        id={`comment-${inputName}`}
+                                        value={uploadComment[inputName] || ''}
+                                        onChange={(e) => setUploadComment(prev => ({ ...prev, [inputName]: e.target.value }))}
+                                        placeholder={isDenied ? "Explaining how you fixed the issue will speed up the review." : "Any relevant details about this document."}
+                                        rows="2"
+                                        className="w-full p-2 border border-neutral-600 rounded-lg bg-neutral-800 text-white focus:ring-pink-500 focus:border-pink-500 text-sm"
+                                    />
+                                    {/* The actual data for the comment is appended in handleSubmit */}
+                                </div>
+                            )}
                         </>
                     ) : (
                         <p className={`text-sm italic mt-2 p-3 rounded-lg font-medium transition-colors duration-200 ${messageColor} ${messageBgColor}`}>

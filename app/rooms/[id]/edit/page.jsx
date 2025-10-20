@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
-import { FaChevronLeft } from 'react-icons/fa6';
+import { FaChevronLeft, FaEdit } from 'react-icons/fa';
 import { CiCirclePlus, CiCircleMinus } from "react-icons/ci";
 
 import { getDocumentById } from '@/app/actions/getSpace';
@@ -31,9 +31,9 @@ export default function EditSpacePage({ params }) {
   const [menuItems, setMenuItems] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [otherCategory, setOtherCategory] = useState("");
-  
-  // Initialize custom categories by filtering out foodTypes from the existing stall types
   const [customCategories, setCustomCategories] = useState([]);
+  const [showImageControls, setShowImageControls] = useState(false);
+
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -49,13 +49,11 @@ export default function EditSpacePage({ params }) {
         setStall(data);
         setSelectedTypes(data.type || []);
         
-        // Populate custom categories based on existing types not in foodTypes
         const initialCustomCategories = (data.type || []).filter(t => !foodTypes.includes(t));
         setCustomCategories(initialCustomCategories);
 
         const initialMenuItems = (data.menuName || []).map((name, index) => {
           const hasSizes = !!(data.menuSmall?.[index] || data.menuMedium?.[index] || data.menuLarge?.[index]);
-          
           const existingSubType = data.menuSubType?.[index];
 
           return {
@@ -86,24 +84,19 @@ export default function EditSpacePage({ params }) {
     fetchStall();
   }, [id, router]);
 
-  // --- NEW CUSTOM CATEGORY LOGIC ---
   const handleAddCustomCategory = () => {
     const newCategory = otherCategory.trim();
     if (newCategory !== "" && !customCategories.includes(newCategory) && !foodTypes.includes(newCategory)) {
       setCustomCategories(prev => [...prev, newCategory]);
-      setSelectedTypes(prev => [...prev, newCategory]); // Automatically select it
-      setOtherCategory(""); // Clear the input
+      setSelectedTypes(prev => [...prev, newCategory]);
+      setOtherCategory("");
     }
   };
 
   const handleRemoveCustomCategory = (categoryToRemove) => {
-    // Only remove from customCategories if it exists there
     setCustomCategories(prev => prev.filter(cat => cat !== categoryToRemove));
-    // Always deselect it if it's currently selected
     setSelectedTypes(prev => prev.filter(t => t !== categoryToRemove));
   };
-  // --- END NEW CUSTOM CATEGORY LOGIC ---
-
 
   const handleTypeChange = (e) => {
     const value = e.target.value;
@@ -117,7 +110,6 @@ export default function EditSpacePage({ params }) {
       const updated = [...prev];
       updated[index][field] = value;
       
-      // If the user unchecks the useSubType box, clear the subType text
       if (field === 'useSubType' && value === false) {
         updated[index].menuSubType = '';
       }
@@ -168,7 +160,6 @@ export default function EditSpacePage({ params }) {
     formData.append('name', e.target.name.value);
     formData.append('description', e.target.description.value);
     formData.append('stallNumber', e.target.stallNumber.value);
-    // Send all selected types, including both foodTypes and customCategories
     formData.append('selectedTypes', JSON.stringify(selectedTypes));
 
     menuItems.forEach((item, index) => {
@@ -177,7 +168,6 @@ export default function EditSpacePage({ params }) {
       formData.append('menuDescriptions[]', item.description);
       formData.append('menuType[]', item.menuType);
       
-      // Only append menuSubType if useSubType is checked, otherwise send empty string
       const subType = item.useSubType ? item.menuSubType : '';
       formData.append('menuSubType[]', subType); 
 
@@ -210,20 +200,26 @@ export default function EditSpacePage({ params }) {
     );
   }
   
-  // Logic for the label text of the stall image button
   const stallImageButtonText = newImages.length > 0 || (stall.images && stall.images.length > 0) ? "Change Image" : "Choose File";
+
+  const stallImageUrl = newImages.length > 0
+    ? URL.createObjectURL(newImages[0])
+    : (stall.images && stall.images.length > 0
+      ? `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${stall.images[0]}/view?project=${PROJECT_ID}`
+      : null
+    );
 
   return (
     <div className="bg-neutral-900 min-h-screen text-white py-6 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
-        {/* Back Link */}
-        <Link href="/rooms/my" className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6">
+        {/* Back Link - Increased py to 4 for slightly less space */}
+        <Link href="/rooms/my" className="flex items-center text-white hover:text-pink-500 transition duration-300 py-4">
           <FaChevronLeft className="mr-2 text-lg" />
           <span className="font-medium text-lg">Back to My Stalls</span>
         </Link>
 
-        {/* Page Header */}
-        <header className="text-center mb-10">
+        {/* Page Header - Increased mb for separation */}
+        <header className="text-center mb-12">
           <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">Details</h2>
           <p className="mt-2 text-3xl sm:text-5xl font-extrabold text-white leading-tight">Edit Food Stall</p>
         </header>
@@ -231,8 +227,73 @@ export default function EditSpacePage({ params }) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto">
 
+          {/* Food Stall Banner/Logo Section */}
+          <div className="border border-neutral-700 rounded-xl overflow-hidden shadow-xl relative mb-8">
+            <label className="block font-semibold text-lg p-4 bg-neutral-800 border-b border-neutral-700">Food Stall Banner/Logo</label>
+            
+            {/* Edit Icon */}
+            <button
+              type="button"
+              onClick={() => setShowImageControls(!showImageControls)}
+              className="absolute top-4 right-4 bg-neutral-700 text-white p-2 rounded-full hover:bg-neutral-600 transition-colors duration-300 z-10"
+              aria-label="Edit banner image"
+            >
+              <FaEdit className="w-5 h-5" />
+            </button>
+
+            {/* Image Preview Container (Banner style) */}
+            <div className="relative w-full h-48 sm:h-64 bg-neutral-900 flex items-center justify-center">
+              {stallImageUrl ? (
+                <img
+                  src={stallImageUrl}
+                  alt="Stall Banner Preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-neutral-500 text-center p-4">
+                  No Stall Image Selected (Recommended: wide banner image)
+                </div>
+              )}
+              
+              {/* Overlay with Controls (Conditional visibility) */}
+              {showImageControls && (
+                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 transition-opacity duration-300">
+                  <div className="flex flex-col gap-3 w-full max-w-sm">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      id="stallImage"
+                      onChange={e => setNewImages(e.target.files.length > 0 ? [e.target.files[0]] : [])}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="stallImage"
+                      className="cursor-pointer bg-pink-600 text-white rounded-lg py-3 px-4 text-center font-bold hover:bg-pink-700 transition-colors duration-300"
+                    >
+                      {stallImageButtonText}
+                    </label>
+                    {(newImages.length > 0 || (stall.images && stall.images.length > 0)) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewImages([]);
+                          if (fileInputRef.current) fileInputRef.current.value = '';
+                        }}
+                        className="px-4 py-2 text-sm rounded-lg bg-neutral-700 text-white hover:bg-neutral-600 transition-colors duration-300"
+                      >
+                        Remove Current Image
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* End Food Stall Banner/Logo Section */}
+
           {/* Stall Name & Number */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div>
               <label htmlFor="name" className="block font-semibold mb-2">Food Stall Name</label>
               <input
@@ -258,7 +319,7 @@ export default function EditSpacePage({ params }) {
           </div>
 
           {/* Stall Description */}
-          <div>
+          <div className="mb-8">
             <label htmlFor="description" className="block font-semibold mb-2">Description</label>
             <textarea
               id="description"
@@ -271,10 +332,9 @@ export default function EditSpacePage({ params }) {
           </div>
 
           {/* Categories */}
-          <div>
+          <div className="mb-8">
             <label className="block font-semibold mb-3">Select Categories</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {/* Combine permanent foodTypes and customCategories for display */}
               {foodTypes.concat(customCategories).map(type => (
                 <label key={type} className="flex items-center space-x-2 text-sm text-neutral-300">
                   <input
@@ -289,8 +349,7 @@ export default function EditSpacePage({ params }) {
               ))}
             </div>
 
-            {/* Add/Manage Custom Categories */}
-            <div className="mt-4 border border-neutral-700 rounded-lg p-4">
+            <div className="mt-6 border border-neutral-700 rounded-lg p-4">
               <label htmlFor="customCategoryInput" className="text-sm font-semibold mb-2 block">Add Custom Category</label>
               <div className="flex gap-2">
                 <input
@@ -318,7 +377,7 @@ export default function EditSpacePage({ params }) {
               </div>
 
               {customCategories.length > 0 && (
-                <div className="mt-4">
+                <div className="mt-4 pt-3 border-t border-neutral-800">
                   <p className="text-sm font-medium mb-2">Current Custom Categories:</p>
                   <div className="flex flex-wrap gap-2">
                     {customCategories.map(category => (
@@ -339,71 +398,13 @@ export default function EditSpacePage({ params }) {
             </div>
           </div>
           
-          {/* --- MOVED STALL IMAGE/LOGO UPLOAD SECTION --- */}
-          <div>
-            <label className="block font-semibold mb-3">Food Stall Image/Logo</label>
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              {/* Image Preview Container */}
-              <div className="relative w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden border border-neutral-700 flex-shrink-0">
-                {(newImages.length > 0) ? (
-                  <img
-                    src={URL.createObjectURL(newImages[0])}
-                    alt="New Stall Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (stall.images && stall.images.length > 0) ? (
-                  <img
-                    src={`https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${stall.images[0]}/view?project=${PROJECT_ID}`}
-                    alt="Existing Stall Image"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full bg-neutral-800 text-neutral-500 text-center p-2">
-                    No Stall Image
-                  </div>
-                )}
-              </div>
-              
-              {/* Upload controls */}
-              <div className="flex-1 flex flex-col gap-2 w-full sm:w-auto">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  id="stallImage"
-                  onChange={e => setNewImages(e.target.files.length > 0 ? [e.target.files[0]] : [])}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="stallImage"
-                  className="cursor-pointer bg-neutral-700 text-white rounded-lg py-3 px-4 text-center hover:bg-neutral-600 transition-colors duration-300 w-full"
-                >
-                  {stallImageButtonText}
-                </label>
-                {newImages.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNewImages([]);
-                      if (fileInputRef.current) fileInputRef.current.value = '';
-                    }}
-                    className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-300"
-                  >
-                    Remove New Image
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-          {/* --- END MOVED SECTION --- */}
-
           {/* Menu Items Section */}
-          <div>
-            <div className="flex justify-between items-center mb-4">
+          <div className="mb-10">
+            <div className="flex justify-between items-center mb-6"> {/* Increased mb for section header */}
               <h3 className="font-bold text-xl sm:text-2xl text-pink-600">Menu</h3>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-8"> {/* Increased space-y for menu items */}
               {menuItems.map((item, index) => (
                 <div key={index} className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 sm:p-6 space-y-4">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
@@ -417,7 +418,6 @@ export default function EditSpacePage({ params }) {
                     </button>
                   </div>
 
-                  {/* Name and Type */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <input
                       type="text"
@@ -439,7 +439,6 @@ export default function EditSpacePage({ params }) {
                     </select>
                   </div>
                   
-                  {/* --- NEW SUB-TYPE CHECKBOX AND INPUT --- */}
                   <div className="border border-neutral-700 rounded-lg p-3">
                     <label className="flex items-center space-x-2 cursor-pointer mb-2">
                       <input
@@ -461,10 +460,7 @@ export default function EditSpacePage({ params }) {
                       />
                     )}
                   </div>
-                  {/* --- END NEW SUB-TYPE SECTION --- */}
 
-
-                  {/* Description */}
                   <textarea
                     placeholder="Description"
                     value={item.description}
@@ -473,8 +469,7 @@ export default function EditSpacePage({ params }) {
                     className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-3 px-4 w-full resize-none"
                   />
 
-                  {/* Price Options */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-2">
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -498,7 +493,6 @@ export default function EditSpacePage({ params }) {
                       </label>
                     </div>
                     
-                    {/* Price Input based on selection */}
                     {!item.useSizes ? (
                       <input
                         type="number"
@@ -532,11 +526,9 @@ export default function EditSpacePage({ params }) {
                     )}
                   </div>
 
-                  {/* Image Preview and Upload */}
-                  <div className="flex flex-col items-start gap-4 mt-4">
+                  <div className="flex flex-col items-start gap-4 pt-2">
                     <span className="text-sm font-medium">Menu Item Image</span>
                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-                      {/* Image Preview */}
                       <div className="relative w-36 h-36 rounded-lg overflow-hidden border border-neutral-700 flex-shrink-0">
                         {(item.menuImage || item.existingImage) ? (
                           <img
@@ -552,7 +544,6 @@ export default function EditSpacePage({ params }) {
                       </div>
 
                       <div className="flex flex-col gap-2 w-full">
-                        {/* Hidden native file input */}
                         <input
                           type="file"
                           accept="image/*"
@@ -560,7 +551,6 @@ export default function EditSpacePage({ params }) {
                           onChange={e => handleMenuImageChange(index, e.target.files[0])}
                           className="hidden"
                         />
-                        {/* Custom button label */}
                         <label
                           htmlFor={`menuImage-${index}`}
                           className="cursor-pointer bg-neutral-700 text-white rounded-lg py-3 px-4 text-center hover:bg-neutral-600 transition-colors duration-300 w-full"
@@ -583,7 +573,6 @@ export default function EditSpacePage({ params }) {
               ))}
             </div>
             
-            {/* Add Menu Item Button - Moved outside the loop */}
             <div className="flex justify-end items-center mt-6">
               <button
                 type="button"
@@ -595,10 +584,10 @@ export default function EditSpacePage({ params }) {
             </div>
           </div>
           
-          {/* Submit */}
+          {/* Submit - Increased py for a larger button */}
           <button
             type="submit"
-            className="w-full py-4 bg-pink-600 hover:bg-pink-700 rounded-lg font-bold text-white text-lg tracking-widest transition-colors duration-300"
+            className="w-full py-5 bg-pink-600 hover:bg-pink-700 rounded-lg font-bold text-white text-lg tracking-widest transition-colors duration-300"
           >
             Update Food Stall
           </button>

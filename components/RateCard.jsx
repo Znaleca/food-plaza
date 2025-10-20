@@ -155,8 +155,8 @@ const RateCard = () => {
                   <div className="mb-3">{renderStarRating(review.rating)}</div>
                   <div className="text-xs text-gray-400 text-center">
                     Reviewed by{' '}
-                    {/* 👇 Using review.user (which is the user's name from the order document) */}
-                    <span className="text-cyan-400 font-semibold">{review.user || 'Anonymous'}</span>
+                    {/* 👇 CHANGE IS HERE: Hardcode 'Anonymous' */}
+                    <span className="text-cyan-400 font-semibold">Anonymous</span>
                   </div>
                 </div>
               </div>

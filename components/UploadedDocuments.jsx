@@ -1,8 +1,7 @@
-// UploadedDocuments.jsx
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { FaTimes, FaDownload, FaFileContract, FaEye, FaCheckCircle, FaBan, FaSpinner, FaCloudUploadAlt, FaTimesCircle } from 'react-icons/fa';
+import { FaTimes, FaDownload, FaFileContract, FaEye, FaCheckCircle, FaBan, FaSpinner, FaCloudUploadAlt, FaTimesCircle, FaCommentAlt, FaInfoCircle } from 'react-icons/fa';
 // Ensure this path is correct for your project
 import updateDocumentStatus from '@/app/actions/updateDocumentStatus'; 
 
@@ -12,20 +11,17 @@ const REQUIRED_DOCUMENTS_NAMES = [
   'Business Permit',
   'Safety and Sanitary Inspection (BFP)',
   'BIR',
-  'Lease Agreement',
+  'Lease Agreement (Notarized)',
 ];
 
 // --- Utility function (Remains the same) ---
 const getUploadedDocuments = (booking) => {
   if (!booking?.documents || booking.documents.length === 0) return [];
   try {
-    // booking.documents is an array of JSON strings
     return booking.documents.map(docString => {
-      // Safely parse each JSON string
       if (typeof docString === 'string') {
         return JSON.parse(docString);
       }
-      // If it's already an object (e.g., in a testing environment)
       return docString;
     });
   } catch (e) {
@@ -42,8 +38,10 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
   const initialDocuments = useMemo(() => getUploadedDocuments(booking), [booking]);
   const [viewingDocument, setViewingDocument] = useState(null); 
   const [updateStatus, setUpdateStatus] = useState({ loadingFileId: null, message: null, isError: false });
-  // NEW STATE: Documents that can be updated locally
   const [localDocuments, setLocalDocuments] = useState(initialDocuments);
+  
+  // NEW STATE: Tracks which document is being denied and the comment entered
+  const [denialTarget, setDenialTarget] = useState({ fileId: null, docName: '', comment: '' });
   
   // Effect to re-sync localDocuments when the parent's 'booking' prop changes
   useEffect(() => {
@@ -53,7 +51,7 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
 
   if (!show || !booking) return null;
   
-  // Use localDocuments instead of calling getUploadedDocuments(booking) directly
+  // Use localDocuments to generate the map
   const uploadedDocMap = localDocuments.reduce((map, doc) => {
     map[doc.name] = doc;
     return map;
@@ -76,9 +74,7 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
 
   const handleView = (doc) => {
       if (!doc?.fileId) return;
-      // Create the direct view link
       const docPdfLink = `${APPWRITE_BASE_URL}${doc.fileId}/view${APPWRITE_PROJECT_QUERY}`;
-      // Set the document and its PDF link for the viewer modal
       setViewingDocument({ ...doc, pdfLink: docPdfLink });
   };
 
@@ -95,19 +91,30 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
       submitted: 'text-gray-500 italic',
   };
 
-  // --- Handler for Status Update ---
-  const handleUpdateStatus = async (fileId, newStatus, docName) => {
+  // Function to initiate denial mode (show comment input)
+  const initiateDenial = (fileId, docName, existingComment = '') => {
+    setDenialTarget({ 
+        fileId, 
+        docName, 
+        comment: existingComment // Pre-fill if editing an existing denial comment
+    });
+    // Clear any previous global status message
+    setUpdateStatus(prev => ({ ...prev, message: null }));
+  };
+
+  // Function to finalize status update (used for both verify and deny)
+  const handleUpdateStatus = async (fileId, newStatus, docName, comment = '') => {
     if (!booking?.['$id'] || !fileId) return;
 
-    // Confirm action with the user
-    const actionText = newStatus === 'verified' ? 'VERIFY' : 'DENY';
+    // 1. Confirmation check
     let confirmationMessage;
-
     if (newStatus === 'verified') {
         confirmationMessage = `Are you sure you want to VERIFY the status of "${docName}"?`;
     } else if (newStatus === 'denied') {
-        // IMPROVED MESSAGE: Warn that denying a document may require the user to re-upload.
-        confirmationMessage = `Are you sure you want to DENY the status of "${docName}"? The user will typically need to re-upload this document.`;
+        if (comment.trim() === '') {
+            return setUpdateStatus({ loadingFileId: null, message: 'Denial requires a comment.', isError: true });
+        }
+        confirmationMessage = `Are you sure you want to DENY "${docName}" with the comment: "${comment}"? The main booking status will be reset to 'pending'.`;
     } else {
         confirmationMessage = `Are you sure you want to change the status of "${docName}" to "${newStatus}"?`;
     }
@@ -115,12 +122,13 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
     if (!window.confirm(confirmationMessage)) {
         return;
     }
-
-    // Set loading state for the specific file
+    
+    // 2. Clear denial target and set loading state
+    setDenialTarget({ fileId: null, docName: '', comment: '' });
     setUpdateStatus({ loadingFileId: fileId, message: null, isError: false });
 
-    // Call the server action
-    const result = await updateDocumentStatus(booking['$id'], fileId, newStatus);
+    // 3. Call the server action with the comment
+    const result = await updateDocumentStatus(booking['$id'], fileId, newStatus, comment);
     
     if (result.error) {
         setUpdateStatus({ 
@@ -131,11 +139,21 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
     } else {
         // SUCCESS:
         
-        // 1. Locally update the document status to reflect the change immediately
+        // 1. Locally update the document status and comment
         setLocalDocuments(prevDocs => 
-            prevDocs.map(doc => 
-                doc.fileId === fileId ? { ...doc, status: newStatus } : doc
-            )
+            prevDocs.map(doc => {
+                if (doc.fileId === fileId) {
+                    const updatedDoc = { ...doc, status: newStatus };
+                    if (newStatus === 'denied') {
+                        updatedDoc.comment = comment.trim();
+                    } else {
+                        delete updatedDoc.comment;
+                    }
+                    // IMPORTANT: The server action preserves tenantComment, so it remains here too.
+                    return updatedDoc;
+                }
+                return doc;
+            })
         );
 
         // 2. Clear loading, show success message
@@ -145,8 +163,6 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
             isError: false 
         });
         
-        // OPTIONAL: Keep this to notify the parent a change occurred,
-        // but now it doesn't need to re-fetch to update the modal content.
         if (onUpdateSuccess) {
             setTimeout(() => onUpdateSuccess(), 500); 
         }
@@ -182,88 +198,157 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
           <div className="space-y-3">
             {documentChecklist.map((item, index) => {
               const doc = item.uploadedDoc;
-              // currentStatus is now driven by the local state via documentChecklist
               const currentStatus = doc?.status || 'submitted'; 
+              const adminComment = doc?.comment || ''; 
+              const tenantComment = doc?.tenantComment || ''; 
               const isLoading = updateStatus.loadingFileId === doc?.fileId;
+              const isDenialMode = denialTarget.fileId === doc?.fileId;
+              
+              // NEW: Determine if the document is verified
+              const isVerified = currentStatus === 'verified'; 
+              // NEW: Determine if we should show the tenant's comment
+              const showTenantComment = tenantComment && !isVerified; 
 
               return (
-                <div key={index} className={`flex flex-col md:flex-row justify-between items-start md:items-center p-3 border rounded-lg transition-colors 
-                    ${!item.isUploaded ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
+                <div key={index} className={`flex flex-col p-4 border rounded-lg transition-colors 
+                    ${!item.isUploaded ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
                   
-                  <div className="flex flex-col mb-2 md:mb-0 md:mr-4 flex-grow">
-                      <span className="font-medium text-gray-700 break-words pr-2">{item.name}</span>
-                      <div className="flex items-center mt-1">
-                          {item.isUploaded ? (
-                              <>
-                                <FaCheckCircle className="text-sm text-green-600 mr-2" />
-                                <span className={`text-xs uppercase ${STATUS_COLOR_CLASSES[currentStatus] || 'text-gray-500'}`}>
-                                  Uploaded - Status: {currentStatus}
-                                </span>
-                              </>
-                          ) : (
-                              <>
-                                <FaTimesCircle className="text-sm text-red-600 mr-2" />
-                                <span className="text-xs uppercase text-red-600 font-semibold">
-                                  Missing
-                                </span>
-                              </>
-                          )}
-                      </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
-                    {/* Actions are ONLY available if the document is uploaded */}
-                    {item.isUploaded ? (
-                        <>
-                            {/* VIEW Button */}
-                            <button
-                                onClick={() => handleView(doc)}
-                                className={`flex-shrink-0 flex items-center gap-1 font-semibold px-3 py-1 rounded-full transition-colors ${ACCENT_BG_CLASS}`}
-                                disabled={isLoading}
-                            >
-                                <FaEye className="text-sm" />
-                                View
-                            </button>
-
-                            {/* VERIFY Button */}
-                            {currentStatus !== 'verified' && (
-                                <button
-                                    onClick={() => handleUpdateStatus(doc.fileId, 'verified', doc.name)}
-                                    className={`flex-shrink-0 flex items-center gap-1 font-semibold px-3 py-1 rounded-full transition-colors ${VERIFY_BG_CLASS}`}
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? (
-                                        <FaSpinner className="animate-spin text-sm" />
-                                    ) : (
-                                        <FaCheckCircle className="text-sm" />
-                                    )}
-                                    Verify
-                                </button>
+                  {/* Document Name and Status Row */}
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                    <div className="flex flex-col mb-2 md:mb-0 md:mr-4 flex-grow">
+                        <span className="font-medium text-gray-700 break-words pr-2">{item.name}</span>
+                        <div className="flex items-center mt-1">
+                            {item.isUploaded ? (
+                                <>
+                                  <FaCheckCircle className="text-sm text-green-600 mr-2" />
+                                  <span className={`text-xs uppercase ${STATUS_COLOR_CLASSES[currentStatus] || 'text-gray-500'}`}>
+                                    Uploaded - Status: {currentStatus}
+                                  </span>
+                                </>
+                            ) : (
+                                <>
+                                  <FaTimesCircle className="text-sm text-red-600 mr-2" />
+                                  <span className="text-xs uppercase text-red-600 font-semibold">
+                                    Missing
+                                  </span>
+                                </>
                             )}
-                            
-                            {/* DENY Button */}
-                            {currentStatus !== 'denied' && (
-                                <button
-                                    // newStatus is 'denied', which is supported by the server action
-                                    onClick={() => handleUpdateStatus(doc.fileId, 'denied', doc.name)} 
-                                    className={`flex-shrink-0 flex items-center gap-1 font-semibold px-3 py-1 rounded-full transition-colors ${DENY_BG_CLASS}`}
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? (
-                                        <FaSpinner className="animate-spin text-sm" />
-                                    ) : (
-                                        <FaBan className="text-sm" />
-                                    )}
-                                    Deny
-                                </button>
-                            )}
-                        </>
-                    ) : (
-                        <div className="flex items-center gap-2 text-gray-500 italic">
-                             <FaCloudUploadAlt /> Awaiting Upload
                         </div>
-                    )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
+                      {item.isUploaded ? (
+                          <>
+                              {/* VIEW Button */}
+                              <button
+                                  onClick={() => handleView(doc)}
+                                  className={`flex-shrink-0 flex items-center gap-1 font-semibold px-3 py-1 rounded-full transition-colors ${ACCENT_BG_CLASS}`}
+                                  disabled={isLoading || isDenialMode}
+                              >
+                                  <FaEye className="text-sm" />
+                                  View
+                              </button>
+
+                              {/* VERIFY Button */}
+                              {!isVerified && (
+                                  <button
+                                      onClick={() => handleUpdateStatus(doc.fileId, 'verified', doc.name)}
+                                      className={`flex-shrink-0 flex items-center gap-1 font-semibold px-3 py-1 rounded-full transition-colors ${VERIFY_BG_CLASS}`}
+                                      disabled={isLoading || isDenialMode}
+                                  >
+                                      {isLoading ? (
+                                          <FaSpinner className="animate-spin text-sm" />
+                                      ) : (
+                                          <FaCheckCircle className="text-sm" />
+                                      )}
+                                      Verify
+                                  </button>
+                              )}
+                              
+                              {/* DENY Button (Toggles Denial Mode) */}
+                              {currentStatus !== 'denied' && (
+                                  <button
+                                      onClick={() => initiateDenial(doc.fileId, doc.name, adminComment)} 
+                                      className={`flex-shrink-0 flex items-center gap-1 font-semibold px-3 py-1 rounded-full transition-colors ${DENY_BG_CLASS}`}
+                                      disabled={isLoading || isDenialMode}
+                                  >
+                                      <FaBan className="text-sm" />
+                                      Deny
+                                  </button>
+                              )}
+
+                              {/* CANCEL/EDIT Denial Button */}
+                              {isDenialMode && (
+                                  <button
+                                      onClick={() => setDenialTarget({ fileId: null, docName: '', comment: '' })}
+                                      className={`flex-shrink-0 flex items-center gap-1 font-semibold px-3 py-1 rounded-full bg-gray-500 hover:bg-gray-600 text-white transition-colors`}
+                                      disabled={isLoading}
+                                  >
+                                      <FaTimes className="text-sm" />
+                                      Cancel
+                                  </button>
+                              )}
+                          </>
+                      ) : (
+                          <div className="flex items-center gap-2 text-gray-500 italic">
+                               <FaCloudUploadAlt /> Awaiting Upload
+                          </div>
+                      )}
+                    </div>
                   </div>
+                  
+                  {/* --- Tenant Comment Section (Visible only if NOT Verified) --- */}
+                  {showTenantComment && (
+                       <div className="mt-3 p-2 text-sm bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded">
+                          <FaInfoCircle className="inline mr-2 text-blue-500" />
+                          <span className="font-semibold">Lessee's Note: </span>
+                          {tenantComment}
+                       </div>
+                  )}
+                  {/* ------------------------------------------------------------- */}
+                  
+                  {/* Admin Denial Comment Section (Always visible if denied, or if in denial mode) */}
+                  {(currentStatus === 'denied' && !isDenialMode) && (
+                      <div className="mt-3 p-2 text-sm bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
+                          <FaCommentAlt className="inline mr-2 text-red-500" />
+                          <span className="font-semibold">Reason for Denial: </span>
+                          {adminComment || 'No reason provided.'}
+                          <button
+                            onClick={() => initiateDenial(doc.fileId, doc.name, adminComment)}
+                            className="ml-3 text-red-500 hover:text-red-700 font-medium underline"
+                          >
+                            (Edit)
+                          </button>
+                      </div>
+                  )}
+
+                  {/* Denial Input Field (Visible when in denial mode) */}
+                  {isDenialMode && (
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                          <label htmlFor={`comment-${doc.fileId}`} className="block text-sm font-medium text-red-600 mb-2">
+                              Reason for Denial:
+                          </label>
+                          <textarea
+                              id={`comment-${doc.fileId}`}
+                              value={denialTarget.comment}
+                              onChange={(e) => setDenialTarget(prev => ({ ...prev, comment: e.target.value }))}
+                              placeholder="Please provide a clear reason why this document is denied (e.g., 'Notarization missing', 'Expired date')."
+                              rows="3"
+                              className="w-full p-2 border border-red-300 rounded-lg bg-red-50 text-gray-900 focus:ring-red-500 focus:border-red-500"
+                              required
+                          />
+                          <button
+                              onClick={() => handleUpdateStatus(denialTarget.fileId, 'denied', denialTarget.docName, denialTarget.comment)}
+                              className={`mt-2 w-full flex items-center justify-center gap-2 font-bold px-4 py-2 rounded-lg transition-colors ${DENY_BG_CLASS}`}
+                              disabled={denialTarget.comment.trim() === '' || isLoading}
+                          >
+                              <FaBan className="text-sm" />
+                              Confirm Denial
+                          </button>
+                      </div>
+                  )}
+
                 </div>
               );
             })}
@@ -271,7 +356,7 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
         </div>
       </div>
       
-      {/* PDF Viewer Modal (Secondary Modal) */}
+      {/* PDF Viewer Modal (Secondary Modal) - Remains the same */}
       {viewingDocument && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-90 z-[60] flex flex-col p-2 sm:p-4">
           <div className="flex justify-between items-center p-2">
@@ -289,7 +374,6 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
           
           <div className="flex-grow bg-white rounded-lg shadow-xl overflow-hidden">
             <iframe
-              // Use the link generated in handleView
               src={viewingDocument.pdfLink} 
               title={`Document: ${viewingDocument.name}`}
               className="w-full h-full border-0"
@@ -304,10 +388,8 @@ const UploadedDocuments = ({ booking, show, onClose, onUpdateSuccess }) => {
             </iframe>
           </div>
 
-          {/* Download button below the viewer (Kept for convenience) */}
           <div className="flex justify-center p-4">
             <a
-                // Use the link for download
                 href={`${APPWRITE_BASE_URL}${viewingDocument.fileId}/download${APPWRITE_PROJECT_QUERY}`}
                 target="_blank"
                 rel="noopener noreferrer"

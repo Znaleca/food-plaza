@@ -19,7 +19,7 @@ const REQUIRED_DOCUMENTS = [
   'Business Permit',
   'Safety and Sanitary Inspection (BFP)',
   'BIR',
-  'Lease Agreement',
+  'Lease Agreement (Notarized)',
 ];
 
 const ApprovalPage = () => {

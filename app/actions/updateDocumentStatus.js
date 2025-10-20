@@ -5,13 +5,14 @@ import { cookies } from 'next/headers';
 import checkAuth from './checkAuth'; // Assuming this is a server action/utility
 
 /**
- * Updates the status of a specific document within a booking/lease record.
+ * Updates the status and optional comment of a specific document within a booking/lease record.
  * * @param {string} bookingId The ID of the lease/booking document.
  * @param {string} fileId The fileId of the specific document to update.
  * @param {'verified' | 'submitted' | 'denied'} newStatus The new status to set.
+ * @param {string} [comment] The denial reason (only used if newStatus is 'denied').
  * @returns {{success: boolean, message: string} | {error: string}}
  */
-async function updateDocumentStatus(bookingId, fileId, newStatus) {
+async function updateDocumentStatus(bookingId, fileId, newStatus, comment = '') {
   const sessionCookie = cookies().get('appwrite-session');
   if (!sessionCookie) {
     return { error: 'Authentication required. Please log in.' };
@@ -22,16 +23,19 @@ async function updateDocumentStatus(bookingId, fileId, newStatus) {
       return { error: 'Invalid status provided.' };
   }
 
+  // Enforce comment requirement for denial
+  if (newStatus === 'denied' && comment.trim() === '') {
+      return { error: 'A denial comment is required to explain the reason to the user.' };
+  }
+
   try {
     const { databases } = await createSessionClient(sessionCookie.value);
     const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE;
     const collectionId = process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS;
     
-    // IMPORTANT: Implement a robust authorization check here. 
-    // Only administrators or specific roles should be able to update document status to 'verified'/'denied'.
+    // Authorization Check (Ensure this is enabled in a real application)
     const { user } = await checkAuth();
     if (!user /* || !user.roles.includes('admin') */) { 
-        // Redirect/block if not authorized
         return { error: 'Unauthorized: Only admins can change document status.' };
     }
 
@@ -53,28 +57,56 @@ async function updateDocumentStatus(bookingId, fileId, newStatus) {
             doc = JSON.parse(docString);
         } catch (e) {
             console.error("Error parsing document JSON:", docString, e);
-            return docString; // Return unparsed string if invalid
+            return docString;
         }
         
         // Check if this is the document to update
         if (doc.fileId === fileId) {
-            if (doc.status !== newStatus) {
+            
+            // --- Preserve existing tenantComment ---
+            const existingTenantComment = doc.tenantComment; 
+            // -------------------------------------
+
+            const statusChanged = doc.status !== newStatus;
+            const commentChanged = newStatus === 'denied' && doc.comment !== comment.trim();
+            const commentRemoved = newStatus !== 'denied' && doc.comment;
+
+            if (statusChanged || commentChanged || commentRemoved) {
                 doc.status = newStatus; // Update the status
                 documentFound = true;
-                updateRequired = true; // Mark that an update has occurred
+                updateRequired = true;
+
+                // Handle Admin's Denial Comment
+                if (newStatus === 'denied') {
+                    doc.comment = comment.trim(); // Store the denial reason
+                } else {
+                    delete doc.comment; // Remove admin comment if status is verified/submitted
+                }
             } else {
                 documentFound = true;
             }
+            
+            // Restore the tenantComment attribute (it is NOT affected by admin action)
+            if (existingTenantComment) {
+                doc.tenantComment = existingTenantComment;
+            }
         }
 
-        return JSON.stringify(doc); // Re-stringify the object
+        // Allow updating the admin's denial comment even if status hasn't changed
+        if (doc.fileId === fileId && newStatus === 'denied' && doc.comment !== comment.trim()) {
+            doc.comment = comment.trim();
+            documentFound = true;
+            updateRequired = true;
+        }
+
+        return JSON.stringify(doc);
     });
 
     if (!documentFound) {
         return { error: 'Document not found within the specified lease.' };
     }
     
-    // If the status was already the same, we can exit early (though not strictly necessary)
+    // Exit early if no changes were actually made to status or comment
     if (!updateRequired) {
         return { success: true, message: `Document status is already '${newStatus}'. No update performed.` };
     }
@@ -82,17 +114,14 @@ async function updateDocumentStatus(bookingId, fileId, newStatus) {
 
     // --- Core Updates to the Booking Record ---
     const updateData = {
-        documents: updatedDocuments // 3. Update the booking document with the new documents array
+        documents: updatedDocuments
     };
     
-    // 4. *** NEW LOGIC: Check if the newStatus is 'denied' and update the main 'status' field ***
+    // Check if the main status needs to be reset due to denial
     if (newStatus === 'denied') {
-        // Only update the main status if it's not already 'pending' (optional optimization)
         if (booking.status !== 'pending') {
             updateData.status = 'pending'; // Set the main status to pending
             console.log(`Setting main booking status for ${bookingId} to 'pending' due to document denial.`);
-        } else {
-            // Already pending, no change needed for main status
         }
     }
 
@@ -102,7 +131,7 @@ async function updateDocumentStatus(bookingId, fileId, newStatus) {
         databaseId,
         collectionId,
         bookingId,
-        updateData // Includes documents and optionally the main status
+        updateData
     );
 
     let successMessage = `Document status updated to '${newStatus}' successfully.`;
