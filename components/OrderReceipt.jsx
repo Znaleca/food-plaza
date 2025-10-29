@@ -4,6 +4,10 @@
 // ADDED: serviceTypeGroups prop
 const OrderReceipt = ({ order, serviceTypeGroups }) => {
 
+  // --- START: VAT Constant ---
+  const VAT_RATE = 0.12; // 12%
+  // --- END: VAT Constant ---
+
   // --- START: Extract Totals from Order Object ---
   const baseTotal = (order.total && typeof order.total[0] === 'number' ? order.total[0] : 0) || 0;
   const discountAmount = Math.abs((order.total && typeof order.total[1] === 'number' ? order.total[1] : 0) || 0); 
@@ -46,6 +50,14 @@ const OrderReceipt = ({ order, serviceTypeGroups }) => {
 
   const getRoomFinalTotal = (items) =>
     items.reduce((sum, item) => sum + item.itemTotal, 0);
+
+  // Helper function to calculate VAT from a VAT-inclusive total
+  const calculateVatAmount = (total) => {
+    // Formula: (Total / (1 + VAT_RATE)) * VAT_RATE
+    if (total <= 0) return 0;
+    return (total / (1 + VAT_RATE)) * VAT_RATE;
+  }
+  // --- END: Helper function ---
 
   const groupedItems = parseItemsGroupedByRoom();
 
@@ -130,7 +142,10 @@ const OrderReceipt = ({ order, serviceTypeGroups }) => {
             const subtotal = getRoomSubtotal(items); 
             const roomDiscount = getRoomDiscount(items); 
             const roomFinalTotal = getRoomFinalTotal(items); 
-            // NEW: Get the display service type for the current stall
+            // Calculate VAT amount for the stall
+            const roomVatAmount = calculateVatAmount(roomFinalTotal);
+            const roomVatExclusiveSubtotal = roomFinalTotal - roomVatAmount;
+            // Get the display service type for the current stall
             const displayServiceType = serviceTypeGroups?.[roomId]?.displayServiceType || null;
 
 
@@ -138,7 +153,7 @@ const OrderReceipt = ({ order, serviceTypeGroups }) => {
               <div key={roomId} className="border-b border-gray-200 pb-4">
                 <h3 className="text-base font-bold text-pink-500 mb-2 flex items-center">
                     {roomName}
-                    {/* NEW: Render Service Type Tag */}
+                    {/* Render Service Type Tag */}
                     {renderReceiptServiceTypeTag(displayServiceType)}
                 </h3>
                 <ul className="space-y-1 text-sm">
@@ -176,9 +191,25 @@ const OrderReceipt = ({ order, serviceTypeGroups }) => {
                           <p>-₱{roomDiscount.toFixed(2)}</p>
                       </div>
                   )}
+
+                  {/* Stall Final Total (The amount paid to the stall) */}
                   <div className="flex justify-between font-semibold text-pink-500 pt-1 border-t border-gray-300 mt-1">
                       <p>Stall Final Total:</p>
                       <p>₱{roomFinalTotal.toFixed(2)}</p>
+                  </div>
+                  
+                  {/* Stall VAT Breakdown (Informational) */}
+                  <div className="text-xs pt-1 flex justify-end">
+                    <div className="flex space-x-2 text-gray-500">
+                      <p className="font-light">(VAT Exclusive Subtotal:</p>
+                      <p className="font-light">₱{roomVatExclusiveSubtotal.toFixed(2)})</p>
+                    </div>
+                  </div>
+                  <div className="text-xs flex justify-end">
+                      <div className="flex space-x-2 text-gray-500">
+                        <p className="font-light">VAT Amt. ({VAT_RATE * 100}%):</p>
+                        <p className="font-bold">₱{roomVatAmount.toFixed(2)}</p>
+                      </div>
                   </div>
                 </div>
               </div>
@@ -224,10 +255,38 @@ const OrderReceipt = ({ order, serviceTypeGroups }) => {
             </div>
           )}
 
-          <div className="mt-6 border-t border-gray-400 pt-4 flex justify-between items-center">
-            <p className="text-lg font-bold text-gray-500">FINAL TOTAL:</p>
-            <p className="text-2xl font-extrabold text-pink-600">₱{finalTotal.toFixed(2)}</p>
-          </div>
+          {/* --- NEW: FINAL TOTAL BREAKDOWN BLOCK --- */}
+          {finalTotal > 0 && (() => {
+            const overallVatAmount = calculateVatAmount(finalTotal);
+            const vatExclusiveSubtotal = finalTotal - overallVatAmount;
+
+            return (
+              <div className="mt-6 border-t border-gray-400 pt-4 space-y-1">
+                {/* 1. Total Paid - Most Prominent */}
+                <div className="flex justify-between items-center text-lg">
+                  <p className="font-bold text-gray-700">Total Paid (VAT Inclusive):</p>
+                  <p className="font-extrabold text-pink-600">₱{finalTotal.toFixed(2)}</p>
+                </div>
+                
+                {/* Visual Separator */}
+                <div className="border-t border-dashed border-gray-300 pt-1"></div>
+
+                {/* 2. VAT Exclusive Subtotal */}
+                <div className="flex justify-between items-center text-sm text-gray-600">
+                  <p className="font-semibold">VAT Exclusive Subtotal:</p>
+                  <p className="font-bold">₱{vatExclusiveSubtotal.toFixed(2)}</p>
+                </div>
+
+                {/* 3. VAT Amount (12%) */}
+                <div className="flex justify-between items-center text-sm text-gray-600">
+                  <p className="font-semibold">VAT Amount ({VAT_RATE * 100}%):</p>
+                  <p className="font-bold">₱{overallVatAmount.toFixed(2)}</p>
+                </div>
+              </div>
+            );
+          })()}
+          {/* ------------------------------------------- */}
+
         </div>
       </div>
     </div>
