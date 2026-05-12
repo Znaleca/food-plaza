@@ -1,12 +1,12 @@
-'use server';
+"use server";
 
 import { createSessionClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import { redirect } from 'next/navigation';
 import { Query } from 'node-appwrite';
 
 export default async function getSpaceCheck() {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) {
     redirect('/login');
   }

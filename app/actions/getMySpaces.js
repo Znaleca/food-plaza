@@ -1,12 +1,12 @@
-'use server';
+"use server";
 
 import { createSessionClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import { redirect } from 'next/navigation';
 import { Query } from 'appwrite'; // Import the Query helper from Appwrite
 
 async function getMySpaces() {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) {
     redirect('/login');
   }

@@ -1,12 +1,12 @@
-'use server';
+"use server";
 
 import { createAdminClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import { redirect } from 'next/navigation';
 import { Query } from 'appwrite';
 
 async function getAllUsers(limit = 25, offset = 0) {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
 
   if (!sessionCookie) {
     redirect('/login');

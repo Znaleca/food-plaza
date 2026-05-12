@@ -1,7 +1,7 @@
 'use server';
 
 import { createSessionClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import checkAuth from './checkAuth'; // Assuming this is a server action/utility
 
 /**
@@ -13,7 +13,7 @@ import checkAuth from './checkAuth'; // Assuming this is a server action/utility
  * @returns {{success: boolean, message: string} | {error: string}}
  */
 async function updateDocumentStatus(bookingId, fileId, newStatus, comment = '') {
-  const sessionCookie = cookies().get('appwrite-session');
+    const sessionCookie = await getSessionCookie();
   if (!sessionCookie) {
     return { error: 'Authentication required. Please log in.' };
   }

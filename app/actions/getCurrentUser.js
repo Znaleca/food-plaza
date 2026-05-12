@@ -1,11 +1,11 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSessionClient } from '@/config/appwrite';
+import getSessionCookie from './getSessionCookie';
 
 async function getCurrentUser() {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
 
   if (!sessionCookie) {
     redirect('/login');

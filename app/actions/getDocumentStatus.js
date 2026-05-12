@@ -3,6 +3,7 @@
 
 import { createSessionClient } from '@/config/appwrite';
 import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import checkAuth from './checkAuth';
 
 /**
@@ -12,7 +13,7 @@ import checkAuth from './checkAuth';
  * @returns {{status: string, document: object} | {error: string}}
  */
 async function getDocumentStatus(bookingId, fileId) {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) {
     return { error: 'Authentication required. Please log in.' };
   }

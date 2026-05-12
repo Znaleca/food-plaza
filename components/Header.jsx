@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import logo from '/Users/acelanz/maproom/assets/images/logo.svg';
+import logo from '../assets/images/logo.svg';
 import { FaSignInAlt, FaSignOutAlt, FaBars, FaTimes, FaUserPlus, FaHome, FaBoxOpen, FaGift, FaCaretRight, FaUtensils } from 'react-icons/fa';
 import { FaGear, FaCircleUser, FaCartShopping } from "react-icons/fa6";
 import { useState, useEffect } from "react";

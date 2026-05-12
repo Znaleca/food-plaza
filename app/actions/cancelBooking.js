@@ -1,13 +1,13 @@
-'use server';
+"use server";
 
 import { createSessionClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import checkAuth from './checkAuth';
 
 async function cancelBooking(bookingId) {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) {
     redirect('/login');
   }

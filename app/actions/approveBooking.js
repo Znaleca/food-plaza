@@ -1,9 +1,9 @@
-'use server';
+"use server";
 import { createSessionClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 
 async function approveBooking(bookingId) {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) {
     return { error: 'You must be logged in to approve bookings' };
   }

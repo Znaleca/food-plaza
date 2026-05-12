@@ -8,9 +8,8 @@ import checkAuth from './checkAuth';
 import { revalidatePath } from 'next/cache';
 import checkSpaceAvailability from './checkSpaceAvailability';
 
-async function leaseStall(previousState, formData) {
-  const { databases, storage } = await createAdminClient();
-  const sessionCookie = cookies().get('appwrite-session');
+async function leaseStall(roomId, leaseData) {
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) redirect('/login');
 
   try {

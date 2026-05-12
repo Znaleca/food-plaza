@@ -1,10 +1,11 @@
-'use server';
+"use server";
 import { createSessionClient } from '@/config/appwrite';
+import getSessionCookie from './getSessionCookie';
 import { cookies } from 'next/headers';
 
 async function destroySession() {
   // Retrieve the session cookie
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
 
   if (!sessionCookie) {
     return {
@@ -18,8 +19,11 @@ async function destroySession() {
     // Delete current session
     await account.deleteSession('current');
 
-    // Clear session cookie
-    cookies().delete('appwrite-session');
+    // Clear session cookie (best-effort)
+    try {
+      const c = await cookies();
+      if (c && typeof c.delete === 'function') c.delete('appwrite-session');
+    } catch (e) {}
 
     return {
       success: true,

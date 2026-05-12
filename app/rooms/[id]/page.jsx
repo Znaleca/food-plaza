@@ -1,6 +1,7 @@
-'use client';
+ 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa';
 import getSingleSpace from '@/app/actions/getSingleSpace';
@@ -15,8 +16,8 @@ const categories = ['Drinks', 'Add-Ons', 'Meals', 'Snacks', 'Dessert'];
 // simple cache so we don’t refetch the same stall repeatedly
 const bestSellersCache = {};
 
-function RoomSpace({ params }) {
-  const { id } = params;
+function RoomSpace() {
+  const { id } = useParams();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedMenu, setSelectedMenu] = useState(null);
@@ -332,4 +333,4 @@ function RoomSpace({ params }) {
   );
 }
 
-export default RoomSpace;
+export default RoomSpace;

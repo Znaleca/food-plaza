@@ -1,12 +1,12 @@
-'use server';
+"use server";
 
 import { createAdminClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import { redirect } from 'next/navigation';
 import { Query } from 'appwrite'; // Use 'appwrite' for server-side imports
 
 async function getLesseeAccountsWithStalls() {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
 
   if (!sessionCookie) {
     redirect('/login');

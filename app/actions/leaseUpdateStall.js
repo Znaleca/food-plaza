@@ -1,14 +1,14 @@
-'use server';
+"use server";
 
 import { createAdminClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import checkAuth from './checkAuth';
 
 async function leaseStall(bookingId, formData) {
   const { databases } = await createAdminClient();
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) redirect('/login');
 
   try {

@@ -1,13 +1,13 @@
-'use server';
+"use server";
 
 import { createSessionClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import { Query } from 'node-appwrite';
 import { redirect } from 'next/navigation';
 import checkAuth from './checkAuth';
 
 async function getMyBookings() {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) {
     redirect('/login');
   }

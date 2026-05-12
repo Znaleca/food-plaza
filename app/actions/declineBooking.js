@@ -1,10 +1,10 @@
-'use server';
+"use server";
 import { createSessionClient } from '@/config/appwrite';
-import { cookies } from 'next/headers';
+import getSessionCookie from './getSessionCookie';
 import { ID } from 'node-appwrite';
 
 async function declineBooking(bookingId) {
-  const sessionCookie = cookies().get('appwrite-session');
+  const sessionCookie = await getSessionCookie();
   if (!sessionCookie) {
     return { error: 'You must be logged in to decline bookings' };
   }
