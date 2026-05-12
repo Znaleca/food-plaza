@@ -7,12 +7,12 @@ import VouchersCard from '@/components/VouchersCard';
 import checkAuth from '@/app/actions/checkAuth';
 import getRoomByUserId from '@/app/actions/getRoomByUserId';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import Link from 'next/link'; // <-- Import Link for the login button
+import Link from 'next/link';
 
 const CustomerPromoPage = () => {
   const [promos, setPromos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // <-- New state for auth status
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,12 +21,10 @@ const CustomerPromoPage = () => {
         const user = authResult.user;
 
         if (!user) {
-          // User is not authenticated
           setIsAuthenticated(false);
           return;
         }
 
-        // User is authenticated, proceed with data fetching
         setIsAuthenticated(true);
         const [allPromos, claimedVouchers] = await Promise.all([
           getAllPromos(),
@@ -38,11 +36,9 @@ const CustomerPromoPage = () => {
           .filter(promo => Array.isArray(promo.redeemed) && promo.redeemed.includes(user.id))
           .map(promo => promo.$id);
 
-        // Remove promos that are claimed OR redeemed
         const hiddenIds = new Set([...claimedIds, ...redeemedIds]);
         const unclaimedUnredeemedPromos = allPromos.filter(promo => !hiddenIds.has(promo.$id));
 
-        // Fetch stall names for promos
         const promosWithStall = await Promise.all(
           unclaimedUnredeemedPromos.map(async (promo) => {
             if (promo.user_id) {
@@ -70,60 +66,89 @@ const CustomerPromoPage = () => {
 
   const renderContent = () => {
     if (loading) {
-      // Show loading spinner while the auth check and data fetching is in progress
-      return <LoadingSpinner message="Loading promotions..." />;
+      return (
+        <div className="flex justify-center py-20">
+          <LoadingSpinner message="SYNCING VOUCHERS..." />
+        </div>
+      );
     }
 
     if (!isAuthenticated) {
-      // Show login prompt if not authenticated
       return (
-        <div className="text-center p-10 col-span-full">
-          <p className="text-sm text-white font-extralight mb-6">
-            Please log in to view and claim exclusive vouchers.
+        <div className="border-4 border-dashed border-neutral-300 bg-neutral-50 py-20 px-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+          <div className="w-16 h-16 bg-neutral-950 text-white flex items-center justify-center mb-6 font-black text-2xl">
+            !
+          </div>
+          <p className="text-2xl sm:text-4xl font-black uppercase tracking-tighter mb-4">AUTHENTICATION REQUIRED</p>
+          <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest mb-8 max-w-md">
+            Please log in to view and claim exclusive vouchers for your account.
           </p>
           <Link href="/login" passHref>
-            <button className="bg-pink-600 hover:bg-pink-700 transition duration-300 text-white font-bold py-3 px-6 rounded-lg text-base shadow-lg">
-              Go to Login
+            <button className="py-4 px-8 border-4 border-neutral-950 bg-neutral-950 text-white font-black text-sm uppercase tracking-[0.2em] hover:bg-red-600 hover:border-red-600 transition-colors duration-200">
+              GO TO LOGIN →
             </button>
           </Link>
         </div>
       );
     }
 
-    // Show vouchers if authenticated and loaded
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="max-w-7xl mx-auto">
         {promos.length > 0 ? (
-          promos.map((voucher) => (
-            <VouchersCard
-              key={voucher.$id}
-              voucher={voucher}
-              stallName={voucher.stallName}
-              onClaim={() => handleClaimUpdate(voucher.$id)}
-            />
-          ))
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
+            {promos.map((voucher) => (
+              <VouchersCard
+                key={voucher.$id}
+                voucher={voucher}
+                stallName={voucher.stallName}
+                onClaim={() => handleClaimUpdate(voucher.$id)}
+              />
+            ))}
+          </div>
         ) : (
-          <p className="col-span-full text-center text-gray-500">No vouchers available at the moment.</p>
+          <div className="border-4 border-dashed border-neutral-300 bg-neutral-50 py-20 px-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+            <div className="w-16 h-16 bg-neutral-200 flex items-center justify-center mb-6">
+              <span className="font-black text-neutral-400 text-2xl">Ø</span>
+            </div>
+            <p className="text-2xl sm:text-4xl font-black uppercase tracking-tighter mb-2">NO VOUCHERS AVAILABLE</p>
+            <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">
+              Check back later for new promotions.
+            </p>
+          </div>
         )}
       </div>
     );
   };
 
   return (
-    <div className="-mt-20 py-12 bg-neutral-950 text-white">
-      <div className="text-center mb-40 mt-5 px-4">
-      <header className="text-center mb-28 mt-12 sm:mt-16 px-4">
-        <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-        PROMOTIONS        </h2>
-        <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
-        Unlock exclusive{' '}
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-          deals and discounts.          </span>
-        </p>
-      </header>
-      </div>
+    <div className="w-full min-h-screen bg-white text-neutral-950 font-sans selection:bg-red-600 selection:text-white pb-20">
+      
+      {/* ── HEADER ── */}
+      <section className="w-full border-b-[8px] border-neutral-950 pt-32 pb-16 px-6 md:px-20 relative overflow-hidden bg-neutral-50 mb-12">
+        <div className="absolute top-0 left-0 w-full h-4 bg-red-600"></div>
+        <div className="absolute top-0 left-12 w-4 h-full bg-red-600 opacity-20 hidden md:block"></div>
 
-      {renderContent()}
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <span className="text-xs font-black tracking-[0.4em] uppercase text-red-600 block mb-4">
+            PROMOTIONS
+          </span>
+          <h2 className="text-5xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-[0.85] mb-8 max-w-4xl">
+            UNLOCK<br/>EXCLUSIVE DEALS
+          </h2>
+
+          <Link
+            href="/customer/my-promos"
+            className="inline-flex items-center gap-3 py-4 px-8 border-4 border-neutral-950 bg-white font-black text-sm uppercase tracking-[0.2em] hover:bg-neutral-950 hover:text-white transition-colors duration-200"
+          >
+            VIEW MY CLAIMED VOUCHERS →
+          </Link>
+        </div>
+      </section>
+
+      {/* ── BODY ── */}
+      <section className="px-6 md:px-20">
+        {renderContent()}
+      </section>
     </div>
   );
 };

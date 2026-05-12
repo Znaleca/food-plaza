@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { sendVerificationEmail } from '@/app/actions/sendVerificationEmail';
-import checkUserExists from '@/app/actions/checkUserExists'; // Import the new server action
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaPhone, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import checkUserExists from '@/app/actions/checkUserExists';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaCheckSquare, FaRegSquare } from 'react-icons/fa';
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -34,264 +34,199 @@ const RegisterPage = () => {
 
   const allRulesPassed = Object.values(passwordRules).every(Boolean);
 
-  // Debounce effect to check for email and phone uniqueness
   useEffect(() => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    // Only run the check if email or phone is a non-empty string
     if (formData.email || formData.phone) {
       debounceTimeoutRef.current = setTimeout(async () => {
         const emailToValidate = formData.email;
         const phoneToValidate = `+63${formData.phone}`;
-
-        // Ensure we only check for validly formatted inputs
         const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToValidate);
         const isPhoneValid = /^\+63\d{10}$/.test(phoneToValidate);
 
         if (isEmailValid || isPhoneValid) {
           const { isEmailTaken, isPhoneTaken, error } = await checkUserExists(emailToValidate, phoneToValidate);
-          
           if (error) {
             toast.error(error);
           } else {
-            setEmailTakenError(isEmailTaken ? 'This email is already taken.' : '');
-            setPhoneTakenError(isPhoneTaken ? 'This phone number is already taken.' : '');
+            setEmailTakenError(isEmailTaken ? 'EMAIL ALREADY TAKEN.' : '');
+            setPhoneTakenError(isPhoneTaken ? 'PHONE ALREADY TAKEN.' : '');
           }
         }
-      }, 500); // 500ms debounce delay
+      }, 500);
     } else {
       setEmailTakenError('');
       setPhoneTakenError('');
     }
 
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
+    return () => { if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current); };
   }, [formData.email, formData.phone]);
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
     if (name === 'phone') {
       const cleaned = value.replace(/\D/g, '').slice(0, 10);
       setFormData((prev) => ({ ...prev, phone: cleaned }));
       return;
     }
-
     setFormData((prev) => ({ ...prev, [name]: value }));
-
-    if (name === 'confirmPassword') {
-      setMatchError(value !== formData.password ? 'Passwords do not match.' : '');
-    }
-
-    if (name === 'password') {
-      if (formData.confirmPassword && value !== formData.confirmPassword) {
-        setMatchError('Passwords do not match.');
-      } else {
-        setMatchError('');
-      }
-    }
+    if (name === 'confirmPassword') setMatchError(value !== formData.password ? 'PASSWORDS DO NOT MATCH.' : '');
+    if (name === 'password') setMatchError(formData.confirmPassword && value !== formData.confirmPassword ? 'PASSWORDS DO NOT MATCH.' : '');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Final checks before sending
     if (emailTakenError || phoneTakenError) {
-      toast.error("Please fix the errors before submitting.");
+      toast.error("PLEASE FIX ERRORS.");
       return;
     }
-
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const form = new FormData(e.target);
-    const name = form.get('name');
-    const email = form.get('email');
-    const fullPhone = `+63${formData.phone}`;
-
-    const emailResponse = await sendVerificationEmail(email, name, code);
+    const emailResponse = await sendVerificationEmail(formData.email, formData.name, code);
     if (emailResponse.error) {
       toast.error(emailResponse.error);
       return;
     }
-
     localStorage.setItem('registrationData', JSON.stringify({
-      name,
-      email,
-      phone: fullPhone,
-      password: form.get('password'),
-      confirmPassword: form.get('confirmPassword'),
+      ...formData,
+      phone: `+63${formData.phone}`,
       code,
       label: 'customer',
     }));
-
-    toast.success('Verification code sent to your email.');
+    toast.success('VERIFICATION CODE SENT.');
     router.push('/verify');
   };
 
   const renderRule = (label, passed) => (
-    <li className={`flex items-center gap-2 text-sm ${passed ? 'text-green-400' : 'text-red-500'}`}>
-      {passed ? <FaCheckCircle /> : <FaTimesCircle />} {label}
+    <li className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${passed ? 'text-black' : 'text-red-600'}`}>
+      {passed ? <FaCheckSquare className="w-3 h-3" /> : <FaRegSquare className="w-3 h-3" />} {label}
     </li>
   );
   
   const isFormInvalid = !allRulesPassed || !!matchError || formData.phone.length !== 10 || !!emailTakenError || !!phoneTakenError;
 
   return (
-    <div className="min-h-screen flex flex-col -mt-28 lg:flex-row text-white">
-      <div className="hidden lg:flex flex-col justify-center items-center w-1/2">
-        <h1 className="text-4xl sm:text-4xl font-black leading-tight tracking-[0.2em] bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 text-transparent bg-clip-text">
-          CREATE YOUR ACCOUNT
+    <div className="min-h-screen flex flex-col lg:flex-row bg-white text-black">
+      {/* Left Panel - Hero Branding */}
+      <div className="hidden lg:flex flex-col justify-center items-start w-1/2 px-20 border-r-4 border-black">
+        <span className="text-xs font-bold tracking-[0.4em] text-red-600 uppercase mb-4">
+          JOIN THE SQUAD
+        </span>
+        <h1 className="text-7xl font-black leading-[0.85] text-black uppercase tracking-tighter">
+          CREATE <br /> YOUR <br /> <span className="text-red-600">ACCOUNT</span>
         </h1>
-        <p className="text-sm sm:text-lg font-medium text-gray-300 tracking-widest mt-2">Join The Corner Food Plaza now!</p>
-        <p className="text-neutral-300 mt-4 text-xs max-w-md text-center">Register to explore delicious food, discover new stalls, and enjoy seamless orders at The Corner Food Plaza.</p>
+        <p className="mt-8 text-sm font-bold uppercase tracking-widest text-black max-w-sm leading-relaxed">
+          Explore delicious food, discover new stalls, and enjoy seamless orders at BLITZ.
+        </p>
       </div>
 
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-4 py-16">
-        <div className="w-full max-w-lg bg-neutral-900 p-10 rounded-3xl border border-pink-600 shadow-2xl">
+      {/* Right Panel - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-4 py-20">
+        <div className="w-full max-w-lg bg-white p-8 sm:p-12 border-4 border-black relative">
+          {/* Decorative Corner Block */}
+          <div className="absolute -top-4 -right-4 w-8 h-8 bg-red-600 border-4 border-black hidden sm:block"></div>
+          
           <div className="text-center mb-10 lg:hidden">
-            <h2 className="text-4xl font-bold bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 text-transparent bg-clip-text">
-              Create your account
-            </h2>
-            <p className="text-neutral-400 mt-2 text-sm">Join The Corner Food Plaza now!</p>
+            <h2 className="text-4xl font-black uppercase tracking-tighter text-black">REGISTER</h2>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Nickname */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-2">Nickname</label>
+              <label className="block text-xs font-black tracking-widest uppercase mb-2 text-black">Nickname</label>
               <div className="relative">
                 <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Your nickname"
-                  required
-                  className="w-full px-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-pink-600"
+                  type="text" name="name" value={formData.name} onChange={handleInputChange}
+                  placeholder="NICKNAME" required
+                  className="w-full px-10 py-3 bg-white border-2 border-black text-black font-bold focus:outline-none focus:border-red-600 placeholder-black/30 rounded-none uppercase"
                 />
-                <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" />
+                <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black" />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2">Email</label>
+              <label className="block text-xs font-black tracking-widest uppercase mb-2 text-black">Email</label>
               <div className="relative">
                 <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="you@example.com"
-                  required
-                  className={`w-full px-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 ${emailTakenError ? 'ring-red-500' : 'focus:ring-pink-600'}`}
+                  type="email" name="email" value={formData.email} onChange={handleInputChange}
+                  placeholder="YOU@EXAMPLE.COM" required
+                  className={`w-full px-10 py-3 bg-white border-2 text-black font-bold focus:outline-none placeholder-black/30 rounded-none uppercase ${emailTakenError ? 'border-red-600' : 'border-black focus:border-red-600'}`}
                 />
-                <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" />
+                <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black" />
               </div>
-              {emailTakenError && <p className="text-red-500 text-sm mt-1">{emailTakenError}</p>}
+              {emailTakenError && <p className="text-red-600 text-[10px] font-black mt-1 tracking-tighter">{emailTakenError}</p>}
             </div>
 
-            {/* Phone Number */}
+            {/* Phone */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium mb-2">Phone Number</label>
-              <div className="relative flex items-center">
-                <span className="px-3 py-3 bg-neutral-800 border border-neutral-700 rounded-l-lg text-neutral-400 flex items-center gap-2">
-                  <FaPhone />
+              <label className="block text-xs font-black tracking-widest uppercase mb-2 text-black">Phone</label>
+              <div className="relative flex">
+                <span className="px-3 py-3 bg-black border-2 border-black text-white font-black text-sm flex items-center gap-2 rounded-none">
                   +63
                 </span>
                 <input
-                  type="text"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="9123456789"
-                  required
-                  className={`w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 ${phoneTakenError || formData.phone.length !== 10 ? 'ring-red-500' : 'focus:ring-pink-600'}`}
+                  type="text" name="phone" value={formData.phone} onChange={handleInputChange}
+                  placeholder="9123456789" required
+                  className={`w-full px-4 py-3 bg-white border-2 text-black font-bold focus:outline-none placeholder-black/30 rounded-none ${phoneTakenError || formData.phone.length !== 10 ? 'border-red-600 border-l-0' : 'border-black border-l-0 focus:border-red-600'}`}
                 />
               </div>
-              {phoneTakenError && <p className="text-red-500 text-sm mt-1">{phoneTakenError}</p>}
+              {phoneTakenError && <p className="text-red-600 text-[10px] font-black mt-1 tracking-tighter">{phoneTakenError}</p>}
             </div>
 
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="••••••••"
-                  required
-                  className="w-full px-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-pink-600"
-                />
-                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"
-                >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
+            {/* Password & Confirm (Grid) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-black tracking-widest uppercase mb-2 text-black">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleInputChange}
+                    placeholder="••••••••" required
+                    className="w-full px-10 py-3 bg-white border-2 border-black text-black font-bold focus:outline-none focus:border-red-600 placeholder-black/30 rounded-none"
+                  />
+                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black hover:text-red-600 transition-colors">
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
               </div>
 
-              {/* Password Strength Rules */}
-              <ul className="mt-2 space-y-1">
-                {renderRule('At least 8 characters', passwordRules.length)}
-                {renderRule('At least 1 capital letter', passwordRules.capital)}
-                {renderRule('At least 1 number', passwordRules.number)}
-              </ul>
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">Confirm Password</label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="Re-enter password"
-                  required
-                  className={`w-full px-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 ${matchError ? 'ring-red-500' : 'focus:ring-pink-600'}`}
-                />
-                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400" />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400"
-                >
-                  {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-                </button>
+              <div>
+                <label className="block text-xs font-black tracking-widest uppercase mb-2 text-black">Confirm</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" value={formData.confirmPassword} onChange={handleInputChange}
+                    placeholder="••••••••" required
+                    className={`w-full px-10 py-3 bg-white border-2 text-black font-bold focus:outline-none placeholder-black/30 rounded-none ${matchError ? 'border-red-600' : 'border-black focus:border-red-600'}`}
+                  />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-black hover:text-red-600 transition-colors">
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
               </div>
-              {matchError && <p className="text-red-500 text-sm mt-1">{matchError}</p>}
             </div>
 
-            {/* Submit */}
+            {/* Rules */}
+            <ul className="flex flex-wrap gap-x-4 gap-y-2 border-t-2 border-black pt-4">
+              {renderRule('8+ CHARS', passwordRules.length)}
+              {renderRule('CAPITAL', passwordRules.capital)}
+              {renderRule('NUMBER', passwordRules.number)}
+              {renderRule('MATCH', !matchError && formData.confirmPassword)}
+            </ul>
+
             <button
-              type="submit"
-              disabled={isFormInvalid}
-              className="w-full py-3 rounded-lg text-lg font-bold bg-gradient-to-r from-pink-500 via-red-500 to-yellow-400 hover:brightness-110 text-white transition duration-300"
+              type="submit" disabled={isFormInvalid}
+              className="w-full py-4 bg-black text-white text-2xl font-black uppercase tracking-tighter hover:bg-red-600 border-2 border-black transition-all disabled:bg-black/10 disabled:text-black/40 disabled:border-black/20"
             >
-              Register
+              REGISTER
             </button>
           </form>
 
-          <p className="text-center mt-6 text-sm text-neutral-400">
-            Already have an account?{' '}
-            <Link href="/login" className="text-pink-500 hover:underline">
-              Log in
+          <p className="text-center mt-8 text-xs font-bold uppercase tracking-widest text-black/60">
+            HAVE AN ACCOUNT?{' '}
+            <Link href="/login" className="text-red-600 hover:bg-black hover:text-white px-2 py-1 transition-colors">
+              LOG IN
             </Link>
           </p>
         </div>

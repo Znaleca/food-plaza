@@ -18,7 +18,7 @@ const SearchResultPage = () => {
   const [searchInput, setSearchInput] = useState(searchParams.get("query") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "All");
   const [displayType, setDisplayType] = useState(searchParams.get("displayType") || "Menus");
-  const [isFilterOpen, setIsFilterOpen] = useState(false); // mobile toggle
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
   const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
@@ -29,40 +29,35 @@ const SearchResultPage = () => {
     const fetchRooms = async () => {
       try {
         const fetchedRooms = await getAllSpaces();
-
         const formattedRooms = fetchedRooms.map((room) => {
           const menuImageUrls = (room.menuImages || []).map(toURL);
-          const menuAvailability =
-            Array.isArray(room.menuAvailability) &&
+          const menuAvailability = Array.isArray(room.menuAvailability) &&
             room.menuAvailability.length === room.menuName?.length
               ? room.menuAvailability
               : new Array(room?.menuName?.length || 0).fill(true);
 
-          const menuData =
-            (room?.menuName || []).map((name, idx) => ({
-              menuId: `${room.$id}_${idx}`,
-              name,
-              price: room.menuPrice?.[idx] ?? 0,
-              description: room.menuDescription?.[idx] ?? "",
-              image: menuImageUrls[idx] || null,
-              type: room.menuType?.[idx] || "Others",
-              smallFee: room.menuSmall?.[idx] ?? 0,
-              mediumFee: room.menuMedium?.[idx] ?? 0,
-              largeFee: room.menuLarge?.[idx] ?? 0,
-              isAvailable: menuAvailability[idx] ?? true,
-              idx,
-            })) || [];
+          const menuData = (room?.menuName || []).map((name, idx) => ({
+            menuId: `${room.$id}_${idx}`,
+            name,
+            price: room.menuPrice?.[idx] ?? 0,
+            description: room.menuDescription?.[idx] ?? "",
+            image: menuImageUrls[idx] || null,
+            type: room.menuType?.[idx] || "Others",
+            smallFee: room.menuSmall?.[idx] ?? 0,
+            mediumFee: room.menuMedium?.[idx] ?? 0,
+            largeFee: room.menuLarge?.[idx] ?? 0,
+            isAvailable: menuAvailability[idx] ?? true,
+            idx,
+          })) || [];
 
           return {
             id: room.$id,
             name: room.name,
             menuData,
-            imageUrl:
-              room.images?.length > 0 ? toURL(room.images[0]) : "/placeholder.jpg",
+            imageUrl: room.images?.length > 0 ? toURL(room.images[0]) : "/placeholder.jpg",
             type: room.type || []
           };
         });
-
         setRooms(formattedRooms);
       } catch (error) {
         console.error("Error fetching rooms:", error);
@@ -70,11 +65,9 @@ const SearchResultPage = () => {
         setLoading(false);
       }
     };
-
     fetchRooms();
   }, []);
 
-  // Keep state synced with URL
   useEffect(() => {
     setCategory(searchParams.get("category") || "All");
     setDisplayType(searchParams.get("displayType") || "Menus");
@@ -83,7 +76,6 @@ const SearchResultPage = () => {
 
   useEffect(() => {
     let filtered = [...rooms];
-
     if (searchInput) {
       filtered = rooms.filter(
         (room) =>
@@ -93,7 +85,6 @@ const SearchResultPage = () => {
           )
       );
     }
-
     if (category !== "All") {
       if (displayType === "Menus") {
         filtered = filtered.filter((room) =>
@@ -103,7 +94,6 @@ const SearchResultPage = () => {
         filtered = filtered.filter((room) => room.type.includes(category));
       }
     }
-
     setFilteredRooms(filtered);
   }, [searchInput, rooms, category, displayType]);
 
@@ -120,9 +110,9 @@ const SearchResultPage = () => {
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex justify-center items-center bg-neutral-950">
-        <p className="text-white text-xl font-semibold animate-pulse">
-          Loading food stalls...
+      <div className="w-full h-screen flex justify-center items-center bg-white">
+        <p className="text-neutral-950 text-xl font-bold uppercase tracking-tighter animate-pulse">
+          Loading...
         </p>
       </div>
     );
@@ -136,27 +126,26 @@ const SearchResultPage = () => {
   });
 
   return (
-    <div className="w-full min-h-screen -mt-20 bg-neutral-950 text-white px-6 pt-28 pb-24">
-      {/* Search Bar */}
-      <div className="mb-12 flex justify-center">
+    <div className="w-full min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white px-6 pt-32 pb-24">
+      
+      {/* Search Bar - Clean with sharp borders */}
+      <div className="mb-16 flex justify-center">
         <input
           type="text"
-          placeholder="Search food stalls or menus..."
+          placeholder="SEARCH FOOD STALLS OR MENUS..."
           value={searchInput}
           onChange={handleSearch}
-          className="w-full max-w-2xl p-4 text-lg bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-xl shadow-lg focus:ring-2 focus:ring-pink-500 focus:outline-none transition-all"
+          className="w-full max-w-3xl p-5 text-lg bg-white text-neutral-950 border-4 border-neutral-950 uppercase font-black focus:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] focus:outline-none transition-all placeholder:text-neutral-400"
         />
       </div>
 
-      {/* Main Layout */}
-      <div className="flex gap-12">
-        {/* Sidebar Filter */}
+      <div className="flex flex-col md:flex-row gap-12">
+        {/* Sidebar Filter - Following the Border-T-4 theme */}
         <aside
           className={`
-            bg-neutral-800 shadow-xl p-6 w-64 z-40 transition-transform duration-300
-            fixed top-0 left-0 h-full overflow-y-auto scrollbar-thin
-            md:relative md:translate-x-0
+            bg-white md:border-r-4 border-neutral-950 p-6 w-full md:w-64 z-40 transition-transform duration-300
             ${isFilterOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+            fixed top-0 left-0 h-full overflow-y-auto md:relative md:h-auto md:block
           `}
         >
           <BrowseFilter
@@ -171,58 +160,46 @@ const SearchResultPage = () => {
           />
         </aside>
 
-        {/* Floating Toggle Button for Mobile */}
-        <button
-          className="fixed top-1/2 -translate-y-1/2 bg-neutral-700 text-white rounded-full p-2 shadow-lg md:hidden z-50 transition-all duration-300"
-          style={{
-            left: isFilterOpen ? '16rem' : '0.5rem',
-          }}
-          onClick={() => setIsFilterOpen(!isFilterOpen)}
-        >
-          {isFilterOpen ? <FaChevronLeft /> : <FaChevronRight />}
-        </button>
-
-        {/* Content */}
+        {/* Content Area */}
         <main className="flex-1">
-          {displayType === "Menus" ? (
-            <section className="mb-16">
-              <h3 className="text-3xl font-bold mb-8 border-b border-gray-700 pb-2">
-                {searchInput ? "Matching Menu Items" : "All Menu"}
-              </h3>
-              {filteredMenus.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8">
-                  {filteredMenus.map((m) => (
-                    <BrowseCardMenu
-                      key={m.menuId}
-                      roomId={rooms.find((r) => r.menuData.includes(m))?.id}
-                      menuItem={m}
-                      roomName={rooms.find((r) => r.menuData.includes(m))?.name || ""}
-                      allMenus={allMenus}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-lg text-gray-400">No menu items found.</p>
-              )}
-            </section>
-          ) : (
-            <section>
-              <h2 className="text-3xl font-bold mb-8 border-b border-gray-700 pb-2">
-                {searchInput ? `Food Stalls for "${searchInput}"` : "All Food Stalls"}
-              </h2>
-              {filteredRooms.length === 0 ? (
-                <p className="text-lg text-gray-400">No food stalls found.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-                  {filteredRooms.map((room) => (
-                    <BrowseCardStall key={room.id} room={room} />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+          <section className="mb-16">
+            <h3 className="text-4xl font-black mb-8 border-b-4 border-neutral-950 pb-2 uppercase tracking-tighter">
+              {displayType === "Menus" 
+                ? (searchInput ? `Results: ${searchInput}` : "The Menu") 
+                : "The Stalls"}
+            </h3>
+            
+            {(displayType === "Menus" ? filteredMenus : filteredRooms).length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {displayType === "Menus" 
+                  ? filteredMenus.map((m) => (
+                      <BrowseCardMenu
+                        key={m.menuId}
+                        roomId={rooms.find((r) => r.menuData.includes(m))?.id}
+                        menuItem={m}
+                        roomName={rooms.find((r) => r.menuData.includes(m))?.name || ""}
+                        allMenus={allMenus}
+                      />
+                    ))
+                  : filteredRooms.map((room) => (
+                      <BrowseCardStall key={room.id} room={room} />
+                    ))
+                }
+              </div>
+            ) : (
+              <p className="text-xl font-medium text-neutral-500 italic">No matches found in this category.</p>
+            )}
+          </section>
         </main>
       </div>
+
+      {/* Floating Toggle for Mobile - Matches Brutalist vibe */}
+      <button
+        className="fixed bottom-8 right-8 bg-neutral-950 text-white w-14 h-14 flex items-center justify-center rounded-none border-2 border-white shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] md:hidden z-50 active:translate-y-1"
+        onClick={() => setIsFilterOpen(!isFilterOpen)}
+      >
+        {isFilterOpen ? <FaChevronLeft /> : <FaChevronRight />}
+      </button>
     </div>
   );
 };

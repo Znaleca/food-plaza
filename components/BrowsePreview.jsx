@@ -2,10 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import getAllSpaces from '@/app/actions/getAllSpaces';
-// 1. Import the new server action
 import getAllStallReviews from '@/app/actions/getAllStallReviews'; 
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { useRouter } from 'next/navigation';
 import SpaceCard from './SpaceCard';
 import FeaturedCard from './FeaturedCard';
 import { gsap } from 'gsap';
@@ -16,7 +14,6 @@ gsap.registerPlugin(ScrollTrigger);
 export default function BrowsePreview() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   const containerRef = useRef(null);
   const featuredRef = useRef(null);
@@ -25,41 +22,30 @@ export default function BrowsePreview() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 2. Use getAllStallReviews instead of getAllReviews
         const [spaces, reviewData] = await Promise.all([
           getAllSpaces(),
           getAllStallReviews(),
         ]);
 
-        // The structure of reviewData is { reviews: extractedReviews[] }
-        const allReviews = reviewData?.reviews || []; 
+        const allReviews = reviewData?.reviews || [];
         const ratingMap = {};
 
-        // 3. Update the logic to process the new allReviews structure
         allReviews.forEach((review) => {
           const { roomName, rating } = review;
-          
           if (!roomName || rating === undefined || rating === null) return;
-          
           if (!ratingMap[roomName]) {
             ratingMap[roomName] = { total: 0, count: 0 };
           }
-          
           const value = Number(rating) || 0;
           ratingMap[roomName].total += value;
           ratingMap[roomName].count += 1;
         });
-        // End of updated review processing logic
 
         const enrichedRooms = (spaces || []).map((room) => {
           const ratingData = ratingMap[room.name] || { total: 0, count: 0 };
           const averageRating =
             ratingData.count > 0 ? ratingData.total / ratingData.count : 0;
-          return {
-            ...room,
-            averageRating,
-            reviewCount: ratingData.count,
-          };
+          return { ...room, averageRating, reviewCount: ratingData.count };
         });
 
         setRooms(enrichedRooms);
@@ -71,76 +57,68 @@ export default function BrowsePreview() {
     };
 
     fetchData();
+  }, []);
 
-    // GSAP ScrollTrigger setup for desktop only
-    let st;
-    if (typeof window !== 'undefined' && 
-      window.innerWidth >= 1024 &&
-      containerRef.current &&
-      featuredRef.current &&
-      gridRef.current
-    ) {
-      st = ScrollTrigger.create({
-        trigger: containerRef.current,
-        pin: featuredRef.current,
-        start: 'top top',
-        end: () => `bottom bottom`,
-        pinSpacing: false,
+  useEffect(() => {
+    if (loading || rooms.length === 0) return;
+
+    let ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
+
+      mm.add("(min-width: 1024px)", () => {
+        ScrollTrigger.create({
+          trigger: containerRef.current,
+          pin: featuredRef.current,
+          start: 'top 10%',
+          end: 'bottom bottom',
+          pinSpacing: false,
+          invalidateOnRefresh: true,
+        });
       });
-    }
+    }, containerRef);
 
-    return () => {
-      if (st) {
-        st.kill();
-      }
-    };
-  }, [rooms]);
+    return () => ctx.revert();
+  }, [loading, rooms]);
 
   if (loading) {
     return <LoadingSpinner message="Loading food stalls..." />;
   }
 
   return (
-    <section id="browse" className="py-20 bg-neutral-950 text-white">
-      {/* Section Header */}
-      <div className="text-center py-8 px-6">
-      <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
-            BROWSE
-          </h2>
-          <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
-            Discover{' '}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            delicious</span> and <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">tasty menus</span>
-          </p>
-          
+    <section id="browse" className="bg-white text-neutral-950 pb-16 font-sans selection:bg-red-600 selection:text-white">
+      {/* Header */}
+      <div className="w-full px-6 md:px-20 pt-12 mb-10">
+        <span className="text-xs font-bold tracking-[0.4em] text-red-600 uppercase">
+          DIRECTORY
+        </span>
+        <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mt-2">
+          EXPLORE STALLS
+        </h2>
+        <div className="h-2 w-32 bg-neutral-950 mt-6" />
       </div>
 
-      {/* Content */}
-      <div
-        className="w-full md:mt-20 h-full mt-14 px-4 sm:px-6 md:px-20"
-        ref={containerRef}
-      >
-        <div className="w-full h-full flex flex-col lg:flex-row lg:gap-4 gap-6 relative">
-          {/* Featured Section */}
-          <div
-            className="relative z-0 w-full h-auto lg:h-screen lg:flex-none lg:w-1/2 lg:sticky lg:top-0 mb-4 lg:mb-0"
-            ref={featuredRef}
-          >
-            <FeaturedCard
-              imageSrc="/images/Featured.jpg"
-              buttonText="Order now"
-              href="/search"
-            />
+      <div className="w-full px-4 sm:px-6 md:px-20" ref={containerRef}>
+        <div className="w-full flex flex-col lg:flex-row lg:gap-12 gap-10 items-stretch relative">
+          
+          {/* Featured Column (Pinned) */}
+          <div className="w-full lg:w-1/2 relative">
+            <div
+              className="z-10 w-full border-[6px] border-neutral-950 bg-white"
+              ref={featuredRef}
+            >
+              <FeaturedCard
+                imageSrc="/images/Featured.jpg"
+                buttonText="ORDER NOW"
+                href="/search"
+              />
+            </div>
           </div>
 
-          {/* Grid Section */}
-          <div
-            className="w-full lg:w-1/2 lg:flex-none lg:overflow-y-auto lg:mt-0"
-            ref={gridRef}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 p-2 sm:p-4">
+          {/* Grid Column (Scrollable) */}
+          <div className="w-full lg:w-1/2" ref={gridRef}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {rooms.length === 0 ? (
-                <div className="flex flex-col items-center justify-center col-span-2 text-center text-gray-500">
+                <div className="flex flex-col items-center justify-center col-span-2 text-center py-20 border-4 border-neutral-950 italic font-semibold text-neutral-400">
                   <p>No food stalls available.</p>
                 </div>
               ) : (
@@ -150,9 +128,7 @@ export default function BrowsePreview() {
                     room={room}
                     averageRating={room.averageRating}
                     reviewCount={room.reviewCount}
-                    // --- PASSING THE NEW PROP ---
                     isStallOpen={room.operatingStatus !== false}
-                    // --- END PROP PASSING ---
                   />
                 ))
               )}

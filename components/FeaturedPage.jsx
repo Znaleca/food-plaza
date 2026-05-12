@@ -3,7 +3,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRef } from 'react';
+import { useRef } from 'react'; 
 
 const categories = [
   { name: 'Meals', image: '/images/Meals.png' },
@@ -15,64 +15,93 @@ const categories = [
 
 const FeaturedPage = () => {
   const containerRef = useRef(null);
+  
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ['start start', 'end end'],
+    offset: ['start end', 'end start'],
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-60%']);
+  // Moves the group slightly from right to left to create a centered gliding effect
+  const x = useTransform(scrollYProgress, [0, 1], ['10%', '-10%']);
 
   return (
-    <div className="bg-neutral-950 text-white min-h-screen">
-      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
-        {/* Header */}
-        <header className="absolute top-16 left-1/2 -translate-x-1/2 text-center z-10 w-full px-6">
-          <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
-            CATEGORIES
-          </h2>
-          <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
-            Your cravings, {' '}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-             sorted
+    <div 
+      ref={containerRef} 
+      className="relative h-[150vh] bg-white border-t-4 border-black z-20"
+    >
+      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+        
+        {/* Massive Brutalist Header */}
+        <header className="w-full text-center mb-8 md:mb-12 z-10 shrink-0 px-6">
+          <span className="text-xs font-bold tracking-[0.4em] text-red-600 uppercase">
+            COLLECTIONS
+          </span>
+          <h2 className="mt-4 text-5xl md:text-8xl font-black tracking-tighter uppercase leading-[0.85] text-black">
+            YOUR CRAVINGS, <br />
+            <span 
+              className="text-transparent" 
+              style={{ WebkitTextStroke: '2px #000' }}
+            >
+              SORTED.
             </span>
-          </p>
+          </h2>
         </header>
 
-        {/* Horizontal Scroll */}
-        <motion.div
-          ref={containerRef}
-          style={{ x }}
-          className="flex flex-nowrap gap-10 sm:gap-14 ml-[12vw] pr-[25vw]"
-        >
-          {categories.map((cat) => (
-            <motion.div
-              key={cat.name}
-              whileHover={{ scale: 1.03 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-              className="relative group flex-shrink-0 w-[22rem] sm:w-[28rem] h-56 sm:h-64 rounded-2xl bg-neutral-950/60 backdrop-blur-md border border-gray-400 hover:border-white shadow-md hover:shadow-cyan-600/30 transition-all duration-500 overflow-hidden"
-            >
-              <Link
-                href={`/search?category=${encodeURIComponent(cat.name)}&displayType=Menus`}
-                className="flex items-center justify-between h-full w-full px-6"
+        {/* Categories Section */}
+        <div className="relative w-full flex justify-center">
+          <motion.div
+            style={{ x }}
+            className="flex flex-nowrap gap-0"
+          >
+            {categories.map((cat, index) => (
+              <div
+                key={cat.name}
+                // Size: 18rem width is the sweet spot for 5 cards to stay visible
+                className={`relative flex-shrink-0 w-[14rem] md:w-[18rem] h-[20rem] md:h-[26rem] bg-white border-y-4 border-r-4 border-black flex flex-col group transition-colors duration-300 hover:bg-black ${
+                  index === 0 ? 'border-l-4' : ''
+                }`}
               >
-                {/* Text */}
-                <h3 className="text-2xl sm:text-3xl font-bold text-white group-hover:text-pink-400 transition-colors duration-300">
-                  {cat.name}
-                </h3>
+                <Link
+                  href={`/search?category=${encodeURIComponent(cat.name)}&displayType=Menus`}
+                  className="relative flex flex-col h-full w-full p-5 md:p-8 justify-between"
+                >
+                  <span className="text-xs font-black tracking-widest text-black group-hover:text-red-600 transition-colors">
+                    0{index + 1}
+                  </span>
 
-                {/* Image */}
-                <div className="relative w-28 h-28 sm:w-40 sm:h-40">
-                  <Image
-                    src={cat.image}
-                    alt={cat.name}
-                    fill
-                    className="object-contain transition-transform duration-500 group-hover:scale-110"
-                  />
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
+                  {/* Product Image */}
+                  <div className="relative w-full h-32 md:h-44 my-3">
+                    <Image
+                      src={cat.image}
+                      alt={cat.name}
+                      fill
+                      className="object-contain transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3"
+                    />
+                  </div>
+
+                  {/* Card Bottom: Title & Arrow */}
+                  <div className="flex justify-between items-end">
+                    <h3 className="text-2xl md:text-3xl font-black text-black uppercase tracking-tighter group-hover:text-white transition-colors">
+                      {cat.name}
+                    </h3>
+                    <div className="h-8 w-8 md:h-10 md:w-10 border-2 border-black group-hover:border-white group-hover:bg-red-600 flex items-center justify-center transition-all">
+                      <span className="text-lg md:text-xl font-bold group-hover:text-white">→</span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Scroll Progress Indicator */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-1/3 h-1 bg-black/10">
+          <motion.div 
+            style={{ scaleX: scrollYProgress }} 
+            className="h-full bg-red-600 origin-left"
+          />
+        </div>
+
       </div>
     </div>
   );

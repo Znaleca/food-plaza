@@ -5,20 +5,20 @@ import Image from "next/image";
 import MenuPopUp from "@/components/MenuPopUp";
 import clsx from 'clsx';
 
-const BrowseCardMenu = ({ roomId, menuItem, roomName, allMenus }) => { // allMenus is a new prop
+const BrowseCardMenu = ({ roomId, menuItem, roomName, allMenus }) => {
   const [selectedMenu, setSelectedMenu] = useState(null);
 
   const handleClick = () => {
     if (!menuItem.isAvailable) return;
-    // Pass the menu item details and the entire list of menus for recommendations
     setSelectedMenu({ ...menuItem, roomName, allMenus });
   };
 
   const cardClasses = clsx(
-    "group relative flex flex-col rounded-3xl bg-neutral-900/90 border-2 border-neutral-700 shadow-md hover:border-neutral-500 hover:shadow-lg transition-all duration-300 overflow-hidden",
+    // Removed rounded-3xl, added border-4 and sharp corners
+    "group relative flex flex-col bg-white border-4 border-neutral-950 transition-all duration-300 overflow-hidden",
     {
-      "cursor-pointer": menuItem.isAvailable,
-      "opacity-60 grayscale cursor-not-allowed": !menuItem.isAvailable,
+      "cursor-pointer hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1": menuItem.isAvailable,
+      "opacity-50 grayscale cursor-not-allowed": !menuItem.isAvailable,
     }
   );
 
@@ -27,45 +27,49 @@ const BrowseCardMenu = ({ roomId, menuItem, roomName, allMenus }) => { // allMen
       <div
         onClick={handleClick}
         className={cardClasses}
-        style={{ minHeight: "340px" }}
+        style={{ minHeight: "360px" }}
       >
-        {/* Image Section */}
+        {/* Image Section - Sharp corners and bottom border */}
         {menuItem.image ? (
-          <div className="relative w-full h-48 overflow-hidden rounded-t-3xl">
+          <div className="relative w-full h-48 overflow-hidden border-b-4 border-neutral-950">
             <Image
               src={menuItem.image}
               alt={menuItem.name}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
             {!menuItem.isAvailable && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm font-medium">
-                Unavailable
+              <div className="absolute inset-0 bg-neutral-950/80 flex items-center justify-center">
+                <span className="text-white text-xs font-black uppercase tracking-widest border-2 border-white px-3 py-1">
+                  Sold Out
+                </span>
               </div>
             )}
           </div>
         ) : (
-          <div className="w-full h-48 bg-neutral-800 flex items-center justify-center text-gray-400 text-sm rounded-t-3xl">
-            No Image
+          <div className="w-full h-48 bg-neutral-100 flex items-center justify-center text-neutral-400 font-bold uppercase text-xs border-b-4 border-neutral-950">
+            No Preview
           </div>
         )}
 
         {/* Content Section */}
-        <div className="flex flex-col flex-1 p-4 justify-between">
+        <div className="flex flex-col flex-1 p-5 justify-between bg-white">
           <div>
-            <p className="text-lg font-semibold text-white truncate">
+            <h4 className="text-xl font-black text-neutral-950 uppercase leading-none mb-2 group-hover:text-red-600 transition-colors">
               {menuItem.name}
-            </p>
+            </h4>
             {menuItem.description && (
-              <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+              <p className="text-xs font-medium text-neutral-600 line-clamp-2 leading-relaxed">
                 {menuItem.description}
               </p>
             )}
           </div>
 
-          <div className="mt-3 flex items-center justify-between text-sm">
-            <span className="text-gray-300">{roomName}</span>
-            <span className="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-400 font-medium text-xs">
+          <div className="mt-4 pt-4 border-t-2 border-neutral-100 flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
+              {roomName}
+            </span>
+            <span className="px-2 py-1 bg-neutral-950 text-white font-black text-[9px] uppercase tracking-tighter">
               {menuItem.type}
             </span>
           </div>
@@ -84,7 +88,7 @@ const BrowseCardMenu = ({ roomId, menuItem, roomName, allMenus }) => { // allMen
           roomName={selectedMenu.roomName}
           roomId={roomId}
           description={selectedMenu.description}
-          recommendedMenus={selectedMenu.allMenus.filter( // Filter recommendations directly here
+          recommendedMenus={selectedMenu.allMenus.filter(
             (m) => m.type === selectedMenu.type && m.menuId !== selectedMenu.menuId
           )}
           onSelectMenu={(item) => setSelectedMenu({ ...item, roomName, allMenus: selectedMenu.allMenus })}

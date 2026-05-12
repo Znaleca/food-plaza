@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FaPercent, FaCalendarAlt, FaMoneyBillWave, FaCheckCircle } from 'react-icons/fa';
+import { FaCalendarAlt, FaMoneyBillWave, FaCheckCircle } from 'react-icons/fa';
 
 const ClaimedVoucherCard = ({ voucher, redeemed = false }) => {
   const formatDate = (dateString) => {
@@ -18,107 +18,110 @@ const ClaimedVoucherCard = ({ voucher, redeemed = false }) => {
   const endDate = voucher.valid_to ? new Date(voucher.valid_to) : null;
   const isExpired = endDate && now > endDate;
 
-  let statusText = 'Claimed';
-  if (isExpired) statusText = 'Expired';
-  else if (redeemed) statusText = 'Used';
+  let statusText = 'READY TO USE';
+  if (isExpired) statusText = 'EXPIRED';
+  else if (redeemed) statusText = 'USED';
 
   return (
     <div
-      className={`relative w-full max-w-xs sm:max-w-md mx-auto bg-neutral-950 text-white rounded-2xl shadow-xl border border-neutral-800 overflow-hidden transition-all duration-300
+      className={`relative w-full max-w-xs sm:max-w-md mx-auto bg-white text-neutral-950 border-[6px] border-neutral-950 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 flex flex-col
         ${
           isExpired
             ? 'opacity-60 pointer-events-none'
             : redeemed
-            ? 'opacity-70 grayscale pointer-events-none'
-            : 'hover:scale-105 hover:shadow-cyan-500/20 cursor-pointer'
+            ? 'opacity-70 grayscale pointer-events-none bg-neutral-100'
+            : 'hover:-translate-y-1 hover:shadow-[12px_12px_0px_0px_rgba(220,38,38,1)] cursor-pointer'
         }`}
     >
-      {/* Expired Overlay */}
-      {isExpired && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black bg-opacity-70 rounded-2xl">
-          <p className="text-xl font-extrabold uppercase bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            Expired
+      {/* Overlay for expired/used */}
+      {(isExpired || redeemed) && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+          <p className="text-3xl font-black tracking-tighter uppercase border-4 px-4 py-2 bg-white -rotate-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]
+             text-neutral-950 border-neutral-950">
+            {isExpired ? 'EXPIRED' : 'USED'}
           </p>
         </div>
       )}
 
-      {/* Used Badge */}
-      {redeemed && !isExpired && (
-        <div className="absolute top-3 right-3 bg-fuchsia-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow">
-          <FaCheckCircle className="text-white" /> Used
+      {/* ── TOP SECTION ── */}
+      <div className={`relative z-10 p-6 flex flex-col items-center border-b-[6px] border-neutral-950 text-white ${redeemed ? 'bg-neutral-800' : 'bg-neutral-950'}`}>
+        <div className="absolute top-0 left-0 bg-white text-neutral-950 px-3 py-1 font-black text-[10px] tracking-widest uppercase border-r-[6px] border-b-[6px] border-neutral-950">
+          MY VOUCHER
         </div>
-      )}
+        
+        <h3 className="text-6xl font-black uppercase tracking-tighter leading-none mt-6">
+          {voucher.discount || '0'}%<span className="text-3xl">OFF</span>
+        </h3>
+        <p className="text-lg font-black mt-2 text-center tracking-tight uppercase text-red-400">
+          {voucher.title || 'VOUCHER TITLE'}
+        </p>
+        {voucher.description && (
+          <p className="mt-4 text-neutral-400 text-sm font-bold text-center border-t-2 border-neutral-800 pt-4 w-full">
+            {voucher.description}
+          </p>
+        )}
+      </div>
 
-      <div className="relative z-10 flex flex-col h-full p-6">
-        {/* Top Section */}
-        <div className="flex flex-col items-center pb-4 border-b border-neutral-800">
-          <div className="flex items-center justify-center w-14 h-14 mb-3 bg-gradient-to-r from-cyan-400 to-fuchsia-500 rounded-full shadow-lg">
-            <FaPercent className="text-white text-2xl" />
-          </div>
-          <h3 className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-center">
-            {voucher.discount || 'N/A'}% OFF
-          </h3>
-          <p className="text-lg font-semibold mt-1 text-center">{voucher.title}</p>
-          {voucher.description && (
-            <p className="mt-2 text-gray-400 text-sm italic text-center max-w-[90%]">
-              {voucher.description}
-            </p>
-          )}
-        </div>
-
-        {/* Details */}
-        <div className="flex flex-col space-y-3 py-4 text-sm text-gray-400">
-          {voucher.valid_from && (
-            <div className="flex items-center gap-2">
-              <FaCalendarAlt className="text-cyan-400" />
-              <span>
-                <strong className="text-white">Valid From:</strong> {formatDate(voucher.valid_from)}
-              </span>
+      {/* ── DETAILS ── */}
+      <div className="flex-1 p-6 flex flex-col justify-between bg-neutral-50">
+        <div className="space-y-4">
+          {(voucher.valid_from || voucher.valid_to) && (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 border-2 border-neutral-950 flex items-center justify-center bg-white">
+                <FaCalendarAlt className="text-neutral-950" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Validity</span>
+                <span className="text-xs font-bold uppercase">
+                  {voucher.valid_from ? formatDate(voucher.valid_from) : '...'} — {voucher.valid_to ? formatDate(voucher.valid_to) : '...'}
+                </span>
+              </div>
             </div>
           )}
-          {voucher.valid_to && (
-            <div className="flex items-center gap-2">
-              <FaCalendarAlt className="text-fuchsia-400" />
-              <span>
-                <strong className="text-white">Valid Until:</strong> {formatDate(voucher.valid_to)}
-              </span>
-            </div>
-          )}
+
           {voucher.min_orders !== undefined && (
-            <div className="flex items-center gap-2">
-              <FaMoneyBillWave className="text-green-400" />
-              <span>
-                <strong className="text-white">Min. Order:</strong>{' '}
-                {voucher.min_orders === 0 ? 'No Minimum Spend' : `₱${voucher.min_orders}`}
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 border-2 border-neutral-950 flex items-center justify-center bg-white">
+                <FaMoneyBillWave className="text-neutral-950" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Min. Order</span>
+                <span className="text-sm font-black uppercase tracking-tight text-red-600">
+                  {voucher.min_orders === 0 ? 'NO MINIMUM' : `₱${voucher.min_orders}`}
+                </span>
+              </div>
             </div>
           )}
 
-          {/* If redeemed, show history info */}
+          {/* Redeemed Info */}
           {redeemed && voucher.redeemedAt && (
-            <div className="flex items-center gap-2">
-              <FaCheckCircle className="text-fuchsia-400" />
-              <span>
-                <strong className="text-white">Used On:</strong> {formatDate(voucher.redeemedAt)}
-              </span>
+            <div className="flex items-center gap-3 mt-4 pt-4 border-t-2 border-neutral-200">
+              <div className="w-8 h-8 border-2 border-neutral-950 flex items-center justify-center bg-neutral-950 text-white">
+                <FaCheckCircle />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Used On</span>
+                <span className="text-xs font-bold uppercase text-neutral-950">
+                  {formatDate(voucher.redeemedAt)}
+                </span>
+              </div>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Status Button */}
-        <div className="pt-4">
-          <button
-            disabled
-            className={`px-4 py-2 rounded-lg font-semibold w-full text-sm ${
+      {/* ── STATUS BUTTON ── */}
+      <div className="border-t-[6px] border-neutral-950 bg-white">
+        <div className={`w-full py-4 font-black text-xs uppercase tracking-[0.2em] text-center
+            ${
               isExpired
-                ? 'bg-neutral-800 text-gray-500 cursor-not-allowed'
+                ? 'bg-neutral-200 text-neutral-400'
                 : redeemed
-                ? 'bg-fuchsia-500 text-white cursor-default'
-                : 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 text-white cursor-default'
+                ? 'bg-neutral-950 text-white'
+                : 'bg-red-600 text-white'
             }`}
-          >
-            {statusText}
-          </button>
+        >
+          {statusText}
         </div>
       </div>
     </div>

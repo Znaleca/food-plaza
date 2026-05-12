@@ -1,41 +1,52 @@
 'use client';
 
-const FeaturedCard = ({ title, imageSrc, buttonText, href }) => {
+import React from 'react';
+import Link from 'next/link';
+
+const FeaturedCard = ({ 
+  title = "CHECK OUT OUR MOST POPULAR PRODUCTS", 
+  imageSrc, 
+  buttonText = "ORDER NOW", 
+  href = "#" 
+}) => {
   return (
-    <div className="flex flex-col w-auto items-center justify-center p-4 md:py-1 sm:py-1 lg:py-1 h-full">
-      <a href={href} className="w-full h-full">
-        <div className="bg-neutral-950 border border-gray-400 rounded-3xl overflow-hidden
-                transition-all duration-300 w-full h-full cursor-pointer flex flex-col
-                hover:border-white">
+    <div className="w-full h-full p-0">
+      {/* 1. Replaced <a> with Next.js <Link> for faster client-side routing */}
+      <Link href={href} className="group block w-full h-full bg-white">
+        <div className="flex flex-col w-full h-full transition-all duration-300">
           
-          {/* Image */}
-          <div className="relative w-full flex-grow">
+          {/* Image - No Rounded Corners */}
+          <div className="relative w-full flex-grow bg-neutral-100 overflow-hidden border-b-4 border-neutral-950">
             <img
               src={imageSrc}
               alt={title}
-              className="object-cover w-full h-full rounded-t-3xl"
+              className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
             />
           </div>
 
-          {/* Content */}
-          <div className="p-6 text-left flex-shrink-0 bg-neutral-950 min-h-[180px] flex flex-col justify-between">
-            <p className="mb-6 lg:text-3xl md:text-3xl sm:text-xl font-extrabold leading-tight text-white">
-              {title}
-            </p>
-            <p className="mb-6 lg:text-3xl md:text-3xl sm:text-xl font-extrabold leading-tight text-white">
-              CHECK OUT OUR MOST POPULAR PRODUCTS
-            </p>
-            <button
-              className="px-6 py-3 uppercase font-bold text-xs rounded-full 
-                         bg-gradient-to-r from-cyan-500 to-fuchsia-500 text-white
-                         hover:from-cyan-600 hover:to-fuchsia-600 
-                         shadow-lg hover:shadow-cyan-500/30 transition-all duration-300 self-start"
+          {/* Content - Modern Editorial Style */}
+          <div className="p-8 text-left bg-white min-h-[220px] flex flex-col justify-between items-start">
+            <div>
+              <span className="text-xs font-black tracking-[0.3em] text-red-600 uppercase mb-2 block">
+                VENDORS CHOICE
+              </span>
+              {/* 2. Replaced hardcoded text with the 'title' prop */}
+              <h2 className="text-3xl md:text-4xl font-black leading-[0.9] text-neutral-950 uppercase tracking-tighter">
+                {title}
+              </h2>
+            </div>
+            
+            {/* 3. Changed <button> to a <div> to prevent invalid HTML nesting (button inside a link). 
+                   Added group-hover so it highlights when the card is hovered. */}
+            <div
+              className="mt-6 inline-block px-8 py-4 bg-neutral-950 text-white font-black uppercase text-sm tracking-widest
+                         group-hover:bg-red-600 transition-colors duration-300 border-none"
             >
               {buttonText}
-            </button>
+            </div>
           </div>
         </div>
-      </a>
+      </Link>
     </div>
   );
 };

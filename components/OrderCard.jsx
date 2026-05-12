@@ -27,15 +27,10 @@ const SERVICE_TYPES = {
   TAKEOUT: 'Take Out',
 };
 
-// Helper function to determine the service type based on a string (case-insensitive)
 const getServiceType = (serviceTypeStr) => {
-    if (serviceTypeStr.toLowerCase().includes('dine in')) {
-        return SERVICE_TYPES.DINE_IN;
-    }
-    if (serviceTypeStr.toLowerCase().includes('take out')) {
-        return SERVICE_TYPES.TAKEOUT;
-    }
-    return null; // Default or unknown
+    if (serviceTypeStr.toLowerCase().includes('dine in')) return SERVICE_TYPES.DINE_IN;
+    if (serviceTypeStr.toLowerCase().includes('take out')) return SERVICE_TYPES.TAKEOUT;
+    return null;
 }
 
 const OrderCard = ({ order, isReadOnly = false }) => {
@@ -43,35 +38,25 @@ const OrderCard = ({ order, isReadOnly = false }) => {
 
   const tableNumber = order.tableNumber?.[0] || 'N/A';
   
-  // NEW: Process the service types array into a map for easy lookup
   const serviceTypeMap = (order.serviceType || []).reduce((acc, serviceStr) => {
-    // Expected format: "Stall Name: Service Type"
     const [stallName, type] = serviceStr.split(':').map(s => s.trim());
-    if (stallName && type) {
-        // Find the room name from the grouped items later, but for now use the stallName part
-        acc[stallName] = getServiceType(type);
-    }
+    if (stallName && type) acc[stallName] = getServiceType(type);
     return acc;
   }, {});
 
-
-  // --- DARK THEME STATUS RENDERING (ICON + TEXT) ---
   const renderStatus = (status) => {
     const statusMap = {
-      [MENU_STATUS.PENDING]: { text: 'Pending', icon: faClock, color: 'text-gray-400' },
-      [MENU_STATUS.PREPARING]: { text: 'Preparing', icon: faHourglassHalf, color: 'text-yellow-400' },
-      [MENU_STATUS.READY]: { text: 'Ready', icon: faCheckCircle, color: 'text-cyan-400' }, 
-      [MENU_STATUS.COMPLETED]: { text: 'Completed', icon: faCheckCircle, color: 'text-green-500' },
-      [MENU_STATUS.CANCELLED]: { text: 'Cancelled', icon: faTimesCircle, color: 'text-fuchsia-400' },
-      [MENU_STATUS.FAILED]: { text: 'Failed', icon: faExclamationCircle, color: 'text-red-500' },
+      [MENU_STATUS.PENDING]: { text: 'PENDING', color: 'bg-neutral-200 text-neutral-950 border-neutral-950' },
+      [MENU_STATUS.PREPARING]: { text: 'PREPARING', color: 'bg-neutral-950 text-white border-neutral-950' },
+      [MENU_STATUS.READY]: { text: 'READY', color: 'bg-red-600 text-white border-red-600' }, 
+      [MENU_STATUS.COMPLETED]: { text: 'COMPLETED', color: 'bg-white text-neutral-950 border-neutral-950' },
+      [MENU_STATUS.CANCELLED]: { text: 'CANCELLED', color: 'bg-neutral-100 text-neutral-400 border-neutral-300' },
+      [MENU_STATUS.FAILED]: { text: 'FAILED', color: 'bg-red-600 text-white border-red-600' },
     };
-
     const s = statusMap[status] || statusMap[MENU_STATUS.PENDING];
-
     return (
-      <div className={`flex items-center space-x-2 text-sm font-medium ${s.color}`}>
-        <FontAwesomeIcon icon={s.icon} className="w-4 h-4" />
-        <span>{s.text}</span>
+      <div className={`inline-flex px-3 py-1 border-2 font-black text-[10px] uppercase tracking-widest ${s.color}`}>
+        {s.text}
       </div>
     );
   };
@@ -79,34 +64,26 @@ const OrderCard = ({ order, isReadOnly = false }) => {
   const renderPaymentStatus = (status) => {
     const statusKey = status.toLowerCase();
     const statusMap = {
-      [PAYMENT_STATUS.PENDING]: { text: 'Pending', icon: faClock, color: 'text-yellow-400' },
-      [PAYMENT_STATUS.PAID]: { text: 'Paid', icon: faCheckCircle, color: 'text-green-500' },
-      [PAYMENT_STATUS.EXPIRED]: { text: 'Expired', icon: faBan, color: 'text-gray-500' },
-      [PAYMENT_STATUS.FAILED]: { text: 'Failed', icon: faExclamationCircle, color: 'text-red-500' },
+      [PAYMENT_STATUS.PENDING]: { text: 'PENDING', bg: 'bg-neutral-200', textCol: 'text-neutral-950' },
+      [PAYMENT_STATUS.PAID]: { text: 'PAID', bg: 'bg-neutral-950', textCol: 'text-white' },
+      [PAYMENT_STATUS.EXPIRED]: { text: 'EXPIRED', bg: 'bg-neutral-100', textCol: 'text-neutral-400' },
+      [PAYMENT_STATUS.FAILED]: { text: 'FAILED', bg: 'bg-red-600', textCol: 'text-white' },
     };
-
     const s = statusMap[statusKey] || statusMap[PAYMENT_STATUS.FAILED];
-
     return (
-      <div className={`flex items-center space-x-2 text-base font-semibold ${s.color}`}>
-        <FontAwesomeIcon icon={s.icon} className="w-5 h-5" />
-        <span>{s.text}</span>
+      <div className={`inline-flex px-4 py-2 border-4 border-neutral-950 font-black text-xs uppercase tracking-widest ${s.bg} ${s.textCol}`}>
+        {s.text}
       </div>
     );
   };
-  // -----------------------------------------------------------------
-
 
   const parseItemsGroupedByRoom = () => {
     const grouped = {};
     let totalItemCount = 0; 
-
     (order.items || []).forEach((itemStr, index) => {
       try {
         const item = JSON.parse(itemStr);
-        
         totalItemCount++;
-
         const roomId = item.room_id || 'unknown';
         const roomName = item.room_name || 'Unknown Stall';
 
@@ -114,40 +91,23 @@ const OrderCard = ({ order, isReadOnly = false }) => {
           grouped[roomId] = {
             roomName,
             items: [],
-            // Initialize an array to track all service types for this stall
             serviceTypesFound: new Set(),
           };
         }
         
-        // Find the service type for this stall using the map we created
         const serviceType = serviceTypeMap[roomName] || null;
-        if (serviceType) {
-            grouped[roomId].serviceTypesFound.add(serviceType);
-        }
+        if (serviceType) grouped[roomId].serviceTypesFound.add(serviceType);
 
-        grouped[roomId].items.push({
-          ...item,
-          index,
-        });
-      } catch {
-        // skip broken item
-      }
+        grouped[roomId].items.push({ ...item, index });
+      } catch {}
     });
 
-    // Post-process to determine the final service type to display
     Object.keys(grouped).forEach(roomId => {
         const stallGroup = grouped[roomId];
         const types = Array.from(stallGroup.serviceTypesFound);
-        
-        // If all items for this stall share the same service type (or one exists), assign it.
-        // We will only display it if there's exactly one type found.
-        if (types.length === 1) {
-            stallGroup.displayServiceType = types[0];
-        } else {
-            // If the stall has items with mixed service types, or none are found, don't display a single label.
-            stallGroup.displayServiceType = null;
-        }
-        delete stallGroup.serviceTypesFound; // Clean up
+        if (types.length === 1) stallGroup.displayServiceType = types[0];
+        else stallGroup.displayServiceType = null;
+        delete stallGroup.serviceTypesFound; 
     });
 
     return { grouped, totalItemCount };
@@ -155,149 +115,111 @@ const OrderCard = ({ order, isReadOnly = false }) => {
 
   const { grouped: groupedItems, totalItemCount } = parseItemsGroupedByRoom();
 
-  if (totalItemCount === 0) {
-      return null;
-  }
+  if (totalItemCount === 0) return null;
 
   const paymentStatus = order.payment_status?.toLowerCase() || PAYMENT_STATUS.FAILED;
   const showReceiptButton = paymentStatus !== PAYMENT_STATUS.FAILED;
   
-  // --- NEW RENDER FUNCTION FOR SERVICE TYPE TAG ---
   const renderServiceTypeTag = (serviceType) => {
     const serviceMap = {
-        [SERVICE_TYPES.DINE_IN]: { text: 'Dine In', icon: faUtensils, color: 'text-cyan-400' },
-        [SERVICE_TYPES.TAKEOUT]: { text: 'Take Out', icon: faBagShopping, color: 'text-fuchsia-400' },
+        [SERVICE_TYPES.DINE_IN]: { text: 'DINE IN', bg: 'bg-neutral-950', textCol: 'text-white' },
+        [SERVICE_TYPES.TAKEOUT]: { text: 'TAKE OUT', bg: 'bg-white', textCol: 'text-neutral-950' },
     };
-    
     const s = serviceMap[serviceType];
-
     if (!s) return null;
-
     return (
-      <span className={`inline-flex items-center space-x-1 ml-3 px-3 py-1 text-sm font-semibold rounded-full ${s.color} bg-neutral-700/50 border border-neutral-600`}>
-        <FontAwesomeIcon icon={s.icon} className="w-3 h-3" />
-        <span>{s.text}</span>
+      <span className={`inline-flex items-center px-3 py-1 text-[10px] font-black uppercase tracking-widest border-2 border-neutral-950 ${s.bg} ${s.textCol} ml-4`}>
+        {s.text}
       </span>
     );
   };
-  // ------------------------------------------------
-
 
   return (
-    <div className="w-full">
-      <div className="bg-neutral-900 text-white w-full rounded-xl border border-neutral-700 p-6 sm:p-8 shadow-2xl shadow-neutral-950/50">
+    <div className="w-full bg-white border-[6px] border-neutral-950 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col mb-12">
 
-        {/* Order Header */}
-        <div className="pb-6 mb-6 border-b border-neutral-700">
-          <div className="flex justify-between items-start mb-1">
-            <h2 className="text-3xl font-extrabold tracking-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 to-cyan-400">
-                  ORDER #
-              </span>
-              <span className="text-white ml-1">
-                  {order.$id.slice(-8)}
-              </span>
-            </h2>
-            
-            {/* View Receipt Button */}
-            {showReceiptButton && (
-                <button
-                onClick={() => setShowReceipt(true)}
-                className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-cyan-400 text-sm font-medium rounded-lg transition duration-150 border border-neutral-700 shadow-lg"
-                >
-                <FontAwesomeIcon icon={faReceipt} className="mr-2" />
-                View Receipt
-                </button>
-            )}
+      {/* ── HEADER ── */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-stretch border-b-[6px] border-neutral-950 bg-neutral-50">
+        <div className="p-6 md:p-8 flex-1 w-full border-b-[6px] md:border-b-0 md:border-r-[6px] border-neutral-950">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-red-600 mb-2">ORDER_ID</p>
+          <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter leading-none text-neutral-950">
+            #{order.$id.slice(-8)}
+          </h2>
+          <p className="text-xs font-bold uppercase tracking-widest text-neutral-500 mt-4">
+            {new Date(order.created_at).toLocaleString()}
+          </p>
+        </div>
+
+        <div className="flex w-full md:w-auto">
+          <div className="p-6 md:p-8 flex flex-col justify-center border-r-[6px] border-neutral-950 flex-1 md:flex-none">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400 mb-3">PAYMENT</p>
+            {renderPaymentStatus(paymentStatus)}
           </div>
-          
-          <p className="text-sm text-gray-400 mb-4">{new Date(order.created_at).toLocaleString()}</p>
-
-          {/* Status/Table Details Grid */}
-          <div className="grid grid-cols-2 gap-4">
-
-            {/* Payment Status */}
-            <div>
-                <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Payment Status</p>
-                {renderPaymentStatus(paymentStatus)}
-            </div>
-
-            {/* Table Number */}
-            <div className='flex flex-col items-end'>
-                <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wider">Table</p>
-                <div className="flex items-center space-x-1 text-2xl font-semibold">
-                    <span className="text-cyan-400 mr-1">#</span>
-                    <span className="text-white">{tableNumber}</span>
-                </div>
+          <div className="p-6 md:p-8 flex flex-col justify-center flex-1 md:flex-none bg-neutral-950 text-white">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400 mb-2 text-center">TABLE</p>
+            <div className="text-4xl font-black text-center tracking-tighter leading-none">
+              {tableNumber}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Items Grouped by Stall */}
-        <div className="mb-6 space-y-8">
-          <h3 className="text-xl font-semibold text-gray-300">
-            Order Items
-          </h3>
+      {/* ── ITEMS BODY ── */}
+      <div className="p-6 md:p-8 bg-white">
+        <h3 className="text-xl font-black uppercase tracking-tighter mb-8 border-b-4 border-neutral-950 pb-4">
+          ORDER MANIFEST
+        </h3>
+        
+        <div className="space-y-10">
           {Object.entries(groupedItems).map(([roomId, { roomName, items, displayServiceType }]) => (
-            // Stall Group Container: Lighter dark background for distinction
-            <div key={roomId} className="rounded-lg p-4 bg-neutral-800 border border-neutral-700 shadow-inner shadow-neutral-950/30">
+            <div key={roomId} className="border-4 border-neutral-950">
               
-              {/* STALL NAME WITH CONDITIONAL SERVICE TYPE TAG */}
-              <h4 className="text-lg font-bold text-gray-100 mb-4 pb-2 border-b border-neutral-700 flex items-center">
-                {roomName}
+              {/* Stall Header */}
+              <div className="bg-neutral-950 text-white p-4 flex items-center">
+                <h4 className="text-lg font-black uppercase tracking-tighter leading-none">
+                  {roomName}
+                </h4>
                 {displayServiceType && renderServiceTypeTag(displayServiceType)}
-              </h4>
+              </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {items.map((item) => {
-                  const itemQuantity = item.quantity;
+              {/* Items List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0">
+                {items.map((item, idx) => {
                   const isCompleted = item.status === MENU_STATUS.COMPLETED;
-
                   return (
                     <div
                       key={item.index}
-                      className={`relative border border-neutral-700 rounded-md bg-neutral-900 p-4 flex flex-col items-center text-center transition-all duration-300 ${isCompleted ? 'opacity-70' : ''}`}
+                      className={`relative p-5 flex items-start gap-4 transition-all ${
+                        isCompleted ? 'bg-neutral-50 grayscale opacity-80' : 'bg-white'
+                      } border-neutral-950
+                      border-t-4 md:border-t-0
+                      [&]:nth-child(n+2):border-t-4 
+                      md:[&]:nth-child(-n+2):border-t-0
+                      lg:[&]:nth-child(-n+3):border-t-0
+                      md:border-l-4 md:[&]:nth-child(odd):border-l-0
+                      lg:border-l-4 lg:[&]:nth-child(3n+1):border-l-0
+                      `}
                     >
-                      {/* --- COMPLETED WATERMARK/OVERLAY --- */}
-                      {isCompleted && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                          <span 
-                            className="text-4xl font-extrabold text-green-500 opacity-20 transform rotate-12 select-none uppercase"
-                          >
-                            Completed
-                          </span>
+                      {/* Image */}
+                      {item.menuImage ? (
+                        <div className="flex-shrink-0 w-16 h-16 border-2 border-neutral-950 overflow-hidden">
+                          <Image src={item.menuImage} alt={item.menuName} width={64} height={64} className="object-cover w-full h-full" />
                         </div>
-                      )}
-                      {/* ---------------------------------- */}
-
-                      {/* Menu Image */}
-                      {item.menuImage && (
-                        <div className="flex-shrink-0 w-20 h-20 rounded-full overflow-hidden relative mb-2 border border-neutral-600">
-                          <Image 
-                            src={item.menuImage}
-                            alt={item.menuName}
-                            width={80} 
-                            height={80}
-                            className="object-cover"
-                          />
+                      ) : (
+                        <div className="flex-shrink-0 w-16 h-16 border-2 border-neutral-950 bg-neutral-100 flex items-center justify-center">
+                          <span className="text-[8px] font-black uppercase">NO IMG</span>
                         </div>
                       )}
 
-                      {/* Item Details */}
-                      <div className="flex-grow w-full relative z-20"> 
-                        <p className="font-semibold text-white text-base leading-snug">
-                            {item.menuName} {item.size && <span className="text-gray-400 font-normal">({item.size})</span>}
+                      {/* Details */}
+                      <div className="flex-grow">
+                        <p className="font-black text-sm uppercase tracking-tight leading-snug mb-1">
+                          {item.menuName} 
+                          {item.size && <span className="text-neutral-500 font-bold ml-1">({item.size})</span>}
                         </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Qty: <span className="font-bold text-cyan-400">{itemQuantity}</span>
+                        <p className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-3">
+                          QTY: <span className="text-neutral-950 font-black">{item.quantity}</span>
                         </p>
-
-                        <div className="mt-4 pt-3 border-t border-neutral-700">
-                            {/* Status */}
-                            <div className="mb-1">
-                                {renderStatus(item.status || MENU_STATUS.PENDING)}
-                            </div>
-                        </div>
+                        {renderStatus(item.status || MENU_STATUS.PENDING)}
                       </div>
                     </div>
                   );
@@ -306,34 +228,42 @@ const OrderCard = ({ order, isReadOnly = false }) => {
             </div>
           ))}
         </div>
-
-        {/* Order Summary Footer */}
-        <div className="pt-6 mt-6 border-t border-neutral-700 text-center">
-            <p className="text-base text-gray-400 font-light">
-                Thank you for your order!
-            </p>
-        </div>
       </div>
 
-      {/* Receipt Modal */}
+      {/* ── FOOTER ── */}
+      <div className="border-t-[6px] border-neutral-950 p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-neutral-50">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400 text-center md:text-left">
+          THANK YOU FOR YOUR ORDER
+        </p>
+        
+        {showReceiptButton && (
+          <button
+            onClick={() => setShowReceipt(true)}
+            className="w-full md:w-auto px-8 py-4 bg-neutral-950 text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-red-600 transition-colors border-4 border-neutral-950 flex items-center justify-center gap-3 group"
+          >
+            <FontAwesomeIcon icon={faReceipt} className="group-hover:animate-bounce" />
+            VIEW RECEIPT
+          </button>
+        )}
+      </div>
+
+      {/* ── RECEIPT MODAL ── */}
       {showReceipt && (
-        <div 
-          className="fixed inset-0 z-50 flex items-start justify-center bg-gray-950 bg-opacity-80 backdrop-blur-sm p-4 overflow-y-auto" 
-          aria-modal="true" 
-          role="dialog"
-        >
-            <div className="relative w-full max-w-xl my-8">
-                {/* Close button */}
-                <button
-                    onClick={() => setShowReceipt(false)}
-                    className="absolute -top-3 -right-3 z-10 w-8 h-8 flex items-center justify-center text-white bg-pink-600 hover:bg-pink-700 rounded-full shadow-lg transition"
-                    aria-label="Close Receipt"
-                >
-                    <FontAwesomeIcon icon={faXmark} className="w-5 h-5" />
-                </button>
-                {/* PASSING GROUPED ITEMS WITH SERVICE TYPE DATA */}
-                <OrderReceipt order={order} serviceTypeGroups={groupedItems} />
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-white/90 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="relative w-full max-w-xl border-[8px] border-neutral-950 bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] my-8">
+            <div className="sticky top-0 z-10 flex justify-between items-center border-b-4 border-neutral-950 p-4 bg-neutral-950 text-white">
+              <span className="font-black uppercase tracking-[0.3em] text-[10px]">RECEIPT_DATA</span>
+              <button
+                onClick={() => setShowReceipt(false)}
+                className="w-8 h-8 bg-white text-neutral-950 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"
+                aria-label="Close Receipt"
+              >
+                <FontAwesomeIcon icon={faXmark} />
+              </button>
             </div>
+            {/* PASSING GROUPED ITEMS WITH SERVICE TYPE DATA */}
+            <OrderReceipt order={order} serviceTypeGroups={groupedItems} />
+          </div>
         </div>
       )}
     </div>

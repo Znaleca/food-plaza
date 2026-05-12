@@ -1,13 +1,17 @@
 'use client';
 
-import { FaUtensils, FaStore, FaStar, FaTag } from 'react-icons/fa';
+import { FaUtensils, FaStore, FaStar, FaPercent } from 'react-icons/fa';
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
+
+// Adjust this import path based on your exact Next.js alias setup
+import logo from '@/assets/images/logo.svg'; 
 
 const features = [
-  { id: 'browse', target: 'menu', icon: FaUtensils, title: 'Menu', desc: 'Browse our diverse food options.' },
-  { id: 'browse', target: 'stall', icon: FaStore, title: 'Food Stalls', desc: 'Discover menus from different food stalls.' },
-  { id: 'reviews', icon: FaStar, title: 'Reviews', desc: 'Read honest feedback from foodies.' },
-  { href: '/customer/promos', icon: FaTag, title: 'Promotions', desc: 'Check out the latest food deals.' },
+  { id: 'browse', target: 'menu', icon: FaUtensils, title: 'The Menu', desc: 'Browse every dish available in the court.' },
+  { id: 'browse', target: 'stall', icon: FaStore, title: 'The Stalls', desc: 'Find your favorite vendor or discover new ones.' },
+  { id: 'reviews', icon: FaStar, title: 'The Vibe', desc: 'Check ratings and real photos from fellow diners.' },
+  { href: '/customer/promos', icon: FaPercent, title: 'The Deals', desc: 'Exclusive foodcourt discounts and daily specials.' },
 ];
 
 const FeaturesSection = () => {
@@ -24,14 +28,11 @@ const FeaturesSection = () => {
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.1 }
     );
 
     featureRefs.current.forEach((el) => el && observer.observe(el));
-
-    return () => {
-      featureRefs.current.forEach((el) => el && observer.unobserve(el));
-    };
+    return () => featureRefs.current.forEach((el) => el && observer.unobserve(el));
   }, []);
 
   const handleScroll = (id, target) => {
@@ -48,50 +49,89 @@ const FeaturesSection = () => {
   };
 
   return (
-    <section className="w-full min-h-screen bg-neutral-950 text-white py-12 sm:py-20 flex flex-col items-center">
-      {/* Header */}
-      <header className="text-center mb-28 mt-12 sm:mt-16 px-4">
-        <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-          Features
-        </h2>
-        <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
-          Explore{' '}
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            Food Plaza
-          </span>
-        </p>
-      </header>
+    <section className="w-full bg-white text-neutral-950 font-sans selection:bg-red-600 selection:text-white border-b-[8px] border-neutral-950">
+      {/* Header Section: Foodcourt Directory Style */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 border-t-[8px] border-neutral-950">
+        <header className="lg:col-span-8 p-8 md:p-16 lg:p-20 border-b-4 lg:border-b-0 lg:border-r-4 border-neutral-950">
+          <div className="text-xs font-black tracking-[0.4em] uppercase mb-8 text-red-600">
+            [ Digital Directory ]
+          </div>
+          
+          {/* BLITZ FOODCOURT Scaled Design */}
+          <div className="flex items-center cursor-default group mb-10">
+            <Image 
+              src={logo} 
+              alt="Blitz Logo" 
+              className="h-24 w-24 md:h-32 md:w-32 lg:h-40 lg:w-40 object-contain invert transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110" 
+              priority 
+            />
+            <div className="ml-4 md:ml-6 flex flex-col justify-center transition-transform duration-300 group-hover:translate-x-2">
+              <h2 className="text-6xl md:text-8xl lg:text-9xl font-black text-neutral-950 tracking-tighter uppercase leading-[0.85]">
+                BLITZ
+              </h2>
+              <span className="text-lg md:text-2xl lg:text-3xl font-black text-white bg-red-600 px-3 py-1.5 md:px-4 md:py-2 mt-2 tracking-[0.2em] uppercase leading-none border-[3px] border-neutral-950 shadow-[6px_6px_0px_#0a0a0a] w-max group-hover:bg-neutral-950 group-hover:shadow-[6px_6px_0px_#dc2626] transition-all duration-300">
+                FOODCOURT
+              </span>
+            </div>
+          </div>
 
-      {/* Features Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 max-w-6xl w-full px-4 mb-20">
+          <p className="max-w-md text-lg font-bold uppercase tracking-tight leading-tight">
+            One floor. Infinite flavors. Navigate your hunger with our complete stall directory.
+          </p>
+        </header>
+        
+        <div className="lg:col-span-4 flex flex-col justify-end bg-red-600 text-white p-8 md:p-16">
+          <div className="text-5xl md:text-6xl font-black uppercase tracking-tighter italic leading-none">
+            EAT <br/> NOW.
+          </div>
+        </div>
+      </div>
+
+      {/* Feature Grid: Flat and Brutal */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t-4 border-neutral-950">
         {features.map((feature, idx) => {
           const Icon = feature.icon;
           const isVisible = visibleIndexes.includes(idx);
-          const delay = isVisible ? `${idx * 150}ms` : '0ms';
 
           const content = (
             <div
               ref={(el) => (featureRefs.current[idx] = el)}
               data-index={idx}
-              className={`group flex flex-col items-center text-center text-white transition-transform duration-700 transform ${
-                isVisible ? 'opacity-100 scale-100 translate-y-0 animate-bounce-smooth' : 'opacity-0 scale-75 translate-y-10'
-              }`}
-              style={{ transitionDelay: delay }}
+              className={`group relative flex flex-col h-full p-10 transition-all duration-300 bg-white 
+                ${idx !== features.length - 1 ? 'border-b-4 lg:border-b-0 lg:border-r-4 border-neutral-950' : 'border-b-4 lg:border-b-0'}
+                ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+              `}
             >
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-neutral-900 flex items-center justify-center transition-all duration-300 group-hover:shadow-lg group-hover:shadow-white/30">
-                <Icon className="text-white text-3xl sm:text-4xl transition-colors duration-300 group-hover:text-cyan-400" />
+              {/* Solid Color Swap on Hover */}
+              <div className="absolute inset-0 bg-neutral-950 opacity-0 group-hover:opacity-100 transition-opacity duration-150" />
+
+              <div className="relative z-10 flex flex-col h-full group-hover:text-white transition-colors duration-150">
+                <div className="mb-10">
+                   <Icon className="text-5xl group-hover:text-red-500 transition-colors" />
+                </div>
+                
+                <h3 className="text-4xl font-black uppercase tracking-tighter mb-4 leading-none">
+                  {feature.title}
+                </h3>
+                
+                <p className="text-sm font-bold leading-snug uppercase opacity-70 group-hover:opacity-100">
+                  {feature.desc}
+                </p>
+
+                <div className="mt-auto pt-16 flex items-center justify-between border-t-2 border-transparent group-hover:border-red-500 transition-colors">
+                  <span className="text-xs font-black tracking-widest uppercase">Go to section</span>
+                  <span className="text-3xl font-light">→</span>
+                </div>
               </div>
-              <span className="mt-4 sm:mt-6 font-bold text-sm sm:text-lg">{feature.title}</span>
-              <p className="text-xs sm:text-sm text-gray-400 font-light mt-1">{feature.desc}</p>
             </div>
           );
 
           return feature.href ? (
-            <a key={feature.title} href={feature.href}>
+            <a key={feature.title} href={feature.href} className="h-full">
               {content}
             </a>
           ) : (
-            <button key={feature.title} onClick={() => handleScroll(feature.id, feature.target)}>
+            <button key={feature.title} onClick={() => handleScroll(feature.id, feature.target)} className="h-full text-left">
               {content}
             </button>
           );

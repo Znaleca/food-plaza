@@ -2,8 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import getAllStallReviews from '@/app/actions/getAllStallReviews';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar as solidStar } from '@fortawesome/free-solid-svg-icons';
 
 const RateCard = () => {
   const [reviews, setReviews] = useState([]);
@@ -23,50 +21,35 @@ const RateCard = () => {
   useEffect(() => {
     const loadReviews = async () => {
       try {
-        // 2. Call the new server action
         const data = await getAllStallReviews();
-        
-        // 3. Check for the correct structure (data.reviews)
         if (!Array.isArray(data.reviews)) throw new Error('Unexpected response format');
-        
-        // The data is already formatted correctly as stall reviews by the server action
         setReviews(data.reviews); 
       } catch (error) {
-        console.error('Could not load stall reviews:', error);
-        setError('Could not load stall reviews');
+        setLoading(false);
       } finally {
         setLoading(false);
       }
     };
-
     loadReviews();
   }, []);
 
-  // 🔥 Observe visibility
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => setIsVisible(entry.isIntersecting));
-      },
-      { threshold: 0.3 }
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.1 }
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // Auto slide only if visible
   useEffect(() => {
     if (reviews.length > 3 && isVisible) {
       intervalRef.current = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1 >= reviews.length ? 0 : prev + 1));
-      }, 3000);
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      }, 5000);
     }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => clearInterval(intervalRef.current);
   }, [reviews, isVisible]);
 
   const handleStart = (clientX) => {
@@ -77,93 +60,85 @@ const RateCard = () => {
 
   const handleMove = (clientX) => {
     if (!isDragging.current) return;
-    const diff = clientX - startX.current;
-    currentTranslate.current = diff;
+    currentTranslate.current = clientX - startX.current;
   };
 
   const handleEnd = () => {
     if (!isDragging.current) return;
     isDragging.current = false;
-
-    if (currentTranslate.current < -50) {
-      setCurrentIndex((prev) => (prev + 1 >= reviews.length ? 0 : prev + 1));
-    } else if (currentTranslate.current > 50) {
-      setCurrentIndex((prev) => (prev - 1 < 0 ? reviews.length - 1 : prev - 1));
-    }
-
+    if (currentTranslate.current < -50) setCurrentIndex((prev) => (prev + 1 >= reviews.length ? 0 : prev + 1));
+    else if (currentTranslate.current > 50) setCurrentIndex((prev) => (prev - 1 < 0 ? reviews.length - 1 : prev - 1));
     currentTranslate.current = 0;
   };
 
-  const renderStarRating = (ratingValue) => (
-    <div className="flex justify-center gap-1 text-xl sm:text-2xl">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <FontAwesomeIcon
-          key={star}
-          icon={solidStar}
-          className={ratingValue >= star ? 'text-fuchsia-400 drop-shadow-md' : 'text-neutral-700'}
-        />
+  const renderStars = (rating) => (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <div key={s} className={`h-1.5 w-6 ${rating >= s ? 'bg-red-600' : 'bg-neutral-200'}`} />
       ))}
     </div>
   );
 
   return (
-    <div ref={containerRef} className="w-full text-white py-10 px-6 bg-neutral-950 relative">
-      {loading ? (
-        <p className="text-neutral-400 text-xl text-center">Loading...</p>
-      ) : error ? (
-        <p className="text-red-500 text-xl text-center">{error}</p>
-      ) : reviews.length === 0 ? (
-        <p className="text-neutral-400 text-xl text-center">No stall reviews found.</p>
-      ) : (
-        <div
-          className="overflow-hidden w-full"
-          onMouseDown={(e) => handleStart(e.clientX)}
-          onMouseMove={(e) => handleMove(e.clientX)}
-          onMouseUp={handleEnd}
-          onMouseLeave={handleEnd}
-          onTouchStart={(e) => handleStart(e.touches[0].clientX)}
-          onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-          onTouchEnd={handleEnd}
-        >
+    <div ref={containerRef} className="w-full bg-white text-neutral-950 font-sans selection:bg-red-600 selection:text-white border-t-[8px] border-neutral-950">
+      
+      {/* 1. CLEAN HEADER */}
+      <div className="p-8 md:p-16 lg:p-20 border-b-4 border-neutral-950 flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div>
+          <p className="text-xs font-black tracking-[0.3em] uppercase mb-4 text-red-600">[ 03 // VIBE CHECK ]</p>
+          <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none">
+            GUEST <br /> FEEDBACK
+          </h2>
+        </div>
+        <p className="max-w-[300px] text-sm font-bold uppercase leading-tight text-neutral-500">
+          Unfiltered logs from the food court floor. Freshness is our standard.
+        </p>
+      </div>
+
+      {/* 2. SLIDER AREA */}
+      <div className="relative bg-neutral-50 overflow-hidden">
+        {loading ? (
+          <div className="h-[400px] flex items-center justify-center font-black uppercase tracking-widest animate-pulse">Initializing...</div>
+        ) : (
           <div
-            className="flex gap-6 transition-transform duration-700 ease-in-out"
-            style={{
-              transform: `translateX(calc(-${currentIndex * 33}% + ${currentTranslate.current}px))`,
-            }}
+            className="flex transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            onMouseDown={(e) => handleStart(e.clientX)}
+            onMouseMove={(e) => handleMove(e.clientX)}
+            onMouseUp={handleEnd}
+            style={{ transform: `translateX(calc(-${currentIndex * (typeof window !== 'undefined' && window.innerWidth < 768 ? 100 : 33.33)}% + ${currentTranslate.current}px))` }}
           >
-            {reviews.map((review, idx) => (
-              <div
-                key={idx}
-                className="min-w-[80%] sm:min-w-[40%] md:min-w-[30%] 
-                           bg-neutral-900/70 backdrop-blur-md border border-neutral-800 
-                           rounded-3xl shadow-lg hover:shadow-fuchsia-500/30 
-                           hover:border-fuchsia-400 transition-all duration-500 
-                           p-6 aspect-square flex flex-col"
+            {reviews.map((review, i) => (
+              <div 
+                key={i} 
+                className="min-w-full md:min-w-[33.33%] p-10 md:p-16 border-r-4 border-neutral-950 bg-white flex flex-col justify-between group transition-colors duration-300 hover:bg-neutral-950 hover:text-white"
               >
-                {/* 4. Use the stall/room name as the title */}
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-2 line-clamp-2">
-                  {review.roomName || 'Overall Stall Experience'}
-                </h3>
+                <div>
+                  <div className="mb-8">{renderStars(review.rating)}</div>
+                  <h3 className="text-2xl font-black uppercase tracking-tighter mb-4 group-hover:text-red-600 transition-colors">
+                    {review.roomName || 'General'}
+                  </h3>
+                  <p className="text-lg font-bold leading-snug italic uppercase opacity-80 group-hover:opacity-100">
+                    "{review.comment || 'Top tier flavor profile.'}"
+                  </p>
+                </div>
 
-                {/* 5. Use the stall comment */}
-                <p className="italic text-gray-300 text-sm leading-relaxed mb-3 line-clamp-3">
-                  "{review.comment || 'No comment provided.'}"
-                </p>
-
-                <div className="mt-auto">
-                  {/* 6. Use the stall rating */}
-                  <div className="mb-3">{renderStarRating(review.rating)}</div>
-                  <div className="text-xs text-gray-400 text-center">
-                    Reviewed by{' '}
-                    {/* 👇 CHANGE IS HERE: Hardcode 'Anonymous' */}
-                    <span className="text-cyan-400 font-semibold">Anonymous</span>
-                  </div>
+                <div className="mt-12 flex items-center justify-between pt-6 border-t-2 border-neutral-100 group-hover:border-neutral-800">
+                  <span className="text-[10px] font-black tracking-widest uppercase">ID: 0{i + 1}</span>
+                  <span className="text-[10px] font-black tracking-widest uppercase text-red-600">VERIFIED</span>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* 3. PROGRESS BAR - Visual indicator of which slide we are on */}
+      <div className="w-full h-2 bg-neutral-200 overflow-hidden">
+        <div 
+          className="h-full bg-red-600 transition-all duration-700 ease-out" 
+          style={{ width: `${((currentIndex + 1) / reviews.length) * 100}%` }}
+        />
+      </div>
     </div>
   );
 };

@@ -76,67 +76,83 @@ const CustomerRatingCard = ({ roomName }) => {
           key={star}
           icon={solidStar}
           className={`${
-            value >= star ? 'text-yellow-400' : 'text-neutral-600'
-          } ${size === 'lg' ? 'text-lg sm:text-xl' : 'text-xs sm:text-sm'}`}
+            value >= star ? 'text-red-600' : 'text-neutral-300'
+          } ${size === 'lg' ? 'text-2xl' : 'text-sm'}`}
         />
       ))}
     </div>
   );
 
   if (loading)
-    return <p className="text-xs sm:text-sm text-neutral-400">Loading ratings...</p>;
+    return (
+      <div className="border-4 border-neutral-950 p-6 flex justify-center bg-white">
+        <span className="text-sm font-black uppercase tracking-[0.3em] animate-pulse">ANALYZING METRICS...</span>
+      </div>
+    );
+    
   if (reviews.length === 0)
-    return <p className="text-xs sm:text-sm text-neutral-500">No reviews yet.</p>;
+    return (
+      <div className="border-4 border-dashed border-neutral-400 p-8 text-center bg-neutral-50">
+        <span className="text-xl font-black uppercase tracking-tighter text-neutral-400">NO RATINGS YET</span>
+      </div>
+    );
 
   return (
-    <div className="mt-6 sm:mt-10 bg-gradient-to-b from-neutral-900 to-neutral-950 text-white p-4 sm:p-8 rounded-xl sm:rounded-2xl border border-neutral-800 shadow-lg sm:shadow-xl hover:shadow-2xl transition-all duration-300">
+    <div className="mt-8 border-[6px] border-neutral-950 bg-white text-neutral-950 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-[6px] border-neutral-950 bg-neutral-50 p-6 sm:p-8 gap-6">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             {renderStarRating(averageRating, 'lg')}
-            <span className="text-base sm:text-lg font-semibold text-pink-400">
-              {averageRating.toFixed(1)}/5
+            <span className="text-4xl sm:text-5xl font-black text-neutral-950 tracking-tighter leading-none">
+              {averageRating.toFixed(1)}<span className="text-2xl text-neutral-400">/5</span>
             </span>
           </div>
-          <p className="text-[10px] sm:text-xs text-neutral-400 mt-1">
-            Based on {reviews.length} reviews • {percentage}% positive
+          <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-neutral-500 mt-2">
+            BASED ON {reviews.length} REVIEWS • <span className="text-red-600">{percentage}% POSITIVE</span>
           </p>
         </div>
         <button
           onClick={() => setExpanded((prev) => !prev)}
-          className="px-3 py-1 text-xs sm:text-sm rounded-lg border border-pink-500 text-pink-400 hover:bg-pink-500/10 transition w-full sm:w-auto"
+          className="px-6 py-3 text-xs sm:text-sm font-black uppercase tracking-[0.2em] border-4 border-neutral-950 text-neutral-950 bg-white hover:bg-neutral-950 hover:text-white transition-colors w-full sm:w-auto"
         >
-          {expanded ? 'Hide Reviews' : 'View Reviews'}
+          {expanded ? 'HIDE REVIEWS' : 'VIEW REVIEWS'}
         </button>
       </div>
 
       {/* Mini Chart */}
-      <div className="h-24 sm:h-32 mb-4 sm:mb-6">
+      <div className="h-32 sm:h-40 border-b-[6px] border-neutral-950 bg-neutral-950 p-4">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
               <linearGradient id="miniChart" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#db2777" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#db2777" stopOpacity={0} />
+                <stop offset="5%" stopColor="#dc2626" stopOpacity={0.5} />
+                <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
               </linearGradient>
             </defs>
             <XAxis dataKey="index" hide />
             <YAxis domain={[0, 5]} hide />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#1f2937',
-                borderColor: '#374151',
-                color: '#fff',
+                backgroundColor: '#ffffff',
+                borderColor: '#0a0a0a',
+                borderWidth: '4px',
+                color: '#0a0a0a',
+                fontFamily: 'monospace',
+                fontWeight: '900',
+                textTransform: 'uppercase',
+                borderRadius: '0px',
               }}
-              labelStyle={{ color: '#f9fafb' }}
+              itemStyle={{ color: '#dc2626' }}
+              labelStyle={{ display: 'none' }}
+              formatter={(value) => [`${value} STARS`, 'RATING']}
             />
             <Area
-              type="monotone"
+              type="step"
               dataKey="rating"
-              stroke="#db2777"
+              stroke="#dc2626"
               fill="url(#miniChart)"
-              strokeWidth={2}
+              strokeWidth={4}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -150,48 +166,61 @@ const CustomerRatingCard = ({ roomName }) => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="space-y-3 sm:space-y-4"
+            className="flex flex-col bg-neutral-50 overflow-hidden"
           >
             {reviews.map((review, idx) => (
               <div
                 key={idx}
-                className="bg-neutral-800/60 border border-neutral-700 rounded-lg sm:rounded-xl p-3 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300"
+                className="border-b-[4px] border-neutral-950 p-6 sm:p-8 flex flex-col sm:flex-row gap-6 bg-white hover:bg-neutral-50 transition-colors last:border-b-0"
               >
-                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                {/* Review Image */}
+                <div className="flex-shrink-0 w-24 h-24 border-4 border-neutral-950 overflow-hidden bg-neutral-100">
                   {review.item.menuImage ? (
                     <img
                       src={review.item.menuImage}
                       alt={review.item.menuName}
-                      className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-lg shadow"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 bg-neutral-700 rounded-lg flex items-center justify-center text-neutral-400 text-[10px] sm:text-xs">
-                      No Image
+                    <div className="w-full h-full flex items-center justify-center text-[10px] font-black uppercase text-neutral-400">
+                      NO IMG
                     </div>
                   )}
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-pink-400 text-sm sm:text-base">
-                      {review.item.menuName}
-                    </h4>
-                    <p className="text-[10px] sm:text-xs text-neutral-500">
-                      {review.user} ({review.email})
+                </div>
+
+                {/* Review Content */}
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                      <h4 className="font-black uppercase text-lg tracking-tighter text-neutral-950">
+                        {review.item.menuName}
+                      </h4>
+                      <div className="flex-shrink-0">{renderStarRating(review.rating)}</div>
+                    </div>
+                    
+                    <p className="text-xs font-black text-neutral-500 uppercase tracking-widest mb-4">
+                      {review.user} <span className="text-neutral-400 font-bold lowercase">({review.email})</span>
                     </p>
-                    <div className="mt-1">{renderStarRating(review.rating)}</div>
+                    
                     {review.comment && (
-                      <p className="italic text-neutral-300 mt-1 sm:mt-2 text-sm">
-                        “{review.comment}”
-                      </p>
+                      <div className="border-l-4 border-red-600 pl-4 py-1 mb-4">
+                        <p className="font-bold text-neutral-800 text-sm sm:text-base italic">
+                          “{review.comment}”
+                        </p>
+                      </div>
                     )}
-                    <p className="text-xs sm:text-sm text-neutral-400 mt-1">
-                      ₱
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mt-2 pt-4 border-t-2 border-neutral-100">
+                    <p className="text-xs font-black text-neutral-400 uppercase tracking-widest">
+                      QTY: <span className="text-neutral-950">{review.item.quantity || 1}</span> • ₱
                       {(
                         Number(review.item.menuPrice) *
                         Number(review.item.quantity || 1)
-                      ).toFixed(2)}{' '}
-                      • Qty: {review.item.quantity || 1}
+                      ).toFixed(2)}
                     </p>
-                    <p className="text-[9px] sm:text-[10px] text-neutral-500 mt-1">
-                      Order ID: {review.orderId}
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">
+                      ID: {review.orderId.slice(-8)}
                     </p>
                   </div>
                 </div>

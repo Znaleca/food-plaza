@@ -435,36 +435,36 @@ const OrderCartPage = () => {
 
   if (loadingAuth) {
     return (
-      <div className="w-full min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+      <div className="w-full min-h-screen bg-white text-neutral-950 flex items-center justify-center selection:bg-red-600 selection:text-white">
         <LoadingSpinner message="Loading your cart..." />
       </div>
     );
   }
 
   return (
-    <div className="w-full -mt-20 min-h-screen bg-neutral-950 text-white py-20 px-4 sm:px-6 lg:px-8">
-      {/* HEADER */}
-      <div className="text-center mb-28 mt-12 sm:mt-16">
-        <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-        YOUR CART ({cartCount})
-        </h2>
-        <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
-        Get ready to indulge in <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">every bite.</span>
-        </p>
+    <div className="w-full min-h-screen bg-white text-neutral-950 font-sans selection:bg-red-600 selection:text-white">
+
+      {/* ── HEADER ── */}
+      <div className="w-full border-b-[8px] border-neutral-950 pt-12 pb-16 px-6 md:px-20">
+        <span className="text-xs font-black tracking-[0.4em] text-red-600 uppercase block mb-4">
+          YOUR ORDER — {cartCount} {cartCount === 1 ? 'ITEM' : 'ITEMS'}
+        </span>
+        <h1 className="text-5xl sm:text-7xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] text-neutral-950">
+          YOUR<br />
+          <span className="text-transparent" style={{ WebkitTextStroke: '3px #0a0a0a' }}>CART.</span>
+        </h1>
+        <div className="h-3 w-32 bg-neutral-950 mt-8" />
       </div>
 
-      {cart.length > 0 ? (
-        <>
-          {/* SELECT ALL */}
-          <div className="max-w-7xl mx-auto flex items-center mb-6">
-            <input
-              type="checkbox"
-              checked={selectAll}
-              onChange={handleGlobalSelectAllChange}
-              className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent"
-            />
-            <span className="ml-2 text-sm text-gray-300">Select All Items</span>
-          </div>
+      <div className="w-full px-6 md:px-20 py-12">
+        {cart.length > 0 ? (
+          <>
+            {/* SELECT ALL */}
+            <div className="flex items-center gap-3 mb-10 border-b-4 border-neutral-950 pb-6">
+              <input type="checkbox" id="select-all" checked={selectAll} onChange={handleGlobalSelectAllChange}
+                className="w-5 h-5 border-2 border-neutral-950 cursor-pointer accent-neutral-950" />
+              <label htmlFor="select-all" className="text-xs font-black tracking-[0.3em] uppercase cursor-pointer">SELECT ALL ITEMS</label>
+            </div>
 
           {/* CART ITEMS */}
           {Object.entries(groupedCart).length > 0 && (
@@ -477,64 +477,38 @@ const OrderCartPage = () => {
                 const currentDineTakeOut = dineTakeOutPerRoom[roomId] || 'Dine In'; // ⭐ Get current selection
 
                 return (
-                  <div key={roomId} className="p-6 rounded-xl bg-neutral-900 border border-neutral-800 shadow-lg">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4">
-                      <div className="flex items-center flex-wrap gap-x-6 gap-y-2">
-                        {/* Checkbox and Room Name */}
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={isRoomSelected}
-                            onChange={() => handleRoomSelectAllChange(roomId)}
-                            className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent"
-                          />
-                          <h2 className="ml-2 text-xl font-semibold text-white tracking-wide">{roomNames[roomId] || roomName}</h2>
-                        </div>
-                        
-                        {/* ⭐ NEW: Dine In / Take Out Selector */}
-                        <div className="flex items-center">
-                          <label htmlFor={`dine-takeout-${roomId}`} className="text-sm text-gray-400 mr-2">Order Type:</label>
-                          <select
-                            id={`dine-takeout-${roomId}`}
-                            value={currentDineTakeOut}
-                            onChange={(e) => handleDineTakeOutChange(roomId, e.target.value)}
-                            className="bg-neutral-800 border border-neutral-700 text-white text-sm rounded-lg focus:ring-cyan-400 focus:border-cyan-400 p-1.5"
-                          >
-                            {DINE_TAKE_OUT_OPTIONS.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                            ))}
+                  <div key={roomId} className="border-4 border-neutral-950">
+                    {/* Room Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-neutral-950 text-white px-6 py-4">
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <input type="checkbox" checked={isRoomSelected} onChange={() => handleRoomSelectAllChange(roomId)}
+                          className="w-4 h-4 cursor-pointer accent-red-600" />
+                        <h2 className="text-lg font-black uppercase tracking-tighter">{roomNames[roomId] || roomName}</h2>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold tracking-widest uppercase text-neutral-400">TYPE:</span>
+                          <select id={`dine-takeout-${roomId}`} value={currentDineTakeOut} onChange={(e) => handleDineTakeOutChange(roomId, e.target.value)}
+                            className="bg-white text-neutral-950 text-xs font-black uppercase border-2 border-white px-2 py-1 cursor-pointer">
+                            {DINE_TAKE_OUT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                           </select>
                         </div>
-                        {/* ⭐ END NEW SELECTOR */}
                       </div>
-                      
-                      <div className="flex items-center space-x-4 mt-2 sm:mt-0">
+                      <div className="flex items-center gap-4 flex-wrap">
                         {hasSelectedItems && isAuthenticated && (
-                          <>
-                            {voucher ? (
-                              // CANCEL VOUCHER BUTTON
-                              <button
-                                onClick={() => handleCancelVoucher(roomId, voucher.$id)}
-                                className="text-sm font-medium text-red-500 hover:text-red-400 transition-colors duration-200 flex items-center whitespace-nowrap"
-                              >
-                                <FaXmark className="mr-2" /> Cancel Voucher
-                              </button>
-                            ) : (
-                              // APPLY VOUCHER BUTTON
-                              <button
-                                onClick={() => setOpenVoucherRoom(roomId)}
-                                className="text-sm font-medium text-cyan-400 hover:text-fuchsia-500 transition-colors duration-200 flex items-center whitespace-nowrap"
-                              >
-                                <FaTag className="mr-2" /> Apply Voucher
-                              </button>
-                            )}
-                          </>
+                          voucher ? (
+                            <button onClick={() => handleCancelVoucher(roomId, voucher.$id)}
+                              className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-white flex items-center gap-1 transition-colors">
+                              <FaXmark /> CANCEL VOUCHER
+                            </button>
+                          ) : (
+                            <button onClick={() => setOpenVoucherRoom(roomId)}
+                              className="text-xs font-black uppercase tracking-widest text-neutral-300 hover:text-white flex items-center gap-1 transition-colors">
+                              <FaTag /> APPLY VOUCHER
+                            </button>
+                          )
                         )}
-                        <div className="text-sm text-gray-400 whitespace-nowrap">
-                          Subtotal: <span className="text-cyan-400 font-bold">₱{discountedSubtotal.toFixed(2)}</span>
-                          {discountLabel && (
-                            <span className="ml-2 text-green-500 font-light">({discountLabel})</span>
-                          )}
+                        <div className="text-xs font-black uppercase tracking-widest text-neutral-400">
+                          SUBTOTAL: <span className="text-white">₱{discountedSubtotal.toFixed(2)}</span>
+                          {discountLabel && <span className="ml-2 text-red-400 normal-case tracking-normal font-bold">({discountLabel})</span>}
                         </div>
                       </div>
                     </div>
@@ -558,91 +532,61 @@ const OrderCartPage = () => {
                         }
 
                         return (
-                          <div
-                            key={itemKey}
-                            className={`bg-neutral-800 rounded-lg p-4 flex flex-col items-center text-center shadow-inner relative ${isSpecialDiscountActiveForItem && !voucher ? 'border-2 border-fuchsia-500' : ''}`}
-                          >
-                            <label className="flex items-center w-full justify-between mb-2">
-                              {/* Special Discount Toggle (Visible only if no room voucher is active) */}
-                              {specialDiscountData && isAuthenticated && isItemSelected && !voucher && (
+                           <div key={itemKey}
+                             className={`flex flex-col items-center text-center p-6 border-t-4 border-neutral-950 border-r-4
+                               ${isSpecialDiscountActiveForItem && !voucher ? 'bg-red-50' : 'bg-white'}
+                               ${isItemSelected ? '' : 'opacity-60'}`}>
+                             <div className="flex items-center justify-between w-full mb-4">
+                               {specialDiscountData && isAuthenticated && isItemSelected && !voucher ? (
+                                 <button onClick={() => handleToggleSpecialDiscountItem(roomId, item.menuName, item.size)}
+                                   className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${
+                                     isSpecialDiscountActiveForItem ? 'text-red-600' : 'text-neutral-400 hover:text-neutral-950'}`}>
+                                   <FaIdCard size={12} />{isSpecialDiscountActiveForItem ? 'PWD APPLIED' : 'PWD/SENIOR'}
+                                 </button>
+                               ) : <span />}
+                               <input type="checkbox" checked={isItemSelected || false}
+                                 onChange={() => handleCheckboxChange(roomId, item.menuName, item.size)}
+                                 className="w-4 h-4 cursor-pointer accent-neutral-950" />
+                             </div>
+                             {item.menuImage && (
+                               <img src={item.menuImage} alt={item.menuName}
+                                 className="w-20 h-20 object-cover border-4 border-neutral-950 mb-4" />
+                             )}
+                             <h3 className="text-sm font-black uppercase tracking-tighter leading-tight">{item.menuName}</h3>
+                             {item.size && (
+                               <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mt-1">
+                                 {item.size === 'One-size' ? 'ONE SIZE' : item.size.toUpperCase()}
+                               </p>
+                             )}
+                             <div className="flex items-center my-4 border-2 border-neutral-950 overflow-hidden shadow-sm">
                                <button
-                                 onClick={() =>
-                                   handleToggleSpecialDiscountItem(roomId, item.menuName, item.size)
-                                 }
-                                 className={`text-sm font-medium transition-colors duration-200 flex items-center ${
-                                   isSpecialDiscountActiveForItem
-                                     ? 'text-fuchsia-500'
-                                     : 'text-cyan-400 hover:text-fuchsia-500'
-                                 }`}
-                                 title={
-                                   isSpecialDiscountActiveForItem
-                                     ? 'Cancel PWD / Senior Discount'
-                                     : 'Apply PWD / Senior Discount (20% Off)'
-                                 }
+                                 onClick={() => updateQuantity(roomId, item.menuName, item.size, -1)}
+                                 className="w-9 h-9 flex items-center justify-center bg-white text-neutral-950 font-black text-lg hover:bg-neutral-950 hover:text-white transition-colors duration-150 select-none"
                                >
-                                 <FaIdCard className="mr-2" size={14} />
-                                 {isSpecialDiscountActiveForItem ? 'PWD / Senior Discount Applied' : 'PWD / Senior Discount'}
+                                 −
                                </button>
-
-                              )}
-                              
-                              <input
-                                type="checkbox"
-                                checked={isItemSelected || false}
-                                onChange={() => handleCheckboxChange(roomId, item.menuName, item.size)}
-                                className="form-checkbox h-4 w-4 bg-transparent border-gray-600 rounded-sm cursor-pointer focus:ring-1 focus:ring-cyan-400 checked:bg-pink-600 checked:border-transparent ml-auto"
-                              />
-                            </label>
-                            {item.menuImage && (
-                              <img
-                                src={item.menuImage}
-                                alt={item.menuName}
-                                className="w-20 h-20 object-cover rounded-full border-2 border-neutral-700 mb-2"
-                              />
-                            )}
-                            <h3 className="font-semibold text-lg text-white tracking-wide">{item.menuName}</h3>
-                            {item.size && (
-                              <p className="text-sm text-neutral-400 italic mt-0.5">
-                                {item.size === 'One-size' ? 'One-size' : `Size: ${item.size}`}
-                              </p>
-                            )}
-                            <div className="flex items-center space-x-3 my-3">
-                              <button
-                                onClick={() => updateQuantity(roomId, item.menuName, item.size, -1)}
-                                className="w-8 h-8 flex items-center justify-center bg-neutral-700 text-white rounded-full hover:bg-neutral-600 transition-colors"
-                              >
-                                −
-                              </button>
-                              <span className="font-bold text-lg">{item.quantity || 1}</span>
-                              <button
-                                onClick={() => updateQuantity(roomId, item.menuName, item.size, 1)}
-                                className="w-8 h-8 flex items-center justify-center bg-neutral-700 text-white rounded-full hover:bg-neutral-600 transition-colors"
-                              >
-                                +
-                              </button>
-                            </div>
-                            <div className="flex flex-col items-center">
-                              {discounted && (
-                                <span className="text-xs text-neutral-400 line-through">
-                                  ₱{itemPrice.toFixed(2)}
-                                </span>
-                              )}
-                              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-                                ₱{finalPrice.toFixed(2)}
-                              </span>
-                              {isSpecialDiscountActiveForItem && !voucher && (
-                                <span className="text-xs text-fuchsia-400 mt-1 font-medium">
-                                  20% PWD / Senior Discount
-                                </span>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => removeItem(roomId, item.menuName, item.size)}
-                              className="mt-2 text-red-500 hover:text-red-400 transition-colors"
-                            >
-                              <FaTrash size={16} />
-                            </button>
-                          </div>
+                               <span className="min-w-[2.5rem] text-center font-black text-base px-2 bg-neutral-950 text-white h-9 flex items-center justify-center tabular-nums">
+                                 {item.quantity || 1}
+                               </span>
+                               <button
+                                 onClick={() => updateQuantity(roomId, item.menuName, item.size, 1)}
+                                 className="w-9 h-9 flex items-center justify-center bg-white text-neutral-950 font-black text-lg hover:bg-neutral-950 hover:text-white transition-colors duration-150 select-none"
+                               >
+                                 +
+                               </button>
+                             </div>
+                             <div className="flex flex-col items-center">
+                               {discounted && <span className="text-xs text-neutral-400 line-through font-bold">₱{itemPrice.toFixed(2)}</span>}
+                               <span className="text-2xl font-black tracking-tighter">₱{finalPrice.toFixed(2)}</span>
+                               {isSpecialDiscountActiveForItem && !voucher && (
+                                 <span className="text-[10px] font-black uppercase tracking-widest text-red-600 mt-1">20% PWD/SENIOR</span>
+                               )}
+                             </div>
+                             <button onClick={() => removeItem(roomId, item.menuName, item.size)}
+                               className="mt-4 flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-red-600 transition-colors">
+                               <FaTrash size={11} /> REMOVE
+                             </button>
+                           </div>
                         );
                       })}
                     </div>
@@ -652,104 +596,74 @@ const OrderCartPage = () => {
             </div>
           )}
 
-          {cart.length > 0 && (
-            <div className="max-w-7xl mx-auto mt-12 text-center text-3xl font-extrabold tracking-tight">
-              Total: <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">₱{calculateTotal.toFixed(2)}</span>
-            </div>
-          )}
-
-          {/* CHECKOUT */}
-          {isAuthenticated ? (
-            <div className="max-w-7xl mx-auto">
-              {Object.keys(combinedVoucherMap).length > 0 && (
-                <div className="mt-8">
-                  <UsedVoucherWallet
-                    activeVouchersPerRoom={combinedVoucherMap}
-                    roomNames={roomNames}
-                  />
+            {cart.length > 0 && (
+              <div className="mt-16 border-[8px] border-neutral-950 bg-white p-8 sm:p-12 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-4 h-full bg-red-600"></div>
+                <div className="pl-4">
+                  <span className="text-xs font-black tracking-[0.4em] uppercase text-red-600 block mb-2">SUMMARY</span>
+                  <span className="text-xl sm:text-3xl font-black uppercase tracking-tighter text-neutral-950">ORDER TOTAL</span>
                 </div>
-              )}
+                <span className="text-6xl sm:text-8xl font-black tracking-tighter leading-none text-neutral-950">
+                  ₱{calculateTotal.toFixed(2)}
+                </span>
+              </div>
+            )}
 
-              <div className="mt-8">
+            {/* CHECKOUT */}
+            {isAuthenticated ? (
+              <div className="mt-12 space-y-6">
+                {Object.keys(combinedVoucherMap).length > 0 && (
+                  <UsedVoucherWallet activeVouchersPerRoom={combinedVoucherMap} roomNames={roomNames} />
+                )}
                 <CheckoutButton
-                  cart={checkoutCart} 
-                  total={calculateTotal}
-                  selectedItems={selectedItems}
-                  groupedCart={groupedCart}
-                  activeVouchersPerRoom={combinedVoucherMap}
-                  roomNames={roomNames}
-                  promos={promos}
+                  cart={checkoutCart} total={calculateTotal} selectedItems={selectedItems}
+                  groupedCart={groupedCart} activeVouchersPerRoom={combinedVoucherMap}
+                  roomNames={roomNames} promos={promos}
                   onCheckoutSuccess={() => {
-                    setCart([]);
-                    setGroupedCart({});
-                    setActiveVouchersPerRoom({});
-                    setActiveSpecialDiscountItems({});
-                    setSelectedItems({});
-                    setSelectAll(false);
-                    setSelectAllPerRoom({});
-                    setCartCount(0);
+                    setCart([]); setGroupedCart({}); setActiveVouchersPerRoom({});
+                    setActiveSpecialDiscountItems({}); setSelectedItems({});
+                    setSelectAll(false); setSelectAllPerRoom({}); setCartCount(0);
                     localStorage.removeItem('cart');
                   }}
                 />
-              </div>
-
-              <div className="mt-6 flex flex-col items-center gap-4">
-                {specialDiscountData ? (
-                  <button
-                    onClick={() => setOpenSpecialDiscount(true)}
-                    className="px-8 py-3 rounded-xl flex items-center justify-center bg-neutral-800 border border-neutral-700 hover:bg-neutral-700 text-white font-medium transition-colors duration-200"
-                  >
-                    <FaIdCard className="mr-2" /> Edit PWD / Senior Card
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setOpenSpecialDiscount(true)}
-                    className="px-8 py-3 rounded-xl flex items-center justify-center bg-gradient-to-r from-cyan-400 to-fuchsia-500 hover:from-cyan-500 hover:to-fuchsia-600 text-white font-bold transition-colors duration-200 shadow-lg"
-                  >
-                    <FaIdCard className="mr-2" /> Apply PWD / Senior Card
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="max-w-xl mx-auto mt-8 text-center p-10 bg-neutral-900 rounded-lg">
-              <p className="text-lg text-white font-semibold mb-4">
-                You need to be logged in to proceed with checkout.
-              </p>
-              <p className="text-sm text-neutral-400 mb-6">
-                Please log in or create an account to finalize your order.
-              </p>
-              <Link href="/login" passHref>
-                <button className="bg-gradient-to-r from-cyan-400 to-fuchsia-500 hover:from-cyan-500 hover:to-fuchsia-600 transition duration-300 text-white font-bold py-3 px-6 rounded-lg text-base shadow-lg">
-                  Go to Login
+                <button onClick={() => setOpenSpecialDiscount(true)}
+                  className={`w-full flex items-center justify-center gap-3 py-4 border-4 border-neutral-950 font-black text-xs uppercase tracking-[0.3em] transition-all duration-200
+                    ${specialDiscountData ? 'bg-white text-neutral-950 hover:bg-neutral-950 hover:text-white' : 'bg-neutral-950 text-white hover:bg-red-600 hover:border-red-600'}`}>
+                  <FaIdCard />{specialDiscountData ? 'EDIT PWD / SENIOR CARD' : 'APPLY PWD / SENIOR CARD'}
                 </button>
-              </Link>
-            </div>
-          )}
-        </>
-      ) : (
-        <p className="text-gray-500 text-lg text-center mt-20">Your cart is empty.</p>
-      )}
+              </div>
+            ) : (
+              <div className="mt-16 border-4 border-neutral-950 p-12 text-center">
+                <p className="text-xs font-black tracking-[0.4em] uppercase text-red-600 mb-4">LOGIN REQUIRED</p>
+                <p className="text-3xl font-black uppercase tracking-tighter mb-2">Ready to checkout?</p>
+                <p className="text-sm font-bold uppercase tracking-widest text-neutral-500 mb-10">Log in to finalize your order.</p>
+                <Link href="/login" passHref>
+                  <button className="inline-flex items-center gap-4 px-10 py-5 bg-neutral-950 text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-red-600 transition-all duration-300 border-4 border-neutral-950">
+                    GO TO LOGIN →
+                  </button>
+                </Link>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="border-4 border-neutral-950 p-20 text-center">
+            <p className="text-xs font-black tracking-[0.4em] uppercase text-red-600 mb-4">NOTHING HERE</p>
+            <p className="text-5xl font-black uppercase tracking-tighter">YOUR CART<br />IS EMPTY.</p>
+            <div className="h-2 w-24 bg-neutral-950 mx-auto mt-8" />
+          </div>
+        )}
+      </div>
 
       {/* SPECIAL DISCOUNT MODAL */}
-      <Dialog
-        open={openSpecialDiscount}
-        onClose={() => setOpenSpecialDiscount(false)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
+      <Dialog open={openSpecialDiscount} onClose={() => setOpenSpecialDiscount(false)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/80" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-6">
-          <Dialog.Panel className="w-full max-w-4xl bg-neutral-900 text-white rounded-xl shadow-xl border border-neutral-800 overflow-y-auto max-h-[90vh]">
-            <SpecialDiscount
-              initialData={specialDiscountData}
-              onSubmissionSuccess={handleSubmissionSuccess}
-            />
-            <div className="text-center mt-6">
-              <button
-                onClick={() => setOpenSpecialDiscount(false)}
-                className="text-sm text-gray-400 hover:text-white underline transition-colors"
-              >
-                Close
+          <Dialog.Panel className="w-full max-w-4xl bg-white border-4 border-neutral-950 overflow-y-auto max-h-[90vh]">
+            <SpecialDiscount initialData={specialDiscountData} onSubmissionSuccess={handleSubmissionSuccess} />
+            <div className="text-center py-4 border-t-4 border-neutral-950">
+              <button onClick={() => setOpenSpecialDiscount(false)}
+                className="text-xs font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-neutral-950 transition-colors">
+                CLOSE
               </button>
             </div>
           </Dialog.Panel>
@@ -757,32 +671,21 @@ const OrderCartPage = () => {
       </Dialog>
 
       {/* VOUCHER MODAL */}
-      <Dialog
-        open={!!openVoucherRoom}
-        onClose={() => setOpenVoucherRoom(null)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/70" aria-hidden="true" />
+      <Dialog open={!!openVoucherRoom} onClose={() => setOpenVoucherRoom(null)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/80" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-3xl bg-neutral-900 rounded-xl p-6 shadow-xl border border-neutral-800">
+          <Dialog.Panel className="w-full max-w-3xl bg-white border-4 border-neutral-950 overflow-y-auto max-h-[90vh]">
             <VoucherWallet
-              roomIdFilter={openVoucherRoom}
-              onVoucherUsed={handleVoucherUsed}
-              usedVoucherStates={usedVoucherStates}
-              setUsedVoucherStates={setUsedVoucherStates}
-              roomSubtotal={
-                Object.values(groupedCart[openVoucherRoom]?.items || {}).reduce(
-                  (sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1),
-                  0
-                )
-              }
+              roomIdFilter={openVoucherRoom} onVoucherUsed={handleVoucherUsed}
+              usedVoucherStates={usedVoucherStates} setUsedVoucherStates={setUsedVoucherStates}
+              roomSubtotal={Object.values(groupedCart[openVoucherRoom]?.items || {}).reduce(
+                (sum, item) => sum + Number(item.menuPrice) * (item.quantity || 1), 0
+              )}
             />
-            <div className="text-center mt-4">
-              <button
-                onClick={() => setOpenVoucherRoom(null)}
-                className="text-sm text-gray-400 hover:text-white underline transition-colors"
-              >
-                Close
+            <div className="text-center py-4 border-t-4 border-neutral-950">
+              <button onClick={() => setOpenVoucherRoom(null)}
+                className="text-xs font-black uppercase tracking-[0.3em] text-neutral-400 hover:text-neutral-950 transition-colors">
+                CLOSE
               </button>
             </div>
           </Dialog.Panel>

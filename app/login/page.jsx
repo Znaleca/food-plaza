@@ -40,85 +40,89 @@ const LoginPage = () => {
   }, [state]);
 
   return (
-    <div className="w-full min-h-screen -mt-28 bg-neutral-900 text-white flex flex-col items-center justify-center px-4 py-16">
+    <div className="w-full min-h-screen bg-white text-neutral-950 flex flex-col items-center justify-center px-4 py-16">
+      
       {/* Logo & Heading */}
-      <div className="mt-12 sm:mt-16 text-center mb-12 px-4">
-  <Headline className="mb-9 -mt-12 justify-center" />
-</div>
-
-
-
+      <div className="mt-12 sm:mt-16 text-center mb-10 px-4">
+        <span className="text-xs font-bold tracking-[0.4em] text-red-600 uppercase block mb-4">
+          WELCOME BACK
+        </span>
+        <Headline className="justify-center" />
+      </div>
 
       {/* Form Card */}
-<div className="w-full max-w-md bg-neutral-850 p-10 sm:p-12 rounded-3xl shadow-2xl border border-pink-500/50 backdrop-blur-md">
-  <form action={formAction} className="space-y-7 sm:space-y-8">
-    {/* Email Field */}
-    <div>
-      <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-2">
-        Email
-      </label>
-      <div className="relative">
-        <input
-          type="email"
-          id="email"
-          name="email"
-          className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500 placeholder-neutral-500"
-          placeholder="you@example.com"
-          required
-        />
-        <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
+      <div className="w-full max-w-md bg-white p-8 sm:p-12 border-4 border-neutral-950 relative">
+        {/* Decorative corner accent block */}
+        <div className="absolute -top-4 -left-4 w-8 h-8 bg-red-600 border-4 border-neutral-950 hidden sm:block"></div>
+
+        <form action={formAction} className="space-y-8">
+          
+          {/* Email Field */}
+          <div>
+            <label htmlFor="email" className="block text-xs font-black tracking-widest text-neutral-950 uppercase mb-3">
+              Email
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className="w-full px-12 py-4 bg-white border-2 border-neutral-950 text-neutral-950 font-bold focus:outline-none focus:border-red-600 transition-colors placeholder-neutral-300 rounded-none"
+                placeholder="YOU@EXAMPLE.COM"
+                required
+              />
+              <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-950 w-5 h-5" />
+            </div>
+          </div>
+
+          {/* Password Field */}
+          <div>
+            <label htmlFor="password" className="block text-xs font-black tracking-widest text-neutral-950 uppercase mb-3">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                className="w-full px-12 py-4 bg-white border-2 border-neutral-950 text-neutral-950 font-bold focus:outline-none focus:border-red-600 transition-colors placeholder-neutral-300 rounded-none"
+                placeholder="••••••••"
+                required
+              />
+              <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-950 w-5 h-5" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-neutral-950 hover:text-red-600 transition-colors"
+              >
+                {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full py-4 bg-neutral-950 text-white border-2 border-neutral-950 hover:bg-red-600 hover:border-red-600 text-2xl font-black uppercase tracking-tighter transition-all"
+          >
+            Sign In
+          </button>
+
+          {/* Links */}
+          <div className="flex flex-col sm:flex-row justify-between items-center text-xs font-bold uppercase tracking-wider text-neutral-500 gap-4 pt-6 border-t-2 border-neutral-100">
+            <p>
+              No account?{' '}
+              <Link href="/register" className="text-red-600 hover:text-neutral-950 transition-colors">
+                Register
+              </Link>
+            </p>
+            <Link href="/forgot-pass" className="text-red-600 hover:text-neutral-950 transition-colors">
+              Forgot Password?
+            </Link>
+          </div>
+
+        </form>
       </div>
-    </div>
-
-    {/* Password Field */}
-    <div>
-      <label htmlFor="password" className="block text-sm font-medium text-neutral-300 mb-2">
-        Password
-      </label>
-      <div className="relative">
-        <input
-          type={showPassword ? 'text' : 'password'}
-          id="password"
-          name="password"
-          className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-500 placeholder-neutral-500"
-          placeholder="••••••••"
-          required
-        />
-        <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
-        <button
-          type="button"
-          onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-500"
-        >
-          {showPassword ? <FaEyeSlash /> : <FaEye />}
-        </button>
-      </div>
-    </div>
-
-    {/* Submit Button */}
-    <button
-      type="submit"
-      className="w-full py-3 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:brightness-110 text-white rounded-xl text-lg font-semibold transition duration-300 shadow-md"
-    >
-      Sign In
-    </button>
-
-    {/* Links */}
-<div className="flex flex-col sm:flex-row justify-between items-center text-sm text-neutral-400 gap-3 mt-4">
-  <p>
-    Don't have an account?{' '}
-    <Link href="/register" className="text-pink-500 hover:underline">
-      Register
-    </Link>
-  </p>
-  <Link href="/forgot-pass" className="text-pink-500 hover:underline">
-    Forgot Password?
-  </Link>
-</div>
-
-  </form>
-</div>
-
     </div>
   );
 };

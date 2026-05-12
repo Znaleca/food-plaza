@@ -8,8 +8,9 @@ const RatePreview = ({ average = 0 }) => {
 
   return (
     <div className="flex items-center justify-center gap-1 mt-2">
-      <FontAwesomeIcon icon={solidStar} className="text-pink-600 text-sm" />
-      <span className="text-sm font-medium text-white">{average.toFixed(1)}</span>
+      {/* The star is now red, the text will inherit the hover color */}
+      <FontAwesomeIcon icon={solidStar} className="text-sm text-red-600" />
+      <span className="text-sm font-medium">{average.toFixed(1)}</span>
     </div>
   );
 };

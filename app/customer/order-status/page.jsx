@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link'; // Import Link for client-side navigation
+import Link from 'next/link';
 import { Client } from 'appwrite';
 import getUserOrders from '@/app/actions/getUserOrders';
 import OrderCard from '@/components/OrderCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { FaArrowRight } from 'react-icons/fa6';
 
 const OrderStatusPage = () => {
   const [orders, setOrders] = useState([]);
@@ -29,78 +30,76 @@ const OrderStatusPage = () => {
   };
 
   useEffect(() => {
-    loadOrders(); // initial load
+    loadOrders();
 
-    // 🟣 Setup Appwrite client for realtime updates
     const client = new Client()
       .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
       .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT);
 
-    // Subscribe to the order-status collection
     const unsubscribe = client.subscribe(
       `databases.${process.env.NEXT_PUBLIC_APPWRITE_DATABASE}.collections.${process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_ORDER_STATUS}.documents`,
       async (response) => {
         console.log('Realtime update:', response);
-        // Just reload orders when anything changes
         await loadOrders();
       }
     );
 
-    // Cleanup subscription when component unmounts
     return () => {
       unsubscribe();
     };
   }, []);
 
   return (
-    <div className="w-full -mt-20 min-h-screen bg-neutral-950 text-white">
-      <section className="w-full py-32 px-4 sm:px-6">
-        <header className="text-center mb-16 mt-12 sm:mt-16 px-4">
-          <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            MY ORDERS
+    <div className="w-full min-h-screen bg-white text-neutral-950 font-sans selection:bg-red-600 selection:text-white pb-20">
+      
+      {/* ── HEADER ── */}
+      <section className="w-full border-b-[8px] border-neutral-950 pt-32 pb-16 px-6 md:px-20 relative overflow-hidden bg-neutral-50">
+        {/* Background accent line */}
+        <div className="absolute top-0 left-0 w-full h-4 bg-red-600"></div>
+        <div className="absolute top-0 left-12 w-4 h-full bg-red-600 opacity-20 hidden md:block"></div>
+
+        <div className="relative z-10">
+          <span className="text-xs font-black tracking-[0.4em] uppercase text-red-600 block mb-4">
+            ORDER_STATUS
+          </span>
+          <h2 className="text-5xl sm:text-7xl lg:text-8xl font-black uppercase tracking-tighter leading-[0.85] mb-8 max-w-4xl">
+            ACTIVE<br/>TRACKING
           </h2>
-          <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-8">
-            Track your{' '}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-              active meals.
-            </span>
-          </p>
 
-          {/* --- ENHANCED HISTORY LINK --- */}
-<Link
-  href="/customer/order-history"
-  className="relative inline-flex items-center gap-2 px-8 py-3 text-sm sm:text-base font-semibold rounded-full
-             bg-gradient-to-r from-cyan-500/20 via-fuchsia-500/20 to-cyan-500/20 
-             border border-cyan-400/30 text-cyan-300 
-             hover:from-cyan-500/30 hover:via-fuchsia-500/30 hover:to-cyan-500/30
-             hover:border-fuchsia-500 hover:text-white
-             transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.25)]
-             group"
->
-  <span className="relative z-10">View History and Reviews</span>
-  <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+          {/* History Link */}
+          <Link
+            href="/customer/order-history"
+            className="inline-flex items-center gap-3 py-4 px-8 border-4 border-neutral-950 bg-white font-black text-sm uppercase tracking-[0.2em] hover:bg-neutral-950 hover:text-white transition-colors duration-200"
+          >
+            HISTORY & REVIEWS <FaArrowRight />
+          </Link>
+        </div>
+      </section>
 
-  {/* Glow effect */}
-  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-cyan-500 
-                   opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500"></span>
-</Link>
-{/* -------------------------------- */}
-
-        </header>
-
+      {/* ── BODY ── */}
+      <section className="px-6 md:px-20 mt-12">
         {loading ? (
-          <LoadingSpinner message="Loading your orders..." />
+          <div className="flex justify-center py-20">
+            <LoadingSpinner message="SYNCING ORDERS..." />
+          </div>
         ) : error ? (
-          <p className="text-red-500 text-center">{error}</p>
+          <div className="border-l-8 border-red-600 bg-red-50 p-6 max-w-2xl">
+            <p className="text-xl font-black uppercase tracking-tight text-red-600">SYSTEM ERROR</p>
+            <p className="font-bold text-neutral-600 mt-1">{error}</p>
+          </div>
         ) : orders.length === 0 ? (
-          <div className="text-center">
-            <p className="text-gray-500 text-lg">No active orders found.</p>
-            <p className="text-gray-500 text-sm mt-2">Any completed orders will be in your history.</p>
+          <div className="border-4 border-dashed border-neutral-300 bg-neutral-50 py-20 px-6 text-center max-w-4xl mx-auto flex flex-col items-center">
+            <div className="w-16 h-16 bg-neutral-200 flex items-center justify-center mb-6">
+              <span className="font-black text-neutral-400 text-2xl">Ø</span>
+            </div>
+            <p className="text-2xl font-black uppercase tracking-tighter mb-2">NO ACTIVE ORDERS</p>
+            <p className="text-sm font-bold text-neutral-500 uppercase tracking-widest">
+              Check history for completed requests.
+            </p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-12 max-w-5xl mx-auto">
             {orders.map((order) => (
-              // OrderCard will automatically hide if all its items are completed
               <OrderCard key={order.$id} order={order} setOrders={setOrders} />
             ))}
           </div>

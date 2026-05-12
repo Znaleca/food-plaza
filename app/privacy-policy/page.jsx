@@ -4,95 +4,114 @@ import { FaUserShield, FaClipboardList, FaShareAlt, FaCookieBite, FaUserCheck, F
 
 const PolicyPrivacyPage = () => {
   return (
-    <div className="w-full min-h-screen -mt-20 bg-neutral-950 text-white p-8 flex flex-col items-center">
+    <div className="w-full min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white px-6 pt-32 pb-24">
+      
       {/* Header Section */}
-      <div className="mt-12 sm:mt-16 text-center mb-8 px-4">
-        <p className="text-4xl sm:text-7xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 leading-tight">PRIVACY POLICY</p>
+      <div className="max-w-7xl mx-auto mb-16">
+        <h1 className="text-6xl md:text-9xl font-[1000] uppercase tracking-tighter leading-[0.8] mb-6">
+          DATA<br />POLICY
+        </h1>
+        <div className="h-4 w-32 bg-red-600" />
       </div>
 
-      {/* Intro */}
-      <div className="text-center max-w-3xl mx-auto mb-20 px-4">
-        <p className="text-lg sm:text-xl font-light text-neutral-400">
-          Your privacy is our priority. This policy explains how we collect, use, and safeguard your data when you visit or interact with us.
+      {/* Intro Statement */}
+      <div className="max-w-4xl mb-20">
+        <p className="text-2xl md:text-4xl font-bold uppercase tracking-tight leading-none text-neutral-400">
+          YOUR PRIVACY IS OUR <span className="text-neutral-950">PRIORITY</span>. WE SAFEGUARD YOUR DATA WITH THE SAME RIGOR WE APPLY TO OUR DESIGN.
         </p>
       </div>
 
       {/* Policy Sections Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10 max-w-5xl w-full text-left mb-12">
-        <div className="bg-neutral-900 p-6 rounded-xl shadow border border-neutral-800">
-          <div className="flex items-center gap-3 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            <FaUserShield className="text-xl" />
-            <h2 className="text-lg font-semibold">1. Information We Collect</h2>
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 border-t-4 border-l-4 border-neutral-950">
+        
+        {/* Section 1 */}
+        <div className="p-8 border-r-4 border-b-4 border-neutral-950 hover:bg-neutral-50 transition-colors group">
+          <div className="flex items-center gap-3 mb-6">
+            <FaUserShield className="text-2xl text-red-600" />
+            <h2 className="text-xl font-[1000] uppercase tracking-tighter">1. Collection</h2>
           </div>
-          <p className="text-sm text-neutral-300">
-            We collect your name, email, and feedback when you contact us at{' '}
-            <a href="mailto:support@thecornerfoodplaza.com" className="text-fuchsia-400 underline hover:text-fuchsia-500">
-              support@thecornerfoodplaza.com
+          <p className="text-sm font-medium leading-relaxed text-neutral-600">
+            We collect name, email, and feedback sent to{' '}
+            <a href="mailto:bernardlanzdeleon@gmail.com" className="font-black text-neutral-950 underline decoration-red-600 underline-offset-4">
+              bernardlanzdeleon@gmail.com
             </a>
-            . We also gather non-personal data like device and browser info.
+            . We also gather non-personal device data.
           </p>
         </div>
 
-        <div className="bg-neutral-900 p-6 rounded-xl shadow border border-neutral-800">
-          <div className="flex items-center gap-3 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            <FaClipboardList className="text-xl" />
-            <h2 className="text-lg font-semibold">2. How We Use Your Information</h2>
+        {/* Section 2 */}
+        <div className="p-8 border-r-4 border-b-4 border-neutral-950 hover:bg-neutral-50 transition-colors group">
+          <div className="flex items-center gap-3 mb-6">
+            <FaClipboardList className="text-2xl text-red-600" />
+            <h2 className="text-xl font-[1000] uppercase tracking-tighter">2. Usage</h2>
           </div>
-          <ul className="list-disc list-inside text-sm text-neutral-300 space-y-1 ml-2">
-            <li>To respond to your inquiries</li>
-            <li>To improve our services and features</li>
-            <li>To send updates (if you’ve opted in)</li>
+          <ul className="text-sm font-black uppercase tracking-widest text-neutral-950 space-y-2">
+            <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-red-600" /> Respond to Inquiries</li>
+            <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-red-600" /> Service Optimization</li>
+            <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-red-600" /> Feature Updates</li>
           </ul>
         </div>
 
-        <div className="bg-neutral-900 p-6 rounded-xl shadow border border-neutral-800">
-          <div className="flex items-center gap-3 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            <FaShareAlt className="text-xl" />
-            <h2 className="text-lg font-semibold">3. Data Sharing</h2>
+        {/* Section 3 */}
+        <div className="p-8 border-r-4 border-b-4 border-neutral-950 hover:bg-neutral-50 transition-colors group">
+          <div className="flex items-center gap-3 mb-6">
+            <FaShareAlt className="text-2xl text-red-600" />
+            <h2 className="text-xl font-[1000] uppercase tracking-tighter">3. Sharing</h2>
           </div>
-          <p className="text-sm text-neutral-300">
-            We never sell or trade your personal information. We only share data when legally required or to protect our platform.
+          <p className="text-sm font-medium leading-relaxed text-neutral-600">
+            We zero-trade your info. Data is only shared when legally mandated or to preserve platform integrity. No exceptions.
           </p>
         </div>
 
-        <div className="bg-neutral-900 p-6 rounded-xl shadow border border-neutral-800">
-          <div className="flex items-center gap-3 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            <FaCookieBite className="text-xl" />
-            <h2 className="text-lg font-semibold">4. Cookies</h2>
+        {/* Section 4 */}
+        <div className="p-8 border-r-4 border-b-4 border-neutral-950 hover:bg-neutral-50 transition-colors group">
+          <div className="flex items-center gap-3 mb-6">
+            <FaCookieBite className="text-2xl text-red-600" />
+            <h2 className="text-xl font-[1000] uppercase tracking-tighter">4. Cookies</h2>
           </div>
-          <p className="text-sm text-neutral-300">
-            Our website may use cookies to personalize your experience. You may disable cookies through your browser settings.
+          <p className="text-sm font-medium leading-relaxed text-neutral-600">
+            We use essential cookies to personalize your flow. You retain the right to terminate cookie tracking via browser settings.
           </p>
         </div>
 
-        <div className="bg-neutral-900 p-6 rounded-xl shadow border border-neutral-800">
-          <div className="flex items-center gap-3 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            <FaUserCheck className="text-xl" />
-            <h2 className="text-lg font-semibold">5. Your Rights</h2>
+        {/* Section 5 */}
+        <div className="p-8 border-r-4 border-b-4 border-neutral-950 hover:bg-neutral-50 transition-colors group">
+          <div className="flex items-center gap-3 mb-6">
+            <FaUserCheck className="text-2xl text-red-600" />
+            <h2 className="text-xl font-[1000] uppercase tracking-tighter">5. Your Rights</h2>
           </div>
-          <p className="text-sm text-neutral-300">
-            You may request access to or deletion of your personal data by emailing us at{' '}
-            <a href="mailto:support@thecornerfoodplaza.com" className="text-fuchsia-400 underline hover:text-fuchsia-500">
-              support@thecornerfoodplaza.com
-            </a>
-            .
+          <p className="text-sm font-medium leading-relaxed text-neutral-600">
+            Access or Deletion requests are processed via{' '}
+            <span className="font-black text-neutral-950">bernardlanzdeleon@gmail.com</span>. We respect your digital footprint.
           </p>
         </div>
 
-        <div className="bg-neutral-900 p-6 rounded-xl shadow border border-neutral-800">
-          <div className="flex items-center gap-3 mb-2 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            <FaHistory className="text-xl" />
-            <h2 className="text-lg font-semibold">6. Policy Updates</h2>
+        {/* Section 6 */}
+        <div className="p-8 border-r-4 border-b-4 border-neutral-950 hover:bg-neutral-50 transition-colors group">
+          <div className="flex items-center gap-3 mb-6">
+            <FaHistory className="text-2xl text-red-600" />
+            <h2 className="text-xl font-[1000] uppercase tracking-tighter">6. Updates</h2>
           </div>
-          <p className="text-sm text-neutral-300">
-            This policy may be updated occasionally. Any changes will be reflected on this page with the version number below.
+          <p className="text-sm font-medium leading-relaxed text-neutral-600">
+            This protocol is subject to evolution. Changes will be logged here. Check the manifest version below.
           </p>
         </div>
       </div>
 
-      {/* Footer Note */}
-      <div className="text-center text-sm text-neutral-500">
-        Version 1.0.0 – Last updated May 10, 2025
+      {/* Manifest Footer */}
+      <div className="max-w-7xl mx-auto mt-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-neutral-950 flex items-center justify-center text-white font-black text-xs italic">
+            BLITZ
+          </div>
+          <div className="text-[10px] font-black uppercase tracking-[0.4em] text-neutral-400">
+            Manifest v2.0.26 — May 2026
+          </div>
+        </div>
+        <div className="h-px flex-1 bg-neutral-200 hidden md:block mx-8" />
+        <div className="text-[10px] font-black uppercase tracking-widest text-neutral-950">
+          Bataan, Philippines
+        </div>
       </div>
     </div>
   );

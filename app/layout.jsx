@@ -15,7 +15,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "The Corner | Food Plaza",
+  title: "Blitz | Food Court",
   description: "Eat your Favorites",
 };
 
@@ -24,17 +24,16 @@ export default function RootLayout({ children }) {
     <AuthWrapper>
       <html lang="en">
         {/* Use the Poppins font class on the body */}
-        <body className={`${poppins.className} bg-neutral-900 text-white`}>
+        <body className={`${poppins.className} bg-white`}>
           <ClientLayoutWrapper>
             {/* The main container for the sticky footer layout */}
             <div className="flex flex-col min-h-screen">
               <Header />
 
               {/* This `div` acts as the flexible content area */}
-              <div className="flex-grow pt-20"> 
-                <section className="w-full py-8">
-                  <NewsNotif />
-                </section>
+              <div className="flex-grow pt-20">
+                {/* NewsNotif is position:fixed — no wrapper padding needed */}
+                <NewsNotif />
 
                 <main className="w-full">{children}</main>
               </div>

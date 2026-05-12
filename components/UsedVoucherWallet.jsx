@@ -32,26 +32,26 @@ const UsedVoucherWallet = ({ activeVouchersPerRoom, roomNames }) => {
   if (entries.length === 0) return null;
 
   return (
-    <div className="mt-10 p-4 bg-neutral-800 border-2 border-pink-600 rounded-lg max-w-3xl mx-auto">
-      <h3 className="text-xl font-semibold text-pink-500 mb-4 text-center">Applied Vouchers</h3>
+    <div className="mt-10 p-4 bg-pink-50 border-2 border-pink-400 rounded-lg max-w-3xl mx-auto">
+      <h3 className="text-xl font-semibold text-pink-600 mb-4 text-center">Applied Vouchers</h3>
       <div className="space-y-4">
         {entries.map(([roomId, promo]) => (
-          <div key={roomId} className="flex items-start gap-4 bg-neutral-900 p-3 rounded shadow">
+          <div key={roomId} className="flex items-start gap-4 bg-white border border-pink-100 p-3 rounded shadow">
             <div className="flex items-center justify-center w-10 h-10 bg-pink-600 rounded-full">
               <FaPercent className="text-white" />
             </div>
-            <div className="flex-1 text-white">
-              <p className="text-sm font-medium text-pink-400">{promo.title}</p>
+            <div className="flex-1 text-black">
+              <p className="text-sm font-medium text-pink-600">{promo.title}</p>
               <p className="text-sm">
-                <FaStore className="inline mr-1 text-blue-400" />
-                <span className="text-white font-semibold">
+                <FaStore className="inline mr-1 text-blue-500" />
+                <span className="text-black font-semibold">
                   {roomNames[roomId] || 'Unknown Stall'}
                 </span>
                 {' — '}
-                <span className="text-green-400">{promo.discount}% OFF</span>
+                <span className="text-green-600">{promo.discount}% OFF</span>
               </p>
               {promo.description && (
-                <p className="text-xs text-gray-400 mt-1 italic">{promo.description}</p>
+                <p className="text-xs text-gray-500 mt-1 italic">{promo.description}</p>
               )}
             </div>
           </div>

@@ -3,15 +3,15 @@
 const Headline = ({ center = true, className = '' }) => {
   return (
     <div
-      className={`flex flex-col items-center ${
-        center ? 'justify-center' : ''
+      className={`flex flex-col ${
+        center ? 'items-center text-center justify-center' : 'items-start text-left'
       } cursor-default ${className}`}
     >
-      <h1 className="text-4xl sm:text-6xl font-black leading-tight tracking-[0.2em] bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent animate-fade-in">
-        THE CORNER
+      <h1 className="text-5xl sm:text-7xl font-black leading-[0.85] text-black uppercase tracking-tighter">
+        BLITZ
       </h1>
-      <p className="text-sm sm:text-lg font-medium text-gray-300 tracking-widest mt-2 uppercase">
-        Food Plaza
+      <p className="text-xs sm:text-sm font-bold tracking-[0.4em] text-red-600 uppercase mt-4">
+        FOODCOURT
       </p>
     </div>
   );

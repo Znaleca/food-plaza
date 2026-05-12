@@ -138,28 +138,27 @@ function RoomSpace({ params }) {
     fetchBestSellers();
     // Added menuData and isStallOpen dependency
   }, [room, id, menuData, isStallOpen]); 
-
   if (loading)
     return (
-      <div className="flex justify-center items-center min-h-screen bg-neutral-950">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-cyan-400" />
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="animate-spin h-16 w-16 border-b-4 border-neutral-950" />
       </div>
     );
 
   if (!room)
-    return <div className="text-white text-center mt-20 text-xl">Food Stall Not Found</div>;
+    return (
+      <div className="text-neutral-950 text-center mt-20 text-xl font-black uppercase tracking-widest">
+        Food Stall Not Found
+      </div>
+    );
 
   const imageUrls = (room.images || []).map(toURL);
 
   const handleSelectMenu = (menuItem) => {
-    // Check item availability again before showing the pop-up (extra safety)
     if (!menuItem.isAvailable) return;
-
-    // Recommended menus should also only include available items
     const recommendedMenus = menuData.filter(
       (m) => m.type === menuItem.type && m.menuId !== menuItem.menuId && m.isAvailable
     );
-
     setSelectedMenu({
       name: menuItem.name,
       price: menuItem.price,
@@ -175,122 +174,122 @@ function RoomSpace({ params }) {
   };
 
   return (
-    <div className="w-full min-h-screen -mt-20 bg-neutral-950 text-white pb-8">
-      <div className="px-4 sm:px-8">
-        <Link
-          href="/"
-          className="flex items-center text-white hover:text-cyan-400 transition duration-300 py-6"
-        >
-          <FaChevronLeft className="mr-2" />
-          <span className="font-medium text-lg">Back</span>
+    <div className="w-full min-h-screen bg-white text-neutral-950 font-sans selection:bg-red-600 selection:text-white">
+
+      {/* ── BACK LINK ── */}
+      <div className="border-b-4 border-neutral-950 px-6 md:px-20">
+        <Link href="/"
+          className="inline-flex items-center gap-3 py-5 text-xs font-black uppercase tracking-[0.3em] text-neutral-950 hover:text-red-600 transition-colors">
+          <FaChevronLeft /> BACK
         </Link>
       </div>
 
-      <div className="mt-6 sm:mt-12 text-center mb-8 px-4 sm:px-8">
-        <h2 className="text-sm sm:text-lg bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 font-light tracking-widest uppercase">
-          Food Stall
-        </h2>
-        <p className="mt-2 text-3xl sm:text-5xl font-extrabold leading-tight">{room.name}</p>
+      {/* ── STALL HEADER ── */}
+      <div className="w-full border-b-[8px] border-neutral-950 pt-10 pb-14 px-6 md:px-20">
+        <span className="text-xs font-black tracking-[0.4em] text-red-600 uppercase block mb-4">
+          FOOD STALL
+        </span>
+        <h1 className="text-5xl sm:text-7xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] text-neutral-950">
+          {room.name}
+        </h1>
+        <div className="h-3 w-32 bg-neutral-950 mt-8" />
+
+        {/* Stall Meta */}
+        <div className="flex flex-wrap gap-6 mt-8">
+          {room.stallNumber && (
+            <div className="flex items-center gap-3 border-4 border-neutral-950 px-5 py-3">
+              <span className="text-xs font-black uppercase tracking-widest text-neutral-400">STALL</span>
+              <span className="text-2xl font-black">#{room.stallNumber}</span>
+            </div>
+          )}
+          {room.type?.length > 0 && (
+            <div className="flex items-center gap-3 border-4 border-neutral-950 px-5 py-3">
+              <span className="text-xs font-black uppercase tracking-widest text-neutral-400">TYPE</span>
+              <span className="text-sm font-black uppercase tracking-wide">{room.type.join(' · ')}</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* --- NEW: Stall Closed Alert --- */}
+      {/* ── CLOSED BANNER ── */}
       {!isStallOpen && (
-        <div className="mx-4 sm:mx-8 p-4 mb-8 text-center bg-red-800/70 border border-red-600 rounded-lg shadow-lg">
-          <p className="text-2xl font-bold text-white uppercase tracking-wider">
-            Stall is Closed
-          </p>
-          <p className="text-sm text-red-100 mt-1">
-            We are currently not accepting orders. Please check back later!
+        <div className="mx-6 md:mx-20 mt-8 border-l-8 border-red-600 bg-red-50 p-6">
+          <p className="text-xl font-black uppercase tracking-tighter text-red-600">STALL IS CLOSED</p>
+          <p className="text-sm font-bold text-neutral-600 mt-1 uppercase tracking-wide">
+            We are currently not accepting orders. Please check back later.
           </p>
         </div>
       )}
-      {/* --- END NEW: Stall Closed Alert --- */}
 
-      <div className="w-full">
+      {/* ── IMAGES ── */}
+      <div className="w-full border-b-4 border-neutral-950 mt-8">
         <SpacesImage imageUrls={imageUrls} />
       </div>
 
-      <div className="px-4 sm:px-8">
-        <div className="flex flex-col sm:flex-row justify-center sm:justify-around items-center gap-6 mt-6 mb-12 sm:mb-20">
-          <div className="flex flex-col items-center">
-            <span className="font-semibold text-base mb-2">Stall #:</span>
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-500 flex items-center justify-center shadow-lg">
-              <p className="text-lg sm:text-xl font-bold">{room.stallNumber || 'N/A'}</p>
-            </div>
-          </div>
-          <div className="flex flex-col items-center">
-            <span className="font-semibold text-base">Type:</span>
-            <p className="text-neutral-300 mt-2 text-center text-sm sm:text-base">
-              {room.type?.join(' • ') || 'N/A'}
-            </p>
-          </div>
+      {/* ── DESCRIPTION ── */}
+      {room.description && (
+        <div className="px-6 md:px-20 py-8 border-b-4 border-neutral-950">
+          <p className="text-lg font-bold italic text-neutral-600 leading-relaxed max-w-3xl">
+            "{room.description}"
+          </p>
         </div>
+      )}
+
+      {/* ── BEST SELLERS ── */}
+      <div className="px-6 md:px-20 py-8 border-b-4 border-neutral-950">
+        <BestSellers topItems={topItems} menuData={menuData} room={room} setSelectedMenu={handleSelectMenu} />
       </div>
 
-      <div className="bg-neutral-900 text-white p-4 sm:p-6 rounded-lg -mt-6 sm:-mt-9 shadow-lg text-center mx-4 sm:mx-8 border border-neutral-800">
-        <p className="mt-2 italic text-sm sm:text-lg text-neutral-400">
-          {room.description || 'Delicious food available here!'}
-        </p>
-      </div>
-
-      <div className="px-4 sm:px-8">
-        {/* Pass isStallOpen to BestSellers if needed for styling/logic */}
-        <BestSellers
-          topItems={topItems}
-          menuData={menuData}
-          room={room}
-          setSelectedMenu={handleSelectMenu}
-        />
-      </div>
-
-      {/* --- MODIFIED MENU RENDERING SECTION --- */}
-      <div className="mt-12 sm:mt-20 px-4 sm:px-8">
+      {/* ── MENU ── */}
+      <div className="px-6 md:px-20 py-12">
         {Object.keys(groupedMenu).map((cat) => (
-          <div key={cat} className="mb-12">
-            <h3 className="text-white font-semibold mb-6 text-2xl bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 border-b border-neutral-700 pb-2">
-              {cat}
-            </h3>
+          <div key={cat} className="mb-16">
+            {/* Category heading */}
+            <div className="flex items-center gap-6 mb-8 border-b-[6px] border-neutral-950 pb-4">
+              <h3 className="text-4xl font-black uppercase tracking-tighter">{cat}</h3>
+              <span className="text-xs font-black tracking-[0.3em] uppercase text-red-600">MENU</span>
+            </div>
 
-            {/* Iterate over Sub-Types within the Category */}
             {Object.keys(groupedMenu[cat]).map((subType) => {
               const items = groupedMenu[cat][subType];
               return (
-                <div key={subType} className="mb-8">
-                  {/* Sub-Type Heading - only show if it's not the default "Main Items" */}
+                <div key={subType} className="mb-10">
                   {subType !== 'Main Items' && (
-                    <h4 className="text-neutral-300 font-medium mb-4 text-lg border-l-4 border-fuchsia-500 pl-3">
-                      {subType}
-                    </h4>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="h-1 w-6 bg-red-600" />
+                      <h4 className="text-sm font-black uppercase tracking-[0.3em] text-neutral-500">{subType}</h4>
+                    </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     {items.map((m) => (
                       <div
                         key={m.idx}
-                        onClick={() => {
-                          // Interaction is only allowed if the item is available
-                          if (!m.isAvailable) return;
-                          handleSelectMenu(m);
-                        }}
-                        className={`relative border border-neutral-800 rounded-md bg-neutral-900 p-3 flex flex-col items-center text-center transition-all duration-300 ${
+                        onClick={() => { if (!m.isAvailable) return; handleSelectMenu(m); }}
+                        className={`relative border-4 border-neutral-950 bg-white flex flex-col overflow-hidden transition-all duration-200 ${
                           m.isAvailable
-                            ? 'cursor-pointer hover:border-white hover:shadow-xl hover:scale-105'
-                            : 'grayscale opacity-60 cursor-not-allowed'
+                            ? 'cursor-pointer hover:border-red-600 hover:shadow-[4px_4px_0px_0px_rgba(220,38,38,1)] group'
+                            : 'grayscale opacity-50 cursor-not-allowed'
                         }`}
                       >
                         {!m.isAvailable && (
-                          <div className="absolute top-2 left-2 bg-neutral-800 text-white text-[10px] px-2 py-1 rounded font-bold z-10">
-                            Not Available
+                          <div className="absolute top-2 left-2 bg-neutral-950 text-white text-[9px] px-2 py-0.5 font-black uppercase tracking-widest z-10">
+                            UNAVAILABLE
                           </div>
                         )}
-                        {m.image && (
-                          <img
-                            src={m.image}
-                            alt={m.name}
-                            className="w-20 h-20 rounded-full object-cover mb-2 shadow-sm"
-                          />
+                        {/* Image fills top of card */}
+                        {m.image ? (
+                          <img src={m.image} alt={m.name}
+                            className="w-full aspect-square object-cover" />
+                        ) : (
+                          <div className="w-full aspect-square bg-neutral-100 flex items-center justify-center">
+                            <span className="text-[9px] font-black uppercase text-neutral-400">No Image</span>
+                          </div>
                         )}
-                        <h4 className="text-sm font-medium">{m.name}</h4>
+                        {/* Black label bar always visible below image */}
+                        <div className="bg-neutral-950 text-white px-3 py-3 flex flex-col items-center justify-center text-center h-full">
+                          <h4 className="text-[10px] font-black uppercase tracking-tight leading-tight">{m.name}</h4>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -300,12 +299,18 @@ function RoomSpace({ params }) {
           </div>
         ))}
       </div>
-      {/* --- END MODIFIED MENU RENDERING SECTION --- */}
 
-      <div className="px-4 sm:px-8 mt-6">
+      {/* ── RATINGS ── */}
+      <div className="px-6 md:px-20 pb-16 border-t-4 border-neutral-950 pt-12">
+        <div className="mb-8">
+          <span className="text-xs font-black tracking-[0.4em] text-red-600 uppercase block mb-2">REVIEWS</span>
+          <h2 className="text-4xl font-black uppercase tracking-tighter">Customer Ratings</h2>
+          <div className="h-2 w-24 bg-neutral-950 mt-4" />
+        </div>
         <CustomerRatingCard roomName={room.name} />
       </div>
 
+      {/* ── MENU POPUP ── */}
       {selectedMenu && (
         <MenuPopUp
           item={selectedMenu.name}
@@ -327,4 +332,4 @@ function RoomSpace({ params }) {
   );
 }
 
-export default RoomSpace;
+export default RoomSpace;

@@ -209,150 +209,78 @@ const CheckoutButton = ({
 
 
   return (
-    <div className="bg-neutral-950 text-white w-full max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-8">
-        {message && <p className="text-sm text-red-400">{message}</p>}
+    <div className="bg-white w-full max-w-7xl mx-auto py-12">
+      <div className="mb-8">
+        {message && <p className="mb-4 text-sm font-black text-red-600 uppercase tracking-widest">{message}</p>}
 
         <button
           onClick={handleCheckout}
           disabled={loading || !phone || !hasSelectedItems}
-          className={`w-full py-3 rounded-xl font-bold tracking-widest text-lg transition-all ${
+          className={`w-full py-5 font-black uppercase tracking-[0.3em] text-sm border-4 transition-all duration-200 ${
             loading || !phone || !hasSelectedItems
-              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 hover:from-cyan-500 hover:to-fuchsia-600 text-white'
+              ? 'bg-neutral-200 text-neutral-400 border-neutral-300 cursor-not-allowed'
+              : 'bg-neutral-950 text-white border-neutral-950 hover:bg-red-600 hover:border-red-600 active:scale-95'
           }`}
         >
-          {loading ? 'Processing...' : 'Checkout Order'}
+          {loading ? 'PROCESSING...' : 'CHECKOUT ORDER →'}
         </button>
       </div>
 
-      {/* POPUP */}
       <Dialog open={isPopupOpen} onClose={() => setIsPopupOpen(false)} className="relative z-50">
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="w-full max-w-4xl bg-neutral-950 border border-neutral-800 rounded-2xl p-8 text-white shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="text-center mb-6">
-            <h2 className="text-base sm:text-lg font-light tracking-[0.3em] bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-            Summary
-              </h2>
-              <p className="mt-2 text-3xl sm:text-4xl font-extrabold text-white">Your Order</p>
+          <Dialog.Panel className="w-full max-w-4xl bg-white border-4 border-black p-10 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-y-auto max-h-[90vh]">
+            <h2 className="text-5xl font-black uppercase mb-10 border-b-4 border-black pb-4 tracking-tighter">ORDER SUMMARY</h2>
+
+            <div className="bg-black text-white p-4 mb-8 font-mono font-bold text-lg">
+              CONTACT: {phone || 'N/A'}
             </div>
 
-            {/* PHONE DISPLAY */}
-            <div className="flex items-center justify-center gap-3 bg-neutral-800 border border-neutral-700 rounded-xl px-5 py-3 mb-8">
-              <div className="p-2 bg-gradient-to-r from-cyan-400 to-fuchsia-500 rounded-full shadow-md">
-                <FaPhone className="text-white w-4 h-4" />
-              </div>
-              <span className="font-medium text-lg text-white">
-                {phone || 'No phone on file'}
-              </span>
-            </div>
-
-            {/* ITEMS PER ROOM */}
-            <div className="space-y-8">
+            <div className="space-y-10">
               {Object.entries(groupedCheckoutCart).map(([roomId, items]) => {
-                const { subtotal, discountedSubtotal, totalDiscount, promo, dineTakeOut } = getRoomSummary(roomId); // ⭐ dineTakeOut is extracted here
-                
-                // Determine the discount label based on the active promo for the room
-                let discountLabel = '';
-                if (promo?.isSpecial) {
-                    discountLabel = `(${promo.discount}% - PWD / Senior Discount)`;
-                } else if (promo) {
-                    discountLabel = `(${promo.discount}% - ${promo.title})`;
-                } else if (totalDiscount > 0) {
-                    // This handles scenarios where only some items in a room got a special discount
-                    discountLabel = '(Item Discounts Applied)';
-                }
-                
-                // ⭐ Helper for icon
+                const { subtotal, discountedSubtotal, totalDiscount, promo, dineTakeOut } = getRoomSummary(roomId);
                 const Icon = dineTakeOut === 'Dine In' ? FaUtensils : FaBagShopping;
-                const iconColor = dineTakeOut === 'Dine In' ? 'text-cyan-400' : 'text-fuchsia-400';
 
                 return (
-                  <div key={roomId} className="border-b border-neutral-700 pb-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-bold text-white">
-                        {roomNames[roomId] || groupedCart[roomId]?.roomName || 'Unknown Room'}
-                        </h3>
-                        {/* ⭐ NEW: Display Dine/Take Out Status */}
-                        <span className={`flex items-center text-sm font-semibold ${iconColor}`}>
-                            <Icon className="mr-1 w-4 h-4" />
+                  <div key={roomId} className="border-b-2 border-dashed border-gray-400 pb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-2xl font-black uppercase">{roomNames[roomId] || 'Unknown Room'}</h3>
+                        <span className="flex items-center font-bold uppercase border-2 border-black px-3 py-1">
+                            <Icon className="mr-2" />
                             {dineTakeOut}
                         </span>
-                        {/* ⭐ END NEW DISPLAY */}
                     </div>
 
-                    <ul className="text-sm space-y-2">
+                    <ul className="font-mono space-y-2 mb-4">
                       {items.map((item, idx) => (
-                        <li key={`${item.menuName}-${item.size}-${idx}`} className="flex justify-between">
-                          <span>
-                            {item.menuName} {item.size && `(${item.size})`} × {item.quantity || 1}
-                          </span>
-                          <span className="flex flex-col items-end">
-                            {item.discountAmount > 0 ? (
-                                <>
-                                    <span className="line-through text-xs text-neutral-400">
-                                        {formatCurrency(Number(item.menuPrice) * (item.quantity || 1))}
-                                    </span>
-                                    <span className="font-semibold">
-                                        {formatCurrency(Number(item.menuPrice) * (item.quantity || 1) - item.discountAmount)}
-                                    </span>
-                                </>
-                            ) : (
-                                <span>{formatCurrency(Number(item.menuPrice) * (item.quantity || 1))}</span>
-                            )}
-                          </span>
+                        <li key={`${item.menuName}-${idx}`} className="flex justify-between border-b border-gray-100 pb-1">
+                          <span>{item.quantity}x {item.menuName}</span>
+                          <span className="font-bold">{formatCurrency(Number(item.menuPrice) * item.quantity)}</span>
                         </li>
                       ))}
                     </ul>
-
-                    <div className="mt-3 text-sm space-y-1 text-right">
-                      <p className="text-gray-400">
-                        <span className="font-normal text-left float-left">Subtotal:</span>
-                        {formatCurrency(subtotal)}
-                      </p>
-                      {totalDiscount > 0 && (
-                        <p className="text-green-400">
-                          <span className="font-normal text-left float-left">
-                            Discount {discountLabel}:
-                          </span>
-                          −{formatCurrency(totalDiscount)}
-                        </p>
-                      )}
-                      <p className="font-semibold text-cyan-400">
-                        <span className="font-normal text-left float-left">Stall Total:</span>
-                        {formatCurrency(discountedSubtotal)}
-                      </p>
-                    </div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="text-center mt-8 text-2xl font-bold">
-              Total:{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500">
-                {formatCurrency(total)}
-              </span>
-            </div>
-
-            <hr className="my-8 border-neutral-700" />
+            <hr className="my-8 border-gray-200" />
 
             {/* REVISED APPLIED PROMOS SECTION */}
             {(Object.keys(groupedPromos).length > 0) && (
-              <div className="mt-8 text-sm text-left mx-auto max-w-full text-neutral-300">
-                <p className="text-xl font-bold text-white mb-4">Applied Promos</p>
+              <div className="mt-8 text-sm text-left mx-auto max-w-full text-gray-600">
+                <p className="text-xl font-bold text-black mb-4">Applied Promos</p>
                 <ul className="space-y-4">
                   {Object.entries(groupedPromos).map(([roomName, { details, itemCount }], idx) => (
                     <li key={idx}>
-                      <p className="font-bold text-white border-b border-neutral-700 pb-1">{roomName}</p>
+                      <p className="font-bold text-black border-b border-gray-200 pb-1">{roomName}</p>
                       <ul className="ml-2 mt-2 space-y-1">
                         {details.map((detail, detailIdx) => (
                           <li key={detailIdx} className="text-sm">
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-fuchsia-500 font-semibold">
                               &bull; {itemCount} Item{itemCount !== 1 ? 's' : ''} applied with 
                             </span> 
-                            <span className="italic ml-1 text-neutral-300">{detail}</span>
+                            <span className="italic ml-1 text-gray-600">{detail}</span>
                           </li>
                         ))}
                       </ul>
@@ -364,7 +292,7 @@ const CheckoutButton = ({
             {/* END REVISED APPLIED PROMOS SECTION */}
 
             {/* --- NEW NON-REFUNDABLE WARNING --- */}
-            <div className="mt-8 flex items-start gap-3 text-red-400 bg-neutral-900 border border-red-500/50 p-4 rounded-lg shadow-md">
+            <div className="mt-8 flex items-start gap-3 text-red-500 bg-red-50 border border-red-200 p-4 rounded-lg shadow-md">
               <FaExclamationTriangle className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" />
               <p className="text-sm leading-relaxed">
                 <span className="font-semibold">Important:</span> Your confirmation signifies
@@ -375,23 +303,23 @@ const CheckoutButton = ({
               </p>
             </div>
             
-            <div className="flex justify-center gap-4 mt-8">
+            <div className="flex gap-4 mt-8">
               <button
                 onClick={() => setIsPopupOpen(false)}
-                className="px-6 py-3 rounded-xl border border-gray-600 text-gray-300 hover:text-white hover:border-white transition-colors"
+                className="flex-1 py-4 border-4 border-neutral-950 font-black text-xs uppercase tracking-[0.3em] hover:bg-neutral-950 hover:text-white transition-all duration-200"
               >
-                Cancel
+                CANCEL
               </button>
               <button
                 onClick={handleConfirmPayment}
                 disabled={loading}
-                className={`px-6 py-3 rounded-xl font-semibold text-lg tracking-wide transition-all ${
+                className={`flex-1 py-4 border-4 font-black text-xs uppercase tracking-[0.3em] transition-all duration-200 ${
                   loading
-                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-cyan-400 to-fuchsia-500 hover:from-cyan-500 hover:to-fuchsia-600 text-white'
+                    ? 'bg-neutral-200 text-neutral-400 border-neutral-300 cursor-not-allowed'
+                    : 'bg-neutral-950 text-white border-neutral-950 hover:bg-red-600 hover:border-red-600'
                 }`}
               >
-                {loading ? 'Processing...' : 'Confirm & Pay'}
+                {loading ? 'PROCESSING...' : 'CONFIRM & PAY →'}
               </button>
             </div>
           </Dialog.Panel>

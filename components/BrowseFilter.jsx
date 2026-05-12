@@ -17,53 +17,54 @@ const BrowseFilter = ({ activeCategory, onChange, activeDisplayType, onDisplayTy
   const categoriesToDisplay = activeDisplayType === 'Menus' ? menuCategories : stallCategories;
 
   return (
-    <div className="relative">
-      {/* Main Vertical Line */}
-      <div className="absolute left-0 top-0 h-full w-[2px] bg-neutral-700 rounded-full"></div>
+    <div className="relative selection:bg-red-600 selection:text-white">
+      {/* Structural Vertical Line - Now 4px Black to match your section dividers */}
+      <div className="absolute left-0 top-0 h-full w-[4px] bg-neutral-950"></div>
 
-      <div className="flex flex-col items-start gap-4 pl-4">
+      <div className="flex flex-col items-start gap-3 pl-6">
 
         {/* Display Type Section */}
-        <h4 className="text-xl font-bold text-white mb-2 -ml-1">View</h4>
+        <h4 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-2">View By</h4>
         {displayTypes.map((type) => (
-          <div key={type}>
-            <div
-              onClick={() => onDisplayTypeChange(type)}
-              className={clsx(
-                "relative cursor-pointer transition-colors duration-300",
-                "before:absolute before:h-full before:top-0 before:left-[-18px] before:rounded-full before:transition-all before:duration-300",
-                {
-                  "text-white font-semibold before:w-[6px] before:bg-pink-500": activeDisplayType === type,
-                  "text-neutral-400 hover:text-white before:w-[4px] before:bg-transparent hover:before:bg-neutral-500": activeDisplayType !== type,
-                }
-              )}
-            >
-              {type}
-            </div>
-          </div>
+          <button
+            key={type}
+            onClick={() => onDisplayTypeChange(type)}
+            className={clsx(
+              "relative text-left text-lg font-black uppercase transition-all duration-200 tracking-tighter",
+              "before:absolute before:h-full before:top-0 before:left-[-28px] before:transition-all before:duration-300",
+              {
+                "text-neutral-950 before:w-[8px] before:bg-red-600": activeDisplayType === type,
+                "text-neutral-300 hover:text-neutral-950 before:w-[0px] before:bg-transparent": activeDisplayType !== type,
+              }
+            )}
+          >
+            {type}
+          </button>
         ))}
 
-        <div className="w-16 h-[2px] bg-neutral-700 mt-4 rounded-full"></div>
+        {/* Divider - Clean and Heavy */}
+        <div className="w-full h-[4px] bg-neutral-950 my-6"></div>
 
         {/* Categories Section */}
-        <h4 className="text-xl font-bold text-white mb-2 -ml-1">Categories</h4>
-        {categoriesToDisplay.map((cat, index) => (
-          <div key={cat}>
-            <div
+        <h4 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-2">Categories</h4>
+        <div className="flex flex-col gap-2 w-full">
+          {categoriesToDisplay.map((cat) => (
+            <button
+              key={cat}
               onClick={() => onChange(cat)}
               className={clsx(
-                "relative cursor-pointer transition-colors duration-300",
-                "before:absolute before:h-full before:top-0 before:left-[-18px] before:rounded-full before:transition-all before:duration-300",
+                "relative text-left text-md font-bold uppercase transition-all duration-200",
+                "before:absolute before:h-[80%] before:top-[10%] before:left-[-28px] before:transition-all before:duration-300",
                 {
-                  "text-white font-semibold before:w-[6px] before:bg-pink-500": activeCategory === cat,
-                  "text-neutral-400 hover:text-white before:w-[4px] before:bg-transparent hover:before:bg-neutral-500": activeCategory !== cat,
+                  "text-neutral-950 before:w-[8px] before:bg-neutral-950": activeCategory === cat,
+                  "text-neutral-400 hover:text-neutral-950 hover:pl-1": activeCategory !== cat,
                 }
               )}
             >
               {cat}
-            </div>
-          </div>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

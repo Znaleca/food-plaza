@@ -6,43 +6,58 @@ import clsx from 'clsx';
 
 const BrowseCardStall = ({ room }) => {
   const cardClasses = clsx(
-    "group relative flex flex-col rounded-3xl bg-neutral-900/90 border-2 border-neutral-700 shadow-md hover:border-neutral-500 hover:shadow-lg transition-all duration-300 overflow-hidden",
-    "cursor-pointer"
+    // Sharp corners, heavy 4px border, and a dramatic "lift" shadow on hover
+    "group relative flex flex-col bg-white border-4 border-neutral-950 transition-all duration-300 overflow-hidden",
+    "cursor-pointer hover:shadow-[12px_12px_0px_0px_rgba(220,38,38,1)] hover:-translate-x-2 hover:-translate-y-2"
   );
 
   return (
-    <Link href={`/rooms/${room.id}`} passHref>
+    <Link href={`/rooms/${room.id}`} className="block">
       <div className={cardClasses} style={{ minHeight: "340px" }}>
-        {/* Image Section */}
+        
+        {/* Image Section - No rounded corners, bottom border only */}
         {room.imageUrl ? (
-          <div className="relative w-full h-48 overflow-hidden rounded-t-[22px]">
+          <div className="relative w-full h-52 overflow-hidden border-b-4 border-neutral-950">
             <Image
               src={room.imageUrl}
               alt={room.name}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
+            {/* Hover overlay label */}
+            <div className="absolute top-4 left-4 bg-neutral-950 text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Visit Stall
+            </div>
           </div>
         ) : (
-          <div className="w-full h-48 bg-neutral-800 flex items-center justify-center text-gray-400 text-sm rounded-t-[22px]">
-            No Image
+          <div className="w-full h-52 bg-neutral-100 flex items-center justify-center text-neutral-400 font-black uppercase text-xs border-b-4 border-neutral-950">
+            No Image Available
           </div>
         )}
 
         {/* Content Section */}
-        <div className="flex flex-col flex-1 p-4 justify-between">
+        <div className="flex flex-col flex-1 p-6 justify-between bg-white">
           <div>
-            <h3 className="text-xl font-semibold text-white truncate">
+            <h3 className="text-2xl font-black text-neutral-950 uppercase tracking-tighter leading-none group-hover:text-red-600 transition-colors">
               {room.name}
             </h3>
             
-            {/* Horizontal line and category display */}
-            <div className="mt-2 pt-2 border-t border-neutral-700">
-              <p className="text-xs text-gray-400">
-                <span className="font-semibold text-white">Category:</span>{' '}
-                {room.type?.join(' • ') || 'N/A'}
-              </p>
+            <div className="mt-4 pt-4 border-t-2 border-neutral-950 flex flex-wrap gap-2">
+              {room.type?.length > 0 ? (
+                room.type.map((cat, i) => (
+                  <span key={i} className="text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                    {cat}{i !== room.type.length - 1 && " •"}
+                  </span>
+                ))
+              ) : (
+                <span className="text-[10px] font-black uppercase text-neutral-300">Uncategorized</span>
+              )}
             </div>
+          </div>
+
+          {/* Bottom "CTA" accent */}
+          <div className="flex justify-end mt-4">
+             <div className="w-8 h-1 bg-red-600 transition-all duration-500 group-hover:w-full" />
           </div>
         </div>
       </div>
