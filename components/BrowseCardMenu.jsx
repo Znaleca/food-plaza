@@ -17,7 +17,7 @@ const BrowseCardMenu = ({ roomId, menuItem, roomName, allMenus }) => {
     // Removed rounded-3xl, added border-4 and sharp corners
     "group relative flex flex-col bg-white border-4 border-neutral-950 transition-all duration-300 overflow-hidden",
     {
-      "cursor-pointer hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-1 hover:-translate-y-1": menuItem.isAvailable,
+      "cursor-pointer hover:border-red-600": menuItem.isAvailable,
       "opacity-50 grayscale cursor-not-allowed": !menuItem.isAvailable,
     }
   );
@@ -36,7 +36,7 @@ const BrowseCardMenu = ({ roomId, menuItem, roomName, allMenus }) => {
               src={menuItem.image}
               alt={menuItem.name}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="object-cover transition-opacity duration-300"
             />
             {!menuItem.isAvailable && (
               <div className="absolute inset-0 bg-neutral-950/80 flex items-center justify-center">

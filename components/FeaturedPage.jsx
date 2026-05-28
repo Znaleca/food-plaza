@@ -57,7 +57,7 @@ const FeaturedPage = () => {
               <div
                 key={cat.name}
                 // Size: 18rem width is the sweet spot for 5 cards to stay visible
-                className={`relative flex-shrink-0 w-[14rem] md:w-[18rem] h-[20rem] md:h-[26rem] bg-white border-y-4 border-r-4 border-black flex flex-col group transition-colors duration-300 hover:bg-black ${
+                className={`relative flex-shrink-0 w-[14rem] md:w-[18rem] h-[20rem] md:h-[26rem] bg-white border-y-4 border-r-4 border-black flex flex-col group transition-colors duration-300 hover:bg-black hover:border-red-600 ${
                   index === 0 ? 'border-l-4' : ''
                 }`}
               >
@@ -75,7 +75,7 @@ const FeaturedPage = () => {
                       src={cat.image}
                       alt={cat.name}
                       fill
-                      className="object-contain transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3"
+                      className="object-contain transition-colors duration-200"
                     />
                   </div>
 

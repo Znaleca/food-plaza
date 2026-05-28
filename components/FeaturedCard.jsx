@@ -3,44 +3,59 @@
 import React from 'react';
 import Link from 'next/link';
 
-const FeaturedCard = ({ 
-  title = "CHECK OUT OUR MOST POPULAR PRODUCTS", 
-  imageSrc, 
-  buttonText = "ORDER NOW", 
-  href = "#" 
+const FeaturedCard = ({
+  title = "CHECK OUT OUR MOST POPULAR PRODUCTS",
+  imageSrc,
+  buttonText = "ORDER NOW",
+  href = "#"
 }) => {
   return (
-    <div className="w-full h-full p-0">
-      {/* 1. Replaced <a> with Next.js <Link> for faster client-side routing */}
-      <Link href={href} className="group block w-full h-full bg-white">
-        <div className="flex flex-col w-full h-full transition-all duration-300">
-          
-          {/* Image - No Rounded Corners */}
-          <div className="relative w-full flex-grow bg-neutral-100 overflow-hidden border-b-4 border-neutral-950">
+    <div className="w-full h-full">
+      <Link
+        href={href}
+        className="group block w-full h-full bg-white"
+      >
+        <div className="flex flex-col w-full h-full border-1 border-neutral-950">
+
+          {/* IMAGE */}
+          <div className="relative w-full h-[420px] md:h-[650px] overflow-hidden bg-neutral-200 border-b-2 border-neutral-950">
             <img
               src={imageSrc}
               alt={title}
-              className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />
           </div>
 
-          {/* Content - Modern Editorial Style */}
-          <div className="p-8 text-left bg-white min-h-[220px] flex flex-col justify-between items-start">
+          {/* CONTENT */}
+          <div className="p-8 md:p-12 bg-white flex flex-col justify-between items-start min-h-[260px]">
             <div>
-              <span className="text-xs font-black tracking-[0.3em] text-red-600 uppercase mb-2 block">
+              <span className="text-xs md:text-sm font-black tracking-[0.35em] text-red-600 uppercase mb-3 block">
                 VENDORS CHOICE
               </span>
-              {/* 2. Replaced hardcoded text with the 'title' prop */}
-              <h2 className="text-3xl md:text-4xl font-black leading-[0.9] text-neutral-950 uppercase tracking-tighter">
+
+              <h2 className="text-3xl md:text-5xl font-black leading-[0.9] text-neutral-950 uppercase tracking-tighter max-w-4xl">
                 {title}
               </h2>
             </div>
-            
-            {/* 3. Changed <button> to a <div> to prevent invalid HTML nesting (button inside a link). 
-                   Added group-hover so it highlights when the card is hovered. */}
+
             <div
-              className="mt-6 inline-block px-8 py-4 bg-neutral-950 text-white font-black uppercase text-sm tracking-widest
-                         group-hover:bg-red-600 transition-colors duration-300 border-none"
+              className="
+                mt-8
+                inline-flex
+                items-center
+                justify-center
+                px-10
+                py-5
+                bg-neutral-950
+                text-white
+                font-black
+                uppercase
+                text-sm
+                tracking-[0.2em]
+                transition-all
+                duration-300
+                group-hover:bg-red-600
+              "
             >
               {buttonText}
             </div>

@@ -8,7 +8,7 @@ const BrowseCardStall = ({ room }) => {
   const cardClasses = clsx(
     // Sharp corners, heavy 4px border, and a dramatic "lift" shadow on hover
     "group relative flex flex-col bg-white border-4 border-neutral-950 transition-all duration-300 overflow-hidden",
-    "cursor-pointer hover:shadow-[12px_12px_0px_0px_rgba(220,38,38,1)] hover:-translate-x-2 hover:-translate-y-2"
+    "cursor-pointer hover:border-red-600"
   );
 
   return (
@@ -22,7 +22,7 @@ const BrowseCardStall = ({ room }) => {
               src={room.imageUrl}
               alt={room.name}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="object-cover transition-opacity duration-300"
             />
             {/* Hover overlay label */}
             <div className="absolute top-4 left-4 bg-neutral-950 text-white text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
