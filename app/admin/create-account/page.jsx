@@ -1,15 +1,16 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useFormState } from 'react-dom';
+import Link from 'next/link';
 import { toast } from 'react-toastify';
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaPhone } from 'react-icons/fa';
+import { FaChevronLeft } from 'react-icons/fa6';
 import createAccount from '@/app/actions/createAccount';
 import checkUserExists from '@/app/actions/checkUserExists';
 
 const CreateFoodStallPage = () => {
-  const [state, formAction] = useFormState(createAccount, {});
+  const [state, formAction] = React.useActionState(createAccount, {});
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -84,22 +85,35 @@ const CreateFoodStallPage = () => {
   const isFormInvalid = !!passwordError || !!matchError || !!phoneError || !!emailTakenError || !!phoneTakenError;
 
   return (
-    <div className="w-full min-h-screen bg-neutral-900 text-white flex flex-col items-center justify-center px-4 py-16">
-      {/* Page Heading */}
-      <div className="text-center mb-12 px-4">
-        <h2 className="text-2xl sm:text-6xl font-extrabold text-white leading-tight">
-          Create Lessee Account
-        </h2>
-        <p className="mt-4 text-lg text-neutral-400">
-        </p>
-      </div>
+    <div className="min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+        <Link
+          href="/admin"
+          className="inline-flex items-center border-2 border-neutral-950 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-neutral-950 shadow-[4px_4px_0px_#000] transition-transform hover:-translate-y-1 hover:bg-neutral-950 hover:text-white"
+        >
+          <FaChevronLeft className="mr-2" />
+          Back
+        </Link>
 
-      {/* Form Card */}
-      <div className="w-full max-w-xl bg-neutral-800 p-10 rounded-3xl shadow-lg border border-pink-600">
-        <form action={formAction} className="space-y-8">
+        <section className="relative mt-6 mb-8 overflow-hidden border-4 border-neutral-950 bg-white px-6 py-8 shadow-[8px_8px_0px_#000] sm:px-8 sm:py-10">
+          <div className="absolute top-0 left-0 h-3 w-24 bg-red-600" />
+          <div className="absolute bottom-0 right-0 h-3 w-24 bg-red-600" />
+          <p className="text-xs font-black tracking-[0.45em] uppercase text-red-600 mb-3">
+            Admin Module
+          </p>
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase text-neutral-950 leading-none">
+            Create Lessee Account
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm sm:text-base text-neutral-600 font-medium leading-relaxed">
+            Add a new lessee using the same bold form treatment as the rest of the admin area.
+          </p>
+        </section>
+
+        <div className="border-4 border-neutral-950 bg-white p-6 shadow-[8px_8px_0px_#000] sm:p-8">
+          <form action={formAction} className="space-y-8">
           {/* Nickname */}
           <div className="relative">
-            <label htmlFor="name" className="block text-sm font-medium mb-2">Lessee Nickname</label>
+            <label htmlFor="name" className="mb-3 block text-xs font-black tracking-[0.35em] uppercase text-neutral-500">Lessee Nickname</label>
             <div className="relative">
               <input
                 type="text"
@@ -107,7 +121,7 @@ const CreateFoodStallPage = () => {
                 name="name"
                 placeholder="Enter Nickname"
                 required
-                className="w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-600 placeholder-neutral-500"
+                className="w-full border-2 border-neutral-950 bg-white px-10 py-3 font-bold text-neutral-950 outline-none transition-colors focus:border-red-600 placeholder:text-neutral-400"
               />
               <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
             </div>
@@ -115,7 +129,7 @@ const CreateFoodStallPage = () => {
 
           {/* Email */}
           <div className="relative">
-            <label htmlFor="email" className="block text-sm font-medium mb-2">Email</label>
+            <label htmlFor="email" className="mb-3 block text-xs font-black tracking-[0.35em] uppercase text-neutral-500">Email</label>
             <div className="relative">
               <input
                 type="email"
@@ -125,7 +139,7 @@ const CreateFoodStallPage = () => {
                 onChange={handleEmailChange}
                 placeholder="you@example.com"
                 required
-                className={`w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 ${emailTakenError ? 'ring-red-500' : 'focus:ring-pink-600'} placeholder-neutral-500`}
+                className={`w-full border-2 bg-white px-10 py-3 font-bold text-neutral-950 outline-none transition-colors ${emailTakenError ? 'border-red-600' : 'border-neutral-950 focus:border-red-600'} placeholder:text-neutral-400`}
               />
               <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
             </div>
@@ -133,39 +147,39 @@ const CreateFoodStallPage = () => {
           </div>
 
           {/* Phone Number */}
-<div className="relative">
-  <label htmlFor="phone" className="block text-sm font-medium mb-2">Phone Number</label>
-  <div className="relative flex items-center">
-    <span className="px-3 py-3 bg-neutral-900 border border-neutral-700 rounded-l-lg text-neutral-400 flex items-center gap-2">
-      <FaPhone />
-      +63
-    </span>
-    <input
-      type="text"
-      id="phone"
-      name="phone"
-      value={phone}
-      onChange={(e) => {
-        const value = e.target.value.replace(/\D/g, ''); // only allow digits
-        if (value.length <= 10) setPhone(value); // limit to 10 digits
-        setPhoneError(!/^\d{10}$/.test(value) ? "Phone number must be 10 digits." : "");
-      }}
-      placeholder="9123456789"
-      required
-      maxLength={10}
-      className={`w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-r-lg text-white placeholder-neutral-500 focus:ring-2 ${
-        phoneError || phoneTakenError ? 'ring-red-500' : 'focus:ring-pink-600'
-      }`}
-    />
-  </div>
-  {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
-  {phoneTakenError && <p className="text-red-500 text-sm mt-1">{phoneTakenError}</p>}
-</div>
+          <div className="relative">
+            <label htmlFor="phone" className="mb-3 block text-xs font-black tracking-[0.35em] uppercase text-neutral-500">Phone Number</label>
+            <div className="relative flex items-stretch">
+              <span className="flex items-center gap-2 border-2 border-neutral-950 bg-neutral-950 px-4 py-3 text-xs font-black uppercase tracking-widest text-white">
+                <FaPhone />
+                +63
+              </span>
+              <input
+                type="text"
+                id="phone"
+                name="phone"
+                value={phone}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value.length <= 10) setPhone(value);
+                  setPhoneError(!/^\d{10}$/.test(value) ? "Phone number must be 10 digits." : "");
+                }}
+                placeholder="9123456789"
+                required
+                maxLength={10}
+                className={`w-full border-2 border-l-0 bg-white px-4 py-3 font-bold text-neutral-950 outline-none transition-colors ${
+                  phoneError || phoneTakenError ? 'border-red-600' : 'border-neutral-950 focus:border-red-600'
+                } placeholder:text-neutral-400`}
+              />
+            </div>
+            {phoneError && <p className="mt-1 text-sm text-red-500">{phoneError}</p>}
+            {phoneTakenError && <p className="mt-1 text-sm text-red-500">{phoneTakenError}</p>}
+          </div>
 
 
           {/* Password */}
           <div className="relative">
-            <label htmlFor="password" className="block text-sm font-medium mb-2">Password</label>
+            <label htmlFor="password" className="mb-3 block text-xs font-black tracking-[0.35em] uppercase text-neutral-500">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
@@ -175,7 +189,7 @@ const CreateFoodStallPage = () => {
                 onChange={handlePasswordChange}
                 placeholder="••••••••"
                 required
-                className={`w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 ${passwordError ? 'ring-red-500' : 'focus:ring-pink-600'} placeholder-neutral-500`}
+                className={`w-full border-2 bg-white px-10 py-3 font-bold text-neutral-950 outline-none transition-colors ${passwordError ? 'border-red-600' : 'border-neutral-950 focus:border-red-600'} placeholder:text-neutral-400`}
               />
               <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
               <button
@@ -191,7 +205,7 @@ const CreateFoodStallPage = () => {
 
           {/* Confirm Password */}
           <div className="relative">
-            <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="mb-3 block text-xs font-black tracking-[0.35em] uppercase text-neutral-500">Confirm Password</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -201,7 +215,7 @@ const CreateFoodStallPage = () => {
                 onChange={handleConfirmPasswordChange}
                 placeholder="Re-enter password"
                 required
-                className={`w-full px-10 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white focus:outline-none focus:ring-2 ${matchError ? 'ring-red-500' : 'focus:ring-pink-600'} placeholder-neutral-500`}
+                className={`w-full border-2 bg-white px-10 py-3 font-bold text-neutral-950 outline-none transition-colors ${matchError ? 'border-red-600' : 'border-neutral-950 focus:border-red-600'} placeholder:text-neutral-400`}
               />
               <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
               <button
@@ -221,13 +235,13 @@ const CreateFoodStallPage = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full py-3 bg-pink-600 hover:bg-pink-700 rounded-lg text-lg font-semibold transition duration-300"
+            className="w-full border-2 border-neutral-950 bg-red-600 py-3 text-xs font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#000] transition-transform hover:-translate-y-1 hover:bg-neutral-950 disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
             disabled={isFormInvalid}
           >
             Create Lessee Account
           </button>
-          
         </form>
+        </div>
       </div>
     </div>
   );

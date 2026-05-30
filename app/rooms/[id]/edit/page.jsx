@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { FaChevronLeft, FaEdit } from 'react-icons/fa';
@@ -22,9 +22,9 @@ const menuTypeOptions = ['Meals', 'Dessert', 'Snacks', 'Add-Ons', 'Drinks'];
 const BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
 const PROJECT_ID = process.env.NEXT_PUBLIC_APPWRITE_PROJECT;
 
-export default function EditSpacePage({ params }) {
+export default function EditSpacePage() {
   const router = useRouter();
-  const { id } = params;
+  const { id } = useParams();
 
   const [stall, setStall] = useState(null);
   const [selectedTypes, setSelectedTypes] = useState([]);
@@ -192,9 +192,9 @@ export default function EditSpacePage({ params }) {
 
   if (!stall) {
     return (
-      <div className="bg-neutral-900 min-h-screen text-white p-6 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl">Loading stall data...</p>
+      <div className="flex min-h-screen items-center justify-center bg-white p-6 text-neutral-950">
+        <div className="border-4 border-black bg-white px-8 py-6 text-center shadow-[8px_8px_0px_#000]">
+          <p className="text-base font-black uppercase tracking-[0.14em] text-red-600">Loading Stall Data...</p>
         </div>
       </div>
     );
@@ -210,39 +210,39 @@ export default function EditSpacePage({ params }) {
     );
 
   return (
-    <div className="bg-neutral-900 min-h-screen text-white py-6 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white px-0 py-4 md:py-6">
+      <div className="w-full">
         {/* Back Link - Increased py to 4 for slightly less space */}
-        <Link href="/rooms/my" className="flex items-center text-white hover:text-pink-500 transition duration-300 py-4">
-          <FaChevronLeft className="mr-2 text-lg" />
-          <span className="font-medium text-lg">Back to My Stalls</span>
+        <Link href="/rooms/my" className="inline-flex items-center border-2 border-black bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-neutral-900 transition hover:bg-black hover:text-white">
+          <FaChevronLeft className="mr-2 text-sm" />
+          <span>Back to My Stalls</span>
         </Link>
 
         {/* Page Header - Increased mb for separation */}
-        <header className="text-center mb-12">
-          <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">Details</h2>
-          <p className="mt-2 text-3xl sm:text-5xl font-extrabold text-white leading-tight">Edit Food Stall</p>
+        <header className="mt-5 border-4 border-black bg-white px-5 py-8 shadow-[10px_10px_0px_#000] md:px-8 md:py-10">
+          <h2 className="text-xs font-black uppercase tracking-[0.35em] text-red-600">Stall Details</h2>
+          <p className="mt-3 text-4xl font-black uppercase leading-tight tracking-tight md:text-6xl">Edit Food Stall</p>
         </header>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-8 max-w-4xl mx-auto">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6 w-full">
 
           {/* Food Stall Banner/Logo Section */}
-          <div className="border border-neutral-700 rounded-xl overflow-hidden shadow-xl relative mb-8">
-            <label className="block font-semibold text-lg p-4 bg-neutral-800 border-b border-neutral-700">Food Stall Banner/Logo</label>
+          <div className="relative overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0px_#000]">
+            <label className="block border-b-2 border-black bg-neutral-100 p-4 text-xs font-black uppercase tracking-[0.14em] text-neutral-800">Food Stall Banner / Logo</label>
             
             {/* Edit Icon */}
             <button
               type="button"
               onClick={() => setShowImageControls(!showImageControls)}
-              className="absolute top-4 right-4 bg-neutral-700 text-white p-2 rounded-full hover:bg-neutral-600 transition-colors duration-300 z-10"
+              className="absolute right-4 top-4 z-10 border-2 border-black bg-red-600 p-2 text-white shadow-[3px_3px_0px_#000] transition hover:bg-black"
               aria-label="Edit banner image"
             >
               <FaEdit className="w-5 h-5" />
             </button>
 
             {/* Image Preview Container (Banner style) */}
-            <div className="relative w-full h-48 sm:h-64 bg-neutral-900 flex items-center justify-center">
+            <div className="relative flex h-48 w-full items-center justify-center bg-neutral-100 sm:h-64">
               {stallImageUrl ? (
                 <img
                   src={stallImageUrl}
@@ -250,14 +250,14 @@ export default function EditSpacePage({ params }) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="text-neutral-500 text-center p-4">
+                <div className="p-4 text-center text-xs font-black uppercase tracking-[0.12em] text-neutral-600">
                   No Stall Image Selected (Recommended: wide banner image)
                 </div>
               )}
               
               {/* Overlay with Controls (Conditional visibility) */}
               {showImageControls && (
-                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 transition-opacity duration-300">
+                <div className="absolute inset-0 flex items-center justify-center bg-black/65 p-4">
                   <div className="flex flex-col gap-3 w-full max-w-sm">
                     <input
                       ref={fileInputRef}
@@ -269,7 +269,7 @@ export default function EditSpacePage({ params }) {
                     />
                     <label
                       htmlFor="stallImage"
-                      className="cursor-pointer bg-pink-600 text-white rounded-lg py-3 px-4 text-center font-bold hover:bg-pink-700 transition-colors duration-300"
+                      className="cursor-pointer border-2 border-black bg-red-600 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-white shadow-[4px_4px_0px_#000] transition hover:bg-black hover:shadow-[2px_2px_0px_#000] hover:translate-y-[2px]"
                     >
                       {stallImageButtonText}
                     </label>
@@ -280,7 +280,7 @@ export default function EditSpacePage({ params }) {
                           setNewImages([]);
                           if (fileInputRef.current) fileInputRef.current.value = '';
                         }}
-                        className="px-4 py-2 text-sm rounded-lg bg-neutral-700 text-white hover:bg-neutral-600 transition-colors duration-300"
+                        className="border-2 border-black bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-red-600 transition hover:bg-black hover:text-white"
                       >
                         Remove Current Image
                       </button>
@@ -293,64 +293,64 @@ export default function EditSpacePage({ params }) {
           {/* End Food Stall Banner/Logo Section */}
 
           {/* Stall Name & Number */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-6 border-4 border-black bg-white p-5 shadow-[8px_8px_0px_#000] md:grid-cols-2 md:p-6">
             <div>
-              <label htmlFor="name" className="block font-semibold mb-2">Food Stall Name</label>
+              <label htmlFor="name" className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-700">Food Stall Name</label>
               <input
                 type="text"
                 id="name"
                 name="name"
                 defaultValue={stall.name}
                 required
-                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-4 focus:ring-pink-500 focus:border-pink-500 transition-colors duration-300"
+                className="w-full border-2 border-black bg-white px-4 py-3 text-sm font-medium text-neutral-950 outline-none focus:border-red-600"
               />
             </div>
             <div>
-              <label htmlFor="stallNumber" className="block font-semibold mb-2">Stall #</label>
+              <label htmlFor="stallNumber" className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-700">Stall #</label>
               <input
                 type="number"
                 id="stallNumber"
                 name="stallNumber"
                 defaultValue={stall.stallNumber}
                 readOnly
-                className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-4 cursor-not-allowed opacity-75"
+                className="w-full cursor-not-allowed border-2 border-black bg-neutral-100 px-4 py-3 text-sm font-bold text-neutral-700"
               />
             </div>
           </div>
 
           {/* Stall Description */}
-          <div className="mb-8">
-            <label htmlFor="description" className="block font-semibold mb-2">Description</label>
+          <div className="mb-8 border-4 border-black bg-white p-5 shadow-[8px_8px_0px_#000] md:p-6">
+            <label htmlFor="description" className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-700">Description</label>
             <textarea
               id="description"
               name="description"
               defaultValue={stall.description}
               required
               rows="4"
-              className="bg-neutral-800 text-white border border-neutral-700 rounded-lg w-full py-3 px-4 resize-none focus:ring-pink-500 focus:border-pink-500 transition-colors duration-300"
+              className="w-full resize-none border-2 border-black bg-white px-4 py-3 text-sm text-neutral-950 outline-none focus:border-red-600"
             />
           </div>
 
           {/* Categories */}
-          <div className="mb-8">
-            <label className="block font-semibold mb-3">Select Categories</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="mb-8 border-4 border-black bg-white p-5 shadow-[8px_8px_0px_#000] md:p-6">
+            <label className="mb-3 block text-xs font-black uppercase tracking-[0.14em] text-neutral-700">Select Categories</label>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {foodTypes.concat(customCategories).map(type => (
-                <label key={type} className="flex items-center space-x-2 text-sm text-neutral-300">
+                <label key={type} className="flex items-center gap-2 border-2 border-black bg-neutral-50 px-3 py-2 text-xs font-bold text-neutral-900">
                   <input
                     type="checkbox"
                     value={type}
                     checked={selectedTypes.includes(type)}
                     onChange={handleTypeChange}
-                    className="accent-pink-500 w-4 h-4"
+                    className="h-4 w-4 accent-red-600"
                   />
                   <span>{type}</span>
                 </label>
               ))}
             </div>
 
-            <div className="mt-6 border border-neutral-700 rounded-lg p-4">
-              <label htmlFor="customCategoryInput" className="text-sm font-semibold mb-2 block">Add Custom Category</label>
+            <div className="mt-6 border-2 border-black bg-neutral-50 p-4">
+              <label htmlFor="customCategoryInput" className="mb-2 block text-xs font-black uppercase tracking-[0.12em] text-neutral-700">Add Custom Category</label>
               <div className="flex gap-2">
                 <input
                   id="customCategoryInput"
@@ -364,12 +364,12 @@ export default function EditSpacePage({ params }) {
                       e.preventDefault();
                     }
                   }}
-                  className="border text-neutral-200 bg-neutral-800 rounded px-3 py-2 text-sm flex-grow focus:ring-pink-500 focus:border-pink-500"
+                  className="flex-grow border-2 border-black bg-white px-3 py-2 text-sm text-neutral-950 outline-none focus:border-red-600"
                 />
                 <button
                   type="button"
                   onClick={handleAddCustomCategory}
-                  className="bg-pink-600 text-white rounded px-4 py-2 text-sm hover:bg-pink-700 transition-colors duration-300 font-medium whitespace-nowrap"
+                  className="whitespace-nowrap border-2 border-black bg-red-600 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white shadow-[3px_3px_0px_#000] transition hover:bg-black hover:shadow-[1px_1px_0px_#000] hover:translate-y-[2px] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500 disabled:shadow-none disabled:translate-y-0"
                   disabled={otherCategory.trim() === "" || customCategories.includes(otherCategory.trim()) || foodTypes.includes(otherCategory.trim())}
                 >
                   Add
@@ -377,16 +377,16 @@ export default function EditSpacePage({ params }) {
               </div>
 
               {customCategories.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-neutral-800">
-                  <p className="text-sm font-medium mb-2">Current Custom Categories:</p>
+                <div className="mt-4 border-t-2 border-black pt-3">
+                  <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-neutral-700">Current Custom Categories</p>
                   <div className="flex flex-wrap gap-2">
                     {customCategories.map(category => (
-                      <span key={category} className="flex items-center bg-neutral-700 text-neutral-200 rounded-full px-3 py-1 text-xs">
+                      <span key={category} className="flex items-center border-2 border-black bg-white px-3 py-1 text-xs font-bold text-neutral-900">
                         {category}
                         <button
                           type="button"
                           onClick={() => handleRemoveCustomCategory(category)}
-                          className="ml-2 text-red-400 hover:text-red-300 font-bold leading-none"
+                          className="ml-2 text-red-600 hover:text-black font-black leading-none"
                         >
                           &times;
                         </button>
@@ -399,20 +399,20 @@ export default function EditSpacePage({ params }) {
           </div>
           
           {/* Menu Items Section */}
-          <div className="mb-10">
+          <div className="mb-10 border-4 border-black bg-white p-5 shadow-[8px_8px_0px_#000] md:p-6">
             <div className="flex justify-between items-center mb-6"> {/* Increased mb for section header */}
-              <h3 className="font-bold text-xl sm:text-2xl text-pink-600">Menu</h3>
+              <h3 className="text-2xl font-black uppercase tracking-[0.16em] text-red-600">Menu</h3>
             </div>
 
             <div className="space-y-8"> {/* Increased space-y for menu items */}
               {menuItems.map((item, index) => (
-                <div key={index} className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 sm:p-6 space-y-4">
+                <div key={index} className="space-y-4 border-3 border-black bg-neutral-50 p-4 md:p-6">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-                    <h4 className="text-lg font-semibold text-white">Item {index + 1}</h4>
+                    <h4 className="text-base font-black uppercase tracking-[0.1em] text-neutral-950 md:text-lg">Item {index + 1}</h4>
                     <button
                       type="button"
                       onClick={() => removeMenuItem(index)}
-                      className="text-red-500 hover:text-red-600 font-medium flex items-center gap-1"
+                      className="flex items-center gap-1 border-2 border-black bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-red-600 transition hover:bg-black hover:text-white"
                     >
                       <CiCircleMinus className="w-5 h-5" /> Remove Item
                     </button>
@@ -425,12 +425,12 @@ export default function EditSpacePage({ params }) {
                       required
                       value={item.name}
                       onChange={e => handleMenuChange(index, 'name', e.target.value)}
-                      className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-3 px-4 w-full"
+                      className="w-full border-2 border-black bg-white px-4 py-3 text-sm text-neutral-950 outline-none focus:border-red-600"
                     />
                     <select
                       value={item.menuType}
                       onChange={e => handleMenuChange(index, 'menuType', e.target.value)}
-                      className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-3 px-4 w-full"
+                      className="w-full border-2 border-black bg-white px-4 py-3 text-sm text-neutral-950 outline-none focus:border-red-600"
                     >
                       <option value="">Select Type</option>
                       {menuTypeOptions.map(t => (
@@ -439,15 +439,15 @@ export default function EditSpacePage({ params }) {
                     </select>
                   </div>
                   
-                  <div className="border border-neutral-700 rounded-lg p-3">
+                  <div className="border-2 border-black bg-white p-3">
                     <label className="flex items-center space-x-2 cursor-pointer mb-2">
                       <input
                         type="checkbox"
                         checked={item.useSubType}
                         onChange={e => handleMenuChange(index, 'useSubType', e.target.checked)}
-                        className="accent-pink-500 w-4 h-4"
+                        className="h-4 w-4 accent-red-600"
                       />
-                      <span className="text-sm font-medium text-neutral-300">Add Menu Sub-Type (e.g., Hot/Cold, Flavor, Style)</span>
+                      <span className="text-sm font-semibold text-neutral-800">Add Menu Sub-Type (e.g., Hot/Cold, Flavor, Style)</span>
                     </label>
 
                     {item.useSubType && (
@@ -456,7 +456,7 @@ export default function EditSpacePage({ params }) {
                         placeholder="Enter Sub-Type (e.g., Spicy, Iced, Korean Style)"
                         value={item.menuSubType}
                         onChange={e => handleMenuChange(index, 'menuSubType', e.target.value)}
-                        className="mt-2 bg-neutral-900 text-white border border-neutral-700 rounded-lg py-2 px-3 w-full"
+                        className="mt-2 w-full border-2 border-black bg-white px-3 py-2 text-sm text-neutral-950 outline-none focus:border-red-600"
                       />
                     )}
                   </div>
@@ -466,7 +466,7 @@ export default function EditSpacePage({ params }) {
                     value={item.description}
                     onChange={e => handleMenuChange(index, 'description', e.target.value)}
                     rows="2"
-                    className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-3 px-4 w-full resize-none"
+                    className="w-full resize-none border-2 border-black bg-white px-4 py-3 text-sm text-neutral-950 outline-none focus:border-red-600"
                   />
 
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-2">
@@ -477,7 +477,7 @@ export default function EditSpacePage({ params }) {
                           name={`sizeOption-${index}`}
                           checked={!item.useSizes}
                           onChange={() => handleMenuChange(index, 'useSizes', false)}
-                          className="accent-pink-500"
+                          className="accent-red-600"
                         />
                         <span className="text-sm">One-Sized Price</span>
                       </label>
@@ -487,7 +487,7 @@ export default function EditSpacePage({ params }) {
                           name={`sizeOption-${index}`}
                           checked={item.useSizes}
                           onChange={() => handleMenuChange(index, 'useSizes', true)}
-                          className="accent-pink-500"
+                          className="accent-red-600"
                         />
                         <span className="text-sm">Size Options</span>
                       </label>
@@ -499,7 +499,7 @@ export default function EditSpacePage({ params }) {
                         placeholder="₱ Price"
                         value={item.price}
                         onChange={e => handleMenuChange(index, 'price', e.target.value)}
-                        className="bg-neutral-900 text-white border border-neutral-700 rounded-lg py-2 px-3 w-full sm:w-32"
+                        className="w-full border-2 border-black bg-white px-3 py-2 text-sm text-neutral-950 outline-none focus:border-red-600 sm:w-32"
                       />
                     ) : (
                       <div className="flex flex-wrap gap-4">
@@ -509,16 +509,16 @@ export default function EditSpacePage({ params }) {
                               type="checkbox"
                               checked={item[`${size}Checked`]}
                               onChange={e => handleMenuChange(index, `${size}Checked`, e.target.checked)}
-                              className="accent-pink-500"
+                              className="accent-red-600"
                             />
-                            <span className="text-xs capitalize text-neutral-400">{size}</span>
+                            <span className="text-xs font-bold uppercase text-neutral-700">{size}</span>
                             <input
                               type="number"
                               placeholder="Price"
                               value={item[`${size}Fee`]}
                               disabled={!item[`${size}Checked`]}
                               onChange={e => handleMenuChange(index, `${size}Fee`, e.target.value)}
-                              className="bg-neutral-900 border border-neutral-700 rounded-lg py-2 px-3 w-20 text-xs disabled:opacity-50"
+                              className="w-20 border-2 border-black bg-white px-3 py-2 text-xs text-neutral-950 outline-none focus:border-red-600 disabled:opacity-50"
                             />
                           </div>
                         ))}
@@ -527,9 +527,9 @@ export default function EditSpacePage({ params }) {
                   </div>
 
                   <div className="flex flex-col items-start gap-4 pt-2">
-                    <span className="text-sm font-medium">Menu Item Image</span>
+                    <span className="text-xs font-black uppercase tracking-[0.1em] text-neutral-700">Menu Item Image</span>
                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-                      <div className="relative w-36 h-36 rounded-lg overflow-hidden border border-neutral-700 flex-shrink-0">
+                      <div className="relative h-36 w-36 flex-shrink-0 overflow-hidden border-2 border-black bg-white">
                         {(item.menuImage || item.existingImage) ? (
                           <img
                             src={item.menuImage ? URL.createObjectURL(item.menuImage) : `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${item.existingImage}/view?project=${PROJECT_ID}`}
@@ -537,7 +537,7 @@ export default function EditSpacePage({ params }) {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="flex items-center justify-center w-full h-full bg-neutral-900 text-neutral-500 text-center text-xs p-2">
+                          <div className="flex h-full w-full items-center justify-center bg-neutral-100 p-2 text-center text-xs font-bold text-neutral-600">
                             No Image
                           </div>
                         )}
@@ -553,7 +553,7 @@ export default function EditSpacePage({ params }) {
                         />
                         <label
                           htmlFor={`menuImage-${index}`}
-                          className="cursor-pointer bg-neutral-700 text-white rounded-lg py-3 px-4 text-center hover:bg-neutral-600 transition-colors duration-300 w-full"
+                          className="w-full cursor-pointer border-2 border-black bg-white px-4 py-3 text-center text-xs font-black uppercase tracking-[0.12em] text-neutral-900 transition hover:bg-black hover:text-white"
                         >
                           {item.menuImage ? "Change New Image" : (item.existingImage ? "Change Image" : "Choose Image")}
                         </label>
@@ -561,7 +561,7 @@ export default function EditSpacePage({ params }) {
                           <button
                             type="button"
                             onClick={() => handleMenuImageChange(index, null)}
-                            className="px-4 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors duration-300"
+                            className="border-2 border-black bg-red-600 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-black"
                           >
                             Undo Change
                           </button>
@@ -577,7 +577,7 @@ export default function EditSpacePage({ params }) {
               <button
                 type="button"
                 onClick={addMenuItem}
-                className="flex items-center gap-1 text-pink-500 hover:text-pink-400 font-semibold"
+                className="flex items-center gap-2 border-2 border-black bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-red-600 transition hover:bg-black hover:text-white"
               >
                 <CiCirclePlus className="w-6 h-6" /> Add New Item
               </button>
@@ -587,7 +587,7 @@ export default function EditSpacePage({ params }) {
           {/* Submit - Increased py for a larger button */}
           <button
             type="submit"
-            className="w-full py-5 bg-pink-600 hover:bg-pink-700 rounded-lg font-bold text-white text-lg tracking-widest transition-colors duration-300"
+            className="w-full border-4 border-black bg-red-600 px-4 py-5 text-sm font-black uppercase tracking-[0.2em] text-white shadow-[8px_8px_0px_#000] transition hover:translate-y-[2px] hover:bg-black hover:shadow-[4px_4px_0px_#000]"
           >
             Update Food Stall
           </button>

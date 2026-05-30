@@ -17,13 +17,13 @@ import {
 
 // Helper component for displaying a row of data with an icon
 const DataRow = ({ icon: Icon, label, value, valueClassName = '' }) => (
-  <div className="flex items-start">
-    <Icon className="text-pink-500 text-base mt-1 mr-4 flex-shrink-0" />
+  <div className="flex items-start gap-3">
+    <Icon className="mt-0.5 flex-shrink-0 text-base text-red-600" />
     <div className="flex flex-col">
-      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+      <span className="text-[10px] font-black uppercase tracking-[0.18em] text-neutral-600">
         {label}
       </span>
-      <span className={`font-medium text-white break-words ${valueClassName}`}>
+      <span className={`break-words text-sm font-bold text-neutral-950 ${valueClassName}`}>
         {value}
       </span>
     </div>
@@ -63,8 +63,8 @@ const ReservationTicket = ({ booking, showActions = true }) => {
     if (checkoutDate && now > checkoutDate && status !== 'declined') {
       return {
         text: 'Expired',
-        color: 'text-gray-400',
-        bgColor: 'bg-gray-700/20',
+        color: 'text-neutral-700',
+        bgColor: 'bg-neutral-200',
         icon: FaBan,
       };
     }
@@ -73,29 +73,29 @@ const ReservationTicket = ({ booking, showActions = true }) => {
       case 'pending':
         return {
           text: 'Pending Review',
-          color: 'text-yellow-400',
-          bgColor: 'bg-yellow-400/10',
+          color: 'text-amber-800',
+          bgColor: 'bg-amber-200',
           icon: FaHourglassHalf,
         };
       case 'approved':
         return {
           text: 'Approved',
-          color: 'text-green-400',
-          bgColor: 'bg-green-400/10',
+          color: 'text-emerald-800',
+          bgColor: 'bg-emerald-200',
           icon: FaCheckCircle,
         };
       case 'declined':
         return {
           text: 'Declined',
-          color: 'text-red-500',
-          bgColor: 'bg-red-500/10',
+          color: 'text-red-700',
+          bgColor: 'bg-red-200',
           icon: FaTimesCircle,
         };
       default:
         return {
           text: 'Unknown Status',
-          color: 'text-gray-400',
-          bgColor: 'bg-gray-700/20',
+          color: 'text-neutral-700',
+          bgColor: 'bg-neutral-200',
           icon: FaExclamationTriangle,
         };
     }
@@ -105,55 +105,55 @@ const ReservationTicket = ({ booking, showActions = true }) => {
 
   if (!booking || !booking.check_in || !booking.check_out) {
     return (
-      <div className="bg-neutral-900 border border-red-500 rounded-xl p-6 text-center text-white">
+      <div className="border-4 border-black bg-white p-6 text-center shadow-[6px_6px_0px_#000]">
         Error: Incomplete lease or stall data provided.
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-neutral-900 border border-neutral-700 rounded-xl p-6 text-white shadow-lg hover:border-pink-600 hover:shadow-pink-600/10 transition-all duration-300 font-sans">
+    <div className="w-full border-4 border-black bg-white p-5 text-neutral-950 shadow-[8px_8px_0px_#000] md:p-6">
       
       {/* 1. Header: Title and Status Badge */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-neutral-800">
-        <h2 className="text-xl font-bold tracking-wider uppercase text-pink-500 mb-2 sm:mb-0">
+      <div className="flex flex-col justify-between gap-3 border-b-2 border-black pb-4 sm:flex-row sm:items-center">
+        <h2 className="mb-1 text-lg font-black uppercase tracking-[0.2em] text-red-600 sm:mb-0 md:text-xl">
           Lease Request
         </h2>
-        <div className={`flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${statusInfo.bgColor}`}>
+        <div className={`inline-flex items-center border-2 border-black px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.14em] ${statusInfo.bgColor}`}>
           <statusInfo.icon className={`mr-2 ${statusInfo.color}`} />
           <span className={statusInfo.color}>{statusInfo.text}</span>
         </div>
       </div>
 
       {/* 2. Main Details: Lessee and Stall Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
-        <div className="space-y-4">
+      <div className="my-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="space-y-4 border-2 border-black bg-neutral-50 p-4">
           <DataRow icon={FaUser} label="Lessee Name" value={userName} />
           <DataRow icon={FaStore} label="Requested Stall" value={`${room.name} (#${room.stallNumber})`} />
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 border-2 border-black bg-neutral-50 p-4">
           <DataRow icon={FaCalendarCheck} label="Lease Start" value={formatDate(booking.check_in)} />
           <DataRow icon={FaCalendarTimes} label="Lease End" value={formatDate(booking.check_out)} />
         </div>
       </div>
 
       {/* 3. Footer: Lease ID and Actions */}
-      <div className="pt-4 border-t border-neutral-800">
-        <div className="mb-6">
-          <DataRow icon={FaHashtag} label="Lease ID" value={leaseId} valueClassName="text-sm font-mono text-gray-300" />
+      <div className="border-t-2 border-black pt-4">
+        <div className="mb-6 border-2 border-black bg-neutral-50 p-4">
+          <DataRow icon={FaHashtag} label="Lease ID" value={leaseId} valueClassName="font-mono text-xs text-neutral-800" />
         </div>
 
         {showActions && (
-          <div className="flex flex-col sm:flex-row justify-end items-center space-y-3 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-end">
             <button
               onClick={() => console.log(`Cancel Booking: ${leaseId}`)}
-              className="w-full sm:w-auto border border-red-600/50 text-red-500 px-5 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 hover:text-white hover:border-red-600 transition-all duration-200"
+              className="w-full border-2 border-black bg-white px-5 py-2 text-xs font-black uppercase tracking-[0.14em] text-red-600 transition hover:bg-black hover:text-white sm:w-auto"
             >
               Cancel Request
             </button>
             <button
               onClick={() => console.log(`View Room: ${room.$id}`)}
-              className="w-full sm:w-auto bg-pink-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-pink-700 transition-all duration-200"
+              className="w-full border-2 border-black bg-red-600 px-5 py-2 text-xs font-black uppercase tracking-[0.14em] text-white shadow-[4px_4px_0px_#000] transition hover:bg-black hover:shadow-[2px_2px_0px_#000] hover:translate-y-[2px] sm:w-auto"
             >
               View Stall Details
             </button>

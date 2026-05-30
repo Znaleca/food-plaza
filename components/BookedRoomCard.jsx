@@ -19,7 +19,7 @@ const REQUIRED_DOCUMENTS_NAMES = [
   'Business Permit',
   'Safety and Sanitary Inspection (BFP)',
   'BIR',
-  'Lease Agreement',
+  'Lease Agreement (Notarized)',
 ];
 
 // Utility to parse documents (shared with UploadedDocuments)
@@ -47,10 +47,11 @@ const areAllDocsVerified = (booking) => {
         return map;
     }, {});
     
-    // Check if every required document exists AND has a status of 'verified'
+    // Check if every required document exists and is in a verified-like state
     const allVerified = REQUIRED_DOCUMENTS_NAMES.every(requiredName => {
         const doc = uploadedDocMap[requiredName];
-        return doc && doc.status === 'verified';
+      const normalizedStatus = (doc?.status || '').toLowerCase();
+      return doc && (normalizedStatus === 'verified' || normalizedStatus === 'approved');
     });
     
     return allVerified;
@@ -114,18 +115,18 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
     const checkOut = new Date(checkOutDate);
 
     if (checkOutDate && checkOut < now) {
-      return { text: 'Expired', color: 'text-gray-500 bg-gray-100 rounded-sm px-1' };
+      return { text: 'Expired', color: 'border border-black bg-neutral-200 px-2 py-0.5 text-neutral-700' };
     }
 
     switch (status) {
       case 'pending':
-        return { text: 'Pending', color: 'text-yellow-700 bg-yellow-100 rounded-sm px-1' };
+        return { text: 'Pending', color: 'border border-black bg-yellow-200 px-2 py-0.5 text-yellow-900' };
       case 'approved':
-        return { text: 'Active', color: 'text-green-700 bg-green-100 rounded-sm px-1' };
+        return { text: 'Active', color: 'border border-black bg-green-200 px-2 py-0.5 text-green-900' };
       case 'declined':
-        return { text: 'Declined', color: 'text-red-700 bg-red-100 rounded-sm px-1' };
+        return { text: 'Declined', color: 'border border-black bg-red-200 px-2 py-0.5 text-red-900' };
       default:
-        return { text: 'Unknown', color: 'text-gray-500 bg-gray-100 rounded-sm px-1' };
+        return { text: 'Unknown', color: 'border border-black bg-neutral-200 px-2 py-0.5 text-neutral-700' };
     }
   };
 
@@ -203,29 +204,28 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
     ? `https://cloud.appwrite.io/v1/storage/buckets/${process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS}/files/${booking.pdf_attachment}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT}`
     : null;
 
-  // Define a professional accent color (Deep Blue)
-  const ACCENT_COLOR_CLASS = 'border-blue-700 text-blue-700';
-  const ACCENT_BG_CLASS = 'bg-blue-700 hover:bg-blue-800 text-white';
-  const SUCCESS_BG_CLASS = 'bg-green-600 hover:bg-green-700 text-white';
-  const DANGER_BG_CLASS = 'bg-red-600 hover:bg-red-700 text-white';
-  const WARNING_COLOR_CLASS = 'border-red-700 text-red-700 hover:bg-red-700 hover:text-white';
+  const ACCENT_COLOR_CLASS = 'border-2 border-black bg-white text-black hover:bg-black hover:text-white shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] hover:translate-y-[2px]';
+  const ACCENT_BG_CLASS = 'border-2 border-black bg-red-600 text-white hover:bg-black shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] hover:translate-y-[2px]';
+  const SUCCESS_BG_CLASS = 'border-2 border-black bg-green-600 text-white hover:bg-black shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] hover:translate-y-[2px]';
+  const DANGER_BG_CLASS = 'border-2 border-black bg-red-600 text-white hover:bg-black shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] hover:translate-y-[2px]';
+  const WARNING_COLOR_CLASS = 'border-2 border-black bg-white text-red-700 hover:bg-red-700 hover:text-white shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] hover:translate-y-[2px]';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 text-center text-gray-800 shadow-md transition-shadow duration-300 hover:shadow-lg">
+    <div className="border-4 border-black bg-white p-5 text-center text-gray-800 shadow-[8px_8px_0px_#000] transition-all duration-200 hover:shadow-[6px_6px_0px_#000] sm:p-7">
       
       {/* Contract Header */}
-      <div className="border-b-2 border-blue-700 pb-3 mb-4 sm:mb-6">
-        <h3 className="text-lg sm:text-xl font-extrabold tracking-tight uppercase text-gray-900">
+      <div className="mb-4 border-b-2 border-black pb-3 sm:mb-6">
+        <h3 className="text-lg font-extrabold tracking-tight uppercase text-gray-900 sm:text-xl">
           Lease Agreement: {stallName}
         </h3>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="mt-1 text-xs font-black uppercase tracking-[0.2em] text-red-600 sm:text-sm">
           Stall #{room.stallNumber || 'N/A'}
         </p>
       </div>
 
       {/* Lessee & ID Block */}
       <div className="mb-6 space-y-1">
-        <p className="text-base sm:text-lg font-semibold text-gray-900">
+        <p className="text-base font-semibold text-gray-900 sm:text-lg">
           Lessee: <span className="font-extrabold">{lesseeName}</span>
         </p>
         <p className="text-xs text-gray-500">
@@ -234,7 +234,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
       </div>
 
       {/* Details Table */}
-      <div className="text-sm border border-gray-200 rounded-lg p-4 sm:p-5 bg-gray-50 text-left">
+      <div className="border-2 border-black bg-neutral-50 p-4 text-left text-sm sm:p-5">
         <div className="grid grid-cols-2 gap-y-3 gap-x-2">
             <p className="font-medium text-gray-600">Lease Duration:</p>
             <p className="font-extrabold text-gray-900 text-right">{durationText}</p>
@@ -257,7 +257,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
         <div className="flex flex-col sm:flex-row gap-3 mt-6">
           <button
             onClick={() => setShowPdfViewer(true)}
-            className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded text-sm font-semibold transition-all ${ACCENT_BG_CLASS}`}
+            className={`w-full flex items-center justify-center space-x-2 px-4 py-2 text-sm font-semibold transition-all ${ACCENT_BG_CLASS}`}
           >
             <FaFileContract />
             <span>View Main Signed Contract</span>
@@ -266,7 +266,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
       )}
 
       {/* Agreement Notice */}
-      <div className="mt-6 text-[11px] sm:text-xs text-gray-600 border-t pt-4 text-left">
+      <div className="mt-6 border-t-2 border-black pt-4 text-left text-[11px] text-gray-600 sm:text-xs">
         <p>
           <strong className="text-gray-900">Notice:</strong> The lease for{' '}
           <strong className="text-gray-900">{stallName}</strong> requires compliance with all{' '}
@@ -277,7 +277,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
 
       {/* Actions */}
       {showActions && (
-        <div className="flex flex-col sm:flex-row flex-wrap justify-center mt-6 gap-3 sm:gap-4 border-t pt-4">
+        <div className="mt-6 flex flex-col flex-wrap justify-center gap-3 border-t-2 border-black pt-4 sm:flex-row sm:gap-4">
 
           {/* --- Approve and Decline Buttons for Pending Leases (CONDITIONAL) --- */}
           {isPending && documentsVerified && (
@@ -285,7 +285,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
               <button
                 onClick={() => handleStatusChange('approve')}
                 disabled={isProcessing}
-                className={`flex items-center justify-center space-x-2 px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all ${SUCCESS_BG_CLASS} disabled:opacity-50`}
+                className={`flex items-center justify-center space-x-2 px-4 py-2 text-xs sm:text-sm font-semibold transition-all ${SUCCESS_BG_CLASS} disabled:opacity-50`}
               >
                 <FaCheckCircle />
                 <span>{isProcessing ? 'Approving...' : 'Approve Lease'}</span>
@@ -294,7 +294,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
               <button
                 onClick={() => handleStatusChange('decline')}
                 disabled={isProcessing}
-                className={`flex items-center justify-center space-x-2 px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all ${DANGER_BG_CLASS} disabled:opacity-50`}
+                className={`flex items-center justify-center space-x-2 px-4 py-2 text-xs sm:text-sm font-semibold transition-all ${DANGER_BG_CLASS} disabled:opacity-50`}
               >
                 <FaTimesCircle />
                 <span>{isProcessing ? 'Declining...' : 'Decline Lease'}</span>
@@ -304,7 +304,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
 
           {/* --- Notice if Pending but Docs NOT Verified --- */}
           {isPending && !documentsVerified && (
-            <div className="p-2 border border-yellow-400 bg-yellow-100 text-yellow-800 text-xs rounded-lg font-semibold flex items-center justify-center space-x-1">
+            <div className="flex items-center justify-center space-x-1 border-2 border-black bg-yellow-100 p-2 text-xs font-semibold text-yellow-800">
                 <FaTimesCircle />
                 <span>Documents must be verified before approval.</span>
             </div>
@@ -314,7 +314,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
           {statusText === 'Expired' && (
             <button
               onClick={() => setShowRenewForm(true)}
-              className={`flex items-center justify-center space-x-2 px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all ${ACCENT_BG_CLASS}`}
+              className={`flex items-center justify-center space-x-2 px-4 py-2 text-xs sm:text-sm font-semibold transition-all ${ACCENT_BG_CLASS}`}
             >
               <FaRedoAlt />
               <span>Renew Lease</span>
@@ -324,7 +324,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
           {/* View Uploaded Documents Button - ALWAYS SHOWN and CLICKABLE */}
           <button
             onClick={() => setShowDocumentList(true)}
-            className={`flex items-center justify-center space-x-2 border px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all ${ACCENT_COLOR_CLASS} hover:bg-blue-50`}
+            className={`flex items-center justify-center space-x-2 px-4 py-2 text-xs sm:text-sm font-semibold transition-all ${ACCENT_COLOR_CLASS}`}
           >
             <FaFileContract />
             {/* Display the count of documents from the array length */}
@@ -336,7 +336,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
           {!pdfLink && !isActive && (
             <button
               onClick={() => setShowContract(true)}
-              className={`flex items-center justify-center space-x-2 border px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all ${ACCENT_COLOR_CLASS} hover:bg-blue-50`}
+              className={`flex items-center justify-center space-x-2 px-4 py-2 text-xs sm:text-sm font-semibold transition-all ${ACCENT_COLOR_CLASS}`}
             >
               <FaFileContract />
               <span>View Contract Draft</span>
@@ -350,7 +350,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
           {isDeclined && (
             <button
               onClick={handleDelete}
-              className={`flex items-center justify-center space-x-2 border px-4 py-2 rounded text-xs sm:text-sm font-semibold transition-all ${WARNING_COLOR_CLASS}`}
+              className={`flex items-center justify-center space-x-2 px-4 py-2 text-xs sm:text-sm font-semibold transition-all ${WARNING_COLOR_CLASS}`}
             >
               <FaTrashAlt />
               <span>Delete Lease</span>
@@ -361,11 +361,11 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
 
       {/* Renew Lease Modal */}
       {showRenewForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-70 z-50 p-4">
-          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
+          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto border-4 border-black bg-white shadow-[10px_10px_0px_#000]">
             <button
               onClick={() => setShowRenewForm(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-900 transition-colors text-2xl z-10"
+              className="absolute right-3 top-3 z-10 border-2 border-black bg-white p-1 text-xl text-gray-700 transition-colors hover:bg-black hover:text-white"
               aria-label="Close renewal form"
             >
               <FaTimes />
@@ -377,7 +377,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
 
       {/* Contract Preview Modal (Draft) */}
       {showContract && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-80 z-50 p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 p-4">
           <div className="flex flex-col items-center max-w-2xl mx-auto w-full">
             {/* Contract Content */}
             <ContractPreview booking={booking} isLightBackground={true} />
@@ -385,7 +385,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
             {/* Close Button */}
             <button
               onClick={() => setShowContract(false)}
-              className="mt-6 flex items-center gap-2 bg-gray-300 text-gray-800 px-5 sm:px-6 py-2 rounded-full text-sm hover:bg-red-600 hover:text-white transition-colors shadow-lg"
+              className="mt-6 flex items-center gap-2 border-2 border-black bg-white px-5 py-2 text-sm font-black uppercase tracking-wider text-gray-800 shadow-[4px_4px_0px_#000] transition-all hover:translate-y-[2px] hover:bg-black hover:text-white hover:shadow-[2px_2px_0px_#000] sm:px-6"
               aria-label="Close contract preview"
             >
               <FaTimes className="text-lg" />
@@ -406,25 +406,25 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
 
       {/* Signed PDF Viewer Modal (Uses old 'pdf_attachment' field) */}
       {showPdfViewer && pdfLink && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-90 z-[60] flex flex-col p-2 sm:p-4">
+        <div className="fixed inset-0 z-[60] flex flex-col bg-black/90 p-2 sm:p-4">
           <div className="flex justify-end p-2">
             <button
               onClick={() => setShowPdfViewer(false)}
-              className="text-white text-3xl hover:text-red-500 transition-colors"
+              className="border-2 border-white bg-black px-2 py-1 text-2xl text-white transition-colors hover:bg-red-600 sm:text-3xl"
               aria-label="Close PDF Viewer"
             >
               <FaTimes />
             </button>
           </div>
           
-          <div className="flex-grow bg-white rounded-lg shadow-xl overflow-hidden">
+          <div className="flex-grow overflow-hidden border-4 border-black bg-white shadow-[8px_8px_0px_#000]">
             <iframe
               src={pdfLink}
               title="Signed Lease Contract"
               className="w-full h-full border-0"
               frameBorder="0"
             >
-              <p className="p-4 text-center">Your browser does not support iframes. You can <a href={pdfLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">download the PDF here</a>.</p>
+              <p className="p-4 text-center">Your browser does not support iframes. You can <a href={pdfLink} target="_blank" rel="noopener noreferrer" className="font-semibold text-red-600 hover:underline">download the PDF here</a>.</p>
             </iframe>
           </div>
 
@@ -434,7 +434,7 @@ const BookedRoomCard = ({ booking, showActions = true, onDeleteSuccess }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 download
-                className="flex items-center gap-2 bg-blue-700 text-white px-5 sm:px-6 py-2 rounded-full text-sm hover:bg-blue-800 transition-colors shadow-lg"
+                className="flex items-center gap-2 border-2 border-black bg-red-600 px-5 py-2 text-sm font-black uppercase tracking-wider text-white shadow-[4px_4px_0px_#000] transition-all hover:translate-y-[2px] hover:bg-black hover:shadow-[2px_2px_0px_#000] sm:px-6"
             >
                 <FaDownload className="text-lg" />
                 <span>Download PDF</span>

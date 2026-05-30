@@ -26,43 +26,45 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white p-6">
-      {/* Back Button */}
+    <div className="min-h-screen bg-white px-2 py-5 text-neutral-950 selection:bg-red-600 selection:text-white md:px-4 md:py-8">
       <Link
         href="/lease/management"
-        className="flex items-center text-yellow-400 hover:text-pink-400 transition duration-300 py-6"
+        className="mb-6 inline-flex items-center border-2 border-black bg-white px-4 py-2 text-sm font-black uppercase tracking-wider shadow-[4px_4px_0px_#000] transition-all duration-200 hover:translate-y-[2px] hover:bg-black hover:text-white hover:shadow-[2px_2px_0px_#000]"
       >
         <FaChevronLeft className="mr-2" />
-        <span className="font-medium text-lg">Back</span>
+        Back
       </Link>
 
-      {/* Heading */}
-      <div className="text-center mb-10">
-        <h2 className="text-yellow-500 uppercase text-sm tracking-widest">Lease</h2>
-        <h1 className="text-4xl font-bold mt-2">Available Food Stalls</h1>
-      </div>
+      <section className="border-4 border-black bg-white px-5 py-8 shadow-[10px_10px_0px_#000] md:px-8 md:py-10">
+        <p className="text-xs font-black uppercase tracking-[0.35em] text-red-600">Lease Module</p>
+        <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-4xl font-black uppercase leading-tight tracking-tight md:text-6xl">Available Food Stalls</h1>
+            <p className="mt-3 text-sm font-medium text-neutral-700 md:text-base">Choose a stall to inspect details, assign a tenant, or update lease records.</p>
+          </div>
+          <div className="inline-flex items-center border-2 border-black bg-red-600 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
+            {rooms.length} Stalls
+          </div>
+        </div>
+      </section>
 
-      {/* Room Cards */}
-      <div className="max-w-6xl mx-auto">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center h-96">
-            <div className="animate-spin h-12 w-12 border-4 border-t-transparent border-yellow-400 border-solid rounded-full"></div>
-            <p className="mt-4 text-lg text-gray-400">Loading spaces...</p>
-          </div>
-        ) : rooms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-96">
-            <p className="mt-4 text-lg text-gray-400">
-              No spaces available at the moment. Please check back later.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {rooms.map((room) => (
-              <LeaseCard key={room.$id} room={room} />
-            ))}
-          </div>
-        )}
-      </div>
+      {loading ? (
+        <div className="mt-6 flex h-80 flex-col items-center justify-center border-4 border-black bg-white p-8 shadow-[8px_8px_0px_#000]">
+          <div className="h-12 w-12 animate-spin border-4 border-black border-t-red-600" />
+          <p className="mt-4 text-xs font-black uppercase tracking-[0.3em] text-neutral-800">Loading Stalls</p>
+        </div>
+      ) : rooms.length === 0 ? (
+        <div className="mt-6 border-4 border-black bg-white p-10 text-center shadow-[8px_8px_0px_#000]">
+          <p className="text-sm font-black uppercase tracking-[0.2em] text-red-600">No Spaces Available</p>
+          <p className="mt-3 text-sm font-medium text-neutral-700">No lease spaces are available right now. Please check back later.</p>
+        </div>
+      ) : (
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {rooms.map((room) => (
+            <LeaseCard key={room.$id} room={room} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

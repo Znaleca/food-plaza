@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useFormState } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import React, { startTransition, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
 import createStall from '@/app/actions/createStall';
 import getStallUser from '@/app/actions/getStallUser';
 import getAllStalls from '@/app/actions/getAllStalls';
@@ -11,7 +10,7 @@ import Link from 'next/link';
 import { FaChevronLeft } from 'react-icons/fa6';
 
 function AddStallPage() {
-  const [state, formAction] = useFormState(createStall, {});
+  const [state, formAction] = React.useActionState(createStall, {});
   const [foodstallUsers, setFoodstallUsers] = useState([]);
   const [stallNumber, setStallNumber] = useState('');
   const [stallName, setStallName] = useState('');
@@ -57,110 +56,119 @@ function AddStallPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    formAction(fd);
+    startTransition(() => {
+      formAction(fd);
+    });
   };
 
   return (
-    <div className="bg-neutral-900 min-h-screen text-white p-6">
-      <Link
-        href="/admin"
-        className="flex items-center text-white hover:text-pink-500 transition duration-300 py-6"
-      >
-        <FaChevronLeft className="mr-2" />
-        <span className="font-medium text-lg">Back</span>
-      </Link>
+    <div className="min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+        <Link
+          href="/admin"
+          className="inline-flex items-center border-2 border-neutral-950 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-neutral-950 shadow-[4px_4px_0px_#000] transition-transform hover:-translate-y-1 hover:bg-neutral-950 hover:text-white"
+        >
+          <FaChevronLeft className="mr-2" />
+          Back
+        </Link>
 
-      <div className="text-center mb-8 px-4">
-        <h2 className="text-lg sm:text-xl text-pink-600 font-light tracking-widest uppercase">
-          Add Stall
-        </h2>
-        <p className="mt-4 text-2xl sm:text-5xl font-extrabold leading-tight">
-          Add a Food Stall
-        </p>
-      </div>
+        <section className="relative mt-6 mb-8 overflow-hidden border-4 border-neutral-950 bg-white px-6 py-8 shadow-[8px_8px_0px_#000] sm:px-8 sm:py-10">
+          <div className="absolute top-0 left-0 h-3 w-24 bg-red-600" />
+          <div className="absolute bottom-0 right-0 h-3 w-24 bg-red-600" />
+          <p className="text-xs font-black tracking-[0.45em] uppercase text-red-600 mb-3">
+            Admin Module
+          </p>
+          <h1 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase text-neutral-950 leading-none">
+            Add a Food Stall
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm sm:text-base text-neutral-600 font-medium leading-relaxed">
+            Assign a food stall owner, choose an open stall number, and save the stall record in the same bold dashboard style.
+          </p>
+        </section>
 
-      <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
-        {/* dropdown for selecting foodstall user */}
-        <div>
-          <label htmlFor="user_id" className="block font-semibold mb-2">Select Foodstall User</label>
-          <select
-            id="user_id"
-            name="user_id"
-            required
-            className="bg-neutral-800 border border-neutral-700 rounded-lg w-full py-3 px-6"
-          >
-            <option value="">-- Select a Foodstall Owner --</option>
-            {foodstallUsers.map((user) => (
-              <option key={user.$id} value={user.$id}>
-                {user.name} ({user.email})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* stall number cinema-style picker */}
-        <div>
-          <label className="block font-semibold mb-4">Choose Stall #</label>
-          <div className="grid grid-cols-5 gap-4 justify-items-center">
-            {Array.from({ length: 15 }, (_, i) => i + 1).map((num) => {
-              const taken = usedStalls.has(num);
-              const selected = parseInt(stallNumber, 10) === num;
-              return (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => !taken && setStallNumber(num)}
-                  disabled={taken}
-                  className={`w-14 h-14 flex items-center justify-center rounded-lg font-bold transition-all
-                    ${taken 
-                      ? 'bg-neutral-700 text-gray-500 cursor-not-allowed' 
-                      : selected 
-                        ? 'bg-pink-600 text-white shadow-lg scale-110' 
-                        : 'bg-neutral-800 hover:bg-pink-700 text-white'}`}
-                >
-                  {num}
-                </button>
-              );
-            })}
+        <form onSubmit={handleSubmit} className="space-y-6 border-4 border-neutral-950 bg-white p-6 shadow-[8px_8px_0px_#000] sm:p-8">
+          {/* dropdown for selecting foodstall user */}
+          <div>
+            <label htmlFor="user_id" className="block text-xs font-black tracking-[0.35em] uppercase text-neutral-500 mb-3">Select Foodstall User</label>
+            <select
+              id="user_id"
+              name="user_id"
+              required
+              className="w-full border-2 border-neutral-950 bg-white px-4 py-3 font-bold text-neutral-950 outline-none transition-colors focus:border-red-600"
+            >
+              <option value="">-- Select a Foodstall Owner --</option>
+              {foodstallUsers.map((user) => (
+                <option key={user.$id} value={user.$id}>
+                  {user.name} ({user.email})
+                </option>
+              ))}
+            </select>
           </div>
-          {/* hidden input to pass stallNumber to form */}
-          <input type="hidden" name="stallNumber" value={stallNumber} required />
-        </div>
 
-        {/* stall name (auto-filled) */}
-        <div>
-          <label className="block font-semibold mb-2">Food Stall Name</label>
-          <input
-            type="text"
-            name="name"
-            value={stallName}
-            onChange={(e) => setStallName(e.target.value)}
-            required
-            className="bg-neutral-800 border border-neutral-700 rounded-lg w-full py-3 px-6 text-white"
-          />
-        </div>
+          {/* stall number cinema-style picker */}
+          <div>
+            <label className="block text-xs font-black tracking-[0.35em] uppercase text-neutral-500 mb-4">Choose Stall #</label>
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4">
+              {Array.from({ length: 15 }, (_, i) => i + 1).map((num) => {
+                const taken = usedStalls.has(num);
+                const selected = parseInt(stallNumber, 10) === num;
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => !taken && setStallNumber(num)}
+                    disabled={taken}
+                    className={`h-14 w-full border-2 border-neutral-950 font-black transition-all ${
+                      taken
+                        ? 'cursor-not-allowed bg-neutral-200 text-neutral-400'
+                        : selected
+                          ? 'bg-red-600 text-white shadow-[4px_4px_0px_#000]'
+                          : 'bg-white text-neutral-950 shadow-[4px_4px_0px_#000] hover:-translate-y-1 hover:bg-neutral-950 hover:text-white'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                );
+              })}
+            </div>
+            <input type="hidden" name="stallNumber" value={stallNumber} required />
+          </div>
 
-        {/* description (auto-filled but editable) */}
-        <div>
-          <label className="block font-semibold mb-2">Description</label>
-          <textarea
-            name="description"
-            defaultValue="Welcome to The Corner Food Plaza! We’re excited to have you join our growing community of food entrepreneurs. Please take this opportunity to design and personalize your very own food stall, showcasing your brand, style, and culinary vision. This will help create a unique space that truly represents your business and attracts customers. (DELETE THIS AFTER READING)"
-            required
-            className="bg-neutral-700 border border-neutral-600 rounded-lg w-full h-32 py-3 px-6 text-gray-300"
-          />
-        </div>
+          {/* stall name (auto-filled) */}
+          <div>
+            <label className="block text-xs font-black tracking-[0.35em] uppercase text-neutral-500 mb-3">Food Stall Name</label>
+            <input
+              type="text"
+              name="name"
+              value={stallName}
+              onChange={(e) => setStallName(e.target.value)}
+              required
+              className="w-full border-2 border-neutral-950 bg-white px-4 py-3 font-bold text-neutral-950 outline-none transition-colors focus:border-red-600"
+            />
+          </div>
 
-        {/* submit */}
-        <div className="flex justify-center">
-          <button
-            type="submit"
-            className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-lg font-semibold shadow-md transition-all"
-          >
-            Save Food Stall
-          </button>
-        </div>
-      </form>
+          {/* description (auto-filled but editable) */}
+          <div>
+            <label className="block text-xs font-black tracking-[0.35em] uppercase text-neutral-500 mb-3">Description</label>
+            <textarea
+              name="description"
+              defaultValue="Welcome to The Corner Food Plaza! We’re excited to have you join our growing community of food entrepreneurs. Please take this opportunity to design and personalize your very own food stall, showcasing your brand, style, and culinary vision. This will help create a unique space that truly represents your business and attracts customers. (DELETE THIS AFTER READING)"
+              required
+              className="h-40 w-full border-2 border-neutral-950 bg-white px-4 py-3 font-medium text-neutral-950 outline-none transition-colors focus:border-red-600"
+            />
+          </div>
+
+          {/* submit */}
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              className="border-2 border-neutral-950 bg-red-600 px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#000] transition-transform hover:-translate-y-1 hover:bg-neutral-950"
+            >
+              Save Food Stall
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

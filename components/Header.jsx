@@ -107,14 +107,14 @@ const Header = () => {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 transform ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <nav className="transition-all duration-300 h-24 bg-white border-b-4 border-black">
-        <div className="flex h-full items-center justify-between mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <nav className="transition-all duration-300 h-20 bg-white border-b-4 border-black">
+        <div className="grid grid-cols-3 items-center h-full w-full px-4 max-w-screen-xl mx-auto">
           
           {/* Logo Section */}
-          <div className="flex-shrink-0">
+          <div className="flex items-center col-start-1 flex-shrink-0 z-30">
             {(isAdmin || isFoodstall) ? (
               <div className="flex items-center cursor-default group">
-                <Image src={logo} alt="Blitz Logo" className="h-10 w-10 md:h-12 md:w-12 object-contain invert" priority />
+                <Image src={logo} alt="Blitz Logo" className="h-10 w-10 md:h-14 md:w-14 object-contain invert" priority />
                 <div className="ml-3 flex flex-col justify-center">
                   <span className="text-xl md:text-2xl font-black text-black tracking-tighter uppercase leading-none">
                     BLITZ
@@ -126,7 +126,7 @@ const Header = () => {
               </div>
             ) : (
               <Link href="/" className="flex items-center group">
-                <Image src={logo} alt="Blitz Logo" className="h-10 w-10 md:h-12 md:w-12 object-contain invert transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110" priority />
+                <Image src={logo} alt="Blitz Logo" className="h-10 w-10 md:h-14 md:w-14 object-contain invert transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110" priority />
                 <div className="ml-3 flex flex-col justify-center transition-transform duration-300 group-hover:translate-x-1">
                   <span className="text-xl md:text-2xl font-black text-black tracking-tighter uppercase leading-none">
                     BLITZ
@@ -140,8 +140,8 @@ const Header = () => {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-center gap-8 text-sm font-black tracking-widest uppercase text-black">
+          <div className="hidden md:block col-start-2 justify-self-center z-20">
+            <div className="flex items-center gap-6 text-[13px] font-black tracking-widest uppercase text-black">
               {!isAuthenticated && (
                 <>
                   <Link href="/" className="hover:text-red-600 hover:-translate-y-1 transition-all duration-200">Home</Link>
@@ -192,7 +192,7 @@ const Header = () => {
           </div>
 
           {/* Account Controls */}
-          <div className="hidden md:flex items-center ml-auto">
+          <div className="hidden md:flex items-center col-start-3 justify-end z-30">
             {!isAuthenticated ? (
               <>
                 <Link href="/order/cart" className="relative mr-6 text-black hover:text-red-600 transition-colors duration-300">
@@ -264,7 +264,7 @@ const Header = () => {
           </div>
 
           {/* Mobile Menu Toggle Button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden col-start-3 flex items-center justify-end">
              {!isAdmin && !isFoodstall && cartCount > 0 && (
               <Link href="/order/cart" className="relative mr-6 text-black hover:text-red-600 transition-colors">
                 <FaCartShopping size={24} />
@@ -285,7 +285,7 @@ const Header = () => {
 
         {/* Mobile Slide-down Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-24 left-0 w-full bg-white border-b-4 border-black shadow-[0_10px_0px_rgba(0,0,0,1)] z-40">
+          <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b-4 border-black shadow-[0_10px_0px_rgba(0,0,0,1)] z-40">
             <div className="flex flex-col font-black uppercase tracking-widest text-black">
               {!isAuthenticated && (
                 <>

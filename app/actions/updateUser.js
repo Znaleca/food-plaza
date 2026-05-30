@@ -59,7 +59,8 @@ export default async function updateUser(_, formData) {
       const newEmail = email || currentUser.email;
       const newSession = await account.createEmailPasswordSession(newEmail, password);
       
-      cookies().set('appwrite-session', newSession.secret, {
+      const cookieStore = await cookies();
+      cookieStore.set('appwrite-session', newSession.secret, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',

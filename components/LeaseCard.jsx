@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { FaEye } from 'react-icons/fa';
 
 const LeaseCard = ({ room }) => {
   const bucketId = process.env.NEXT_PUBLIC_APPWRITE_STORAGE_BUCKET_ROOMS;
@@ -18,11 +17,9 @@ const LeaseCard = ({ room }) => {
 
   return (
     <Link href={`/lease/${room.$id}`}>
-      <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 md:p-8 mb-10 shadow-2xl hover:scale-105 transition-all duration-300 w-full max-w-4xl mx-auto cursor-pointer">
-        {/* Cinema Format Container: Horizontal Layout */}
-        <div className="flex items-center space-x-6">
-          {/* Circular Image */}
-          <div className="relative w-28 h-28 bg-gray-800 rounded-full overflow-hidden">
+      <div className="h-full cursor-pointer border-4 border-black bg-white p-5 shadow-[8px_8px_0px_#000] transition-all duration-200 hover:-translate-y-1 hover:shadow-[6px_6px_0px_#000] md:p-6">
+        <div className="flex items-center gap-4">
+          <div className="relative h-24 w-24 overflow-hidden border-2 border-black bg-neutral-200 md:h-28 md:w-28">
             <Image
               src={imageSrc}
               alt={room.name}
@@ -32,23 +29,17 @@ const LeaseCard = ({ room }) => {
             />
           </div>
 
-          {/* Card Content */}
-          <div className="flex flex-col justify-between w-3/5">
-            <div className="text-center">
-              <div className="w-11 h-0.5 bg-yellow-400 mx-auto mb-4" />
+          <div className="min-w-0 flex-1 text-left">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-red-600">Lease Stall</p>
+            <h3 className="mt-2 line-clamp-2 text-lg font-black uppercase tracking-tight text-neutral-950 sm:text-xl">
+              {room.name || 'No Name'}
+            </h3>
 
-              {/* Room Name */}
-              <h3 className="text-xl sm:text-2xl font-semibold text-white uppercase tracking-wide mb-2">
-                {room.name || 'No Name'}
-              </h3>
-
-              {/* Stall Number in Circle */}
-              <div className="relative mb-4">
-                <div className="w-16 h-16 bg-white text-black rounded-full flex items-center justify-center mx-auto">
-                  <span className="text-xl font-bold">{room.stallNumber || 'N/A'}</span>
-                </div>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <div className="border-2 border-black bg-red-600 px-3 py-1 text-xs font-black uppercase tracking-wider text-white">
+                Stall #{room.stallNumber || 'N/A'}
               </div>
-
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-neutral-700">Open</span>
             </div>
           </div>
         </div>

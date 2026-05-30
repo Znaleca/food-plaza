@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useFormState } from 'react-dom';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import createSpaces from '@/app/actions/createSpaces';
@@ -19,7 +18,7 @@ const foodTypes = [
 const menuType = ['Meals','Dessert','Snacks','Add-ons','Drinks'];
 
 function AddSpacePage() {
-  const [state, formAction] = useFormState(createSpaces, {});
+  const [state, formAction] = React.useActionState(createSpaces, {});
   const router = useRouter();
   const [selectedTypes, setSelectedTypes] = useState([]);
 

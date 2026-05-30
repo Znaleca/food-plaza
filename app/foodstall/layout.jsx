@@ -14,7 +14,7 @@ import {
 import { FaChevronRight, FaChevronLeft } from 'react-icons/fa';
 
 export default function FoodStallLayout({ children }) {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const baseLinks = [
     { href: '/foodstall', icon: <FaHouse />, label: 'Dashboard' },
@@ -28,52 +28,63 @@ export default function FoodStallLayout({ children }) {
   const links = baseLinks.filter(Boolean);
 
   return (
-    <div className="flex min-h-screen bg-neutral-900 text-neutral-100 relative">
-      {/* Sidebar */}
-      <aside
-        className={`bg-neutral-800 shadow-xl px-6 py-8 w-64 z-40 transition-transform duration-300 
-        fixed top-0 left-0 h-full overflow-y-auto scrollbar-thin
-        md:relative md:translate-x-0 md:flex md:flex-col
-        ${isHovered ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
-      >
-        <div className="mb-8">
-          <h2 className="text-3xl font-extrabold tracking-widest text-white">Stall Panel</h2>
-          <div className="h-1 w-20 bg-gradient-to-r from-pink-500 to-purple-500 mt-2 rounded-full"></div>
-        </div>
+    <div className="min-h-screen bg-white text-neutral-950 relative overflow-hidden selection:bg-red-600 selection:text-white md:flex md:flex-row md:items-stretch">
+      <div className="relative md:flex md:items-stretch">
+        {/* Sidebar */}
+        <aside
+          className={`relative z-40 flex h-full min-h-screen flex-col overflow-y-auto border-r-4 border-neutral-950 bg-white py-5 shadow-[8px_0px_0px_#000] transition-all duration-300 ease-in-out ${
+            isCollapsed ? 'w-20 px-2' : 'w-72 px-4'
+          }`}
+        >
+          <div className={`mb-6 border-4 border-neutral-950 bg-white py-4 shadow-[6px_6px_0px_#000] ${isCollapsed ? 'px-2' : 'px-4'}`}>
+            <p className="mb-2 text-xs font-black tracking-[0.4em] uppercase text-red-600">
+              {isCollapsed ? 'SP' : 'Stall Panel'}
+            </p>
+            {!isCollapsed && (
+              <>
+                <h2 className="text-2xl font-black tracking-tighter uppercase text-neutral-950">
+                  Food Stall
+                </h2>
+                <div className="mt-3 h-2 w-24 border-2 border-neutral-950 bg-red-600" />
+              </>
+            )}
+          </div>
 
-        <nav className="space-y-2">
-          {links.map(({ href, icon, label }, idx) => (
-            <Link
-              key={idx}
-              href={href}
-              className="flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-pink-600 hover:to-purple-600 hover:text-white transition-all duration-300 ease-in-out group"
-            >
-              <div className="p-2 rounded-xl bg-white text-black group-hover:text-pink-600 transition">
-                {icon}
-              </div>
-              <span className="text-sm font-semibold tracking-wide">{label}</span>
-            </Link>
-          ))}
-        </nav>
+          <nav className="flex-1 space-y-2">
+            {links.map(({ href, icon, label }, idx) => (
+              <Link
+                key={idx}
+                href={href}
+                className={`group flex items-center border-2 border-neutral-950 bg-white font-black uppercase tracking-wider text-neutral-950 shadow-[4px_4px_0px_#000] transition-all duration-200 hover:-translate-y-1 hover:bg-neutral-950 hover:text-white ${
+                  isCollapsed ? 'justify-center gap-0 px-2 py-3' : 'gap-4 px-3 py-3'
+                }`}
+              >
+                <div className="flex h-10 w-10 items-center justify-center border-2 border-neutral-950 bg-red-600 text-white transition-colors group-hover:bg-white group-hover:text-neutral-950">
+                  {icon}
+                </div>
+                {!isCollapsed && <span className="text-sm">{label}</span>}
+              </Link>
+            ))}
+          </nav>
 
-        <div className="mt-auto pt-6 border-t border-neutral-700 text-xs text-pink-400">
-          <p>&copy; {new Date().getFullYear()} The Corner | Manage with ease.</p>
-        </div>
-      </aside>
+          <div className={`mt-auto border-t-4 border-neutral-950 pt-6 text-xs font-black uppercase tracking-widest text-neutral-500 ${isCollapsed ? 'px-2' : ''}`}>
+            {!isCollapsed && <p>&copy; {new Date().getFullYear()} The Corner.</p>}
+          </div>
+        </aside>
 
-      {/* Floating Arrow Toggle (Mobile only) */}
-      <button
-        className="fixed top-1/2 -translate-y-1/2 bg-neutral-700 text-white rounded-full p-2 shadow-lg md:hidden z-50 transition-all duration-300"
-        style={{
-          left: isHovered ? '16rem' : '0.5rem', // Move to sidebar edge when open
-        }}
-        onClick={() => setIsHovered(!isHovered)}
-      >
-        {isHovered ? <FaChevronLeft /> : <FaChevronRight />}
-      </button>
+        <button
+          type="button"
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="fixed top-1/2 z-50 -translate-y-1/2 border-4 border-neutral-950 bg-white p-3 text-neutral-950 shadow-[4px_4px_0px_#000] transition-transform duration-300 hover:scale-105"
+          style={{ left: isCollapsed ? '4rem' : '17rem' }}
+          onClick={() => setIsCollapsed((current) => !current)}
+        >
+          {isCollapsed ? <FaChevronRight /> : <FaChevronLeft />}
+        </button>
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 px-6 py-8 overflow-y-auto">{children}</main>
+      <main className="flex-1 min-w-0 overflow-y-auto bg-white px-2 py-4 sm:px-4 sm:py-6 lg:px-5">{children}</main>
     </div>
   );
 }

@@ -4,45 +4,60 @@ import React from 'react';
 
 const UsersCard = ({ users, loading, error }) => {
   if (loading) {
-    return <div className="text-center text-neutral-400 py-4">Loading users...</div>;
+    return <div className="border-2 border-dashed border-neutral-400 px-6 py-10 text-center text-xs font-black uppercase tracking-widest text-neutral-500">Loading users...</div>;
   }
 
   if (error) {
-    return <div className="text-center text-red-500 py-4">{error}</div>;
+    return <div className="border-2 border-neutral-950 bg-white px-6 py-5 text-sm font-bold text-red-600 shadow-[4px_4px_0px_#000]">{error}</div>;
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 bg-neutral-900 text-white">
+    <div className="w-full text-neutral-950">
       {users.length === 0 ? (
-        <p className="text-center text-neutral-400">No users found.</p>
+        <div className="border-2 border-dashed border-neutral-400 px-6 py-10 text-center text-sm font-bold uppercase tracking-widest text-neutral-500">
+          No users found.
+        </div>
       ) : (
         <div className="w-full overflow-x-auto">
-          <table className="min-w-full bg-neutral-800 border border-neutral-700 rounded-2xl shadow-md text-sm sm:text-base">
-            <thead className="bg-neutral-900 border-b border-yellow-600">
+          <table className="min-w-full border-4 border-neutral-950 bg-white text-sm shadow-[6px_6px_0px_#000] sm:text-base">
+            <thead className="bg-neutral-950 text-white">
               <tr>
-                <th className="px-4 sm:px-6 py-3 text-left text-yellow-400 font-semibold whitespace-nowrap">Name</th>
-                <th className="px-4 sm:px-6 py-3 text-left text-yellow-400 font-semibold whitespace-nowrap">Email</th>
-                <th className="px-4 sm:px-6 py-3 text-left text-yellow-400 font-semibold whitespace-nowrap">Creation Date</th>
-                <th className="px-4 sm:px-6 py-3 text-left text-yellow-400 font-semibold whitespace-nowrap">Labels</th>
+                <th className="px-4 sm:px-6 py-4 text-left text-xs font-black uppercase tracking-[0.35em] whitespace-nowrap">Name</th>
+                <th className="px-4 sm:px-6 py-4 text-left text-xs font-black uppercase tracking-[0.35em] whitespace-nowrap">Email</th>
+                <th className="px-4 sm:px-6 py-4 text-left text-xs font-black uppercase tracking-[0.35em] whitespace-nowrap">Creation Date</th>
+                <th className="px-4 sm:px-6 py-4 text-left text-xs font-black uppercase tracking-[0.35em] whitespace-nowrap">Labels</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y-2 divide-neutral-950">
               {users.map((user) => (
                 <tr
                   key={user.$id}
-                  className="border-b border-neutral-700 hover:bg-neutral-700 transition-all"
+                  className="transition-colors hover:bg-neutral-100"
                 >
-                  <td className="px-4 sm:px-6 py-3 whitespace-nowrap">{user.name || 'Unnamed User'}</td>
-                  <td className="px-4 sm:px-6 py-3 text-neutral-300 whitespace-nowrap">{user.email || 'No Email'}</td>
-                  <td className="px-4 sm:px-6 py-3 text-neutral-300 whitespace-nowrap">
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap font-black uppercase tracking-tight text-neutral-950">{user.name || 'Unnamed User'}</td>
+                  <td className="px-4 sm:px-6 py-4 text-neutral-700 whitespace-nowrap">{user.email || 'No Email'}</td>
+                  <td className="px-4 sm:px-6 py-4 text-neutral-700 whitespace-nowrap">
                     {user.createdAt
                       ? new Date(user.createdAt).toLocaleString()
                       : 'N/A'}
                   </td>
-                  <td className="px-4 sm:px-6 py-3 text-neutral-300 whitespace-nowrap">
-                    {user.labels && user.labels.length > 0
-                      ? user.labels.join(', ')
-                      : 'No Label'}
+                  <td className="px-4 sm:px-6 py-4 text-neutral-700 whitespace-nowrap">
+                    {user.labels && user.labels.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {user.labels.map((label) => (
+                          <span
+                            key={label}
+                            className="inline-flex items-center border-2 border-neutral-950 bg-red-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white"
+                          >
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="inline-flex items-center border-2 border-dashed border-neutral-400 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                        No Label
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

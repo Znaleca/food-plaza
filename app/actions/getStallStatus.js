@@ -18,9 +18,25 @@ async function getStallStatus(roomId) {
     );
 
     if (bookings.length > 0) {
-      // Get the status and return it along with the room_id
-      const status = bookings[0].status;
-      return { roomId: roomId, status }; // Return both roomId and status
+      const now = new Date();
+
+      const activeApproved = bookings
+        .filter((booking) => {
+          if (booking.status !== 'approved') return false;
+          if (!booking.check_out) return true;
+          return new Date(booking.check_out) > now;
+        })
+        .sort((current, next) => new Date(next.check_out || 0) - new Date(current.check_out || 0));
+
+      const selectedBooking =
+        activeApproved[0] ||
+        bookings.sort((current, next) => new Date(next.$createdAt) - new Date(current.$createdAt))[0];
+
+      return {
+        roomId,
+        status: selectedBooking.status,
+        check_out: selectedBooking.check_out || null,
+      };
     }
 
     return null; // Return null if no booking found for the room

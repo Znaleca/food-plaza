@@ -289,7 +289,12 @@ function RoomSpace() {
                         )}
                         {/* Black label bar always visible below image */}
                         <div className="bg-neutral-950 text-white px-3 py-3 flex flex-col items-center justify-center text-center h-full">
-                          <h4 className="text-[10px] font-black uppercase tracking-tight leading-tight">{m.name}</h4>
+                          <h4 className="text-sm font-black uppercase tracking-tight leading-tight">{m.name}</h4>
+                          {m.description && (
+                            <p className="mt-2 text-[11px] font-medium text-neutral-300 leading-snug max-w-full line-clamp-2">
+                              {m.description}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}

@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import updateDocuments from '@/app/actions/updateDocuments'; 
 import { useState } from 'react';
@@ -23,8 +22,8 @@ import {
 // Helper function to render status badge with icons (No change)
 const StatusBadge = ({ status }) => {
     let Icon = FaHourglassHalf; 
-    let color = 'text-yellow-400';
-    let bgColor = 'bg-yellow-400/10';
+  let color = 'text-amber-800';
+  let bgColor = 'bg-amber-200';
     let label = 'Submitted';
     
     const normalizedStatus = status ? status.toLowerCase() : 'submitted'; 
@@ -33,29 +32,29 @@ const StatusBadge = ({ status }) => {
       case 'verified':
       case 'approved':
         Icon = FaCheckCircle;
-        color = 'text-green-400';
-        bgColor = 'bg-green-400/10';
+        color = 'text-emerald-800';
+        bgColor = 'bg-emerald-200';
         label = 'Verified';
         break;
       case 'denied':
       case 'rejected':
         Icon = FaTimesCircle;
-        color = 'text-red-500';
-        bgColor = 'bg-red-500/10';
+        color = 'text-red-700';
+        bgColor = 'bg-red-200';
         label = 'Denied';
         break;
       case 'submitted':
       case 'pending':
       default:
         Icon = FaHourglassHalf; 
-        color = 'text-yellow-400';
-        bgColor = 'bg-yellow-400/10';
+        color = 'text-amber-800';
+        bgColor = 'bg-amber-200';
         label = 'Submitted';
         break;
     }
 
     return (
-      <span className={`flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${bgColor} transition-colors duration-200`}>
+      <span className={`inline-flex items-center border-2 border-black px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${bgColor}`}>
         <Icon className={`mr-2 ${color}`} />
         <span className={color}>{label}</span>
       </span>
@@ -67,18 +66,18 @@ const FilePreview = ({ fileItem }) => {
   if (!fileItem) return null;
 
   return (
-    <div className="mt-3 flex justify-between items-center p-4 border-l-4 border-pink-500 bg-neutral-800 rounded-r-lg text-sm transition-all duration-200 shadow-inner">
+    <div className="mt-3 flex items-center justify-between border-2 border-black bg-neutral-100 p-3 text-sm">
       <div className="flex items-center truncate">
-        <FaFileAlt className="text-pink-500 mr-3 flex-shrink-0 text-lg" />
-        <span className="truncate font-medium text-gray-300">
-          Ready to Upload: <strong className="text-white">{fileItem.name}</strong>
+        <FaFileAlt className="mr-2 flex-shrink-0 text-base text-red-600" />
+        <span className="truncate text-xs font-black uppercase tracking-[0.12em] text-neutral-700">
+          Ready: <strong className="text-neutral-950">{fileItem.name}</strong>
         </span>
       </div>
       <a 
         href={fileItem.url} 
         target="_blank" 
         rel="noopener noreferrer"
-        className="ml-4 flex-shrink-0 text-yellow-400 hover:text-yellow-300 font-medium transition-colors border-b border-dashed border-yellow-400/50"
+        className="ml-4 flex-shrink-0 border-b-2 border-black text-xs font-black uppercase tracking-[0.12em] text-red-600 hover:text-black"
       >
         View Preview
       </a>
@@ -203,9 +202,9 @@ const UploadDocuments = ({
   return (
     <form 
       onSubmit={handleSubmit} 
-      className="space-y-6 w-full p-6 bg-neutral-900 border border-pink-600/30 rounded-xl shadow-2xl font-sans"
+      className="w-full space-y-6 border-4 border-black bg-white p-4 shadow-[8px_8px_0px_#000] md:p-6"
     >
-      <h3 className="text-2xl font-extrabold text-white mb-6 border-b border-neutral-700 pb-3">
+      <h3 className="mb-2 border-b-2 border-black pb-3 text-2xl font-black uppercase tracking-[0.16em] text-neutral-950">
         Lessee Documentation
       </h3>
       
@@ -230,18 +229,18 @@ const UploadDocuments = ({
             const isSelectedForPreview = isBookingPreviewOpen && activePreviewDoc === docName;
 
             let DocIcon = FaFileAlt;
-            let iconColor = 'text-gray-500';
+            let iconColor = 'text-neutral-600';
 
             if (alreadyUploaded) {
                 if (isVerified) {
                     DocIcon = FaFileAlt;
-                    iconColor = 'text-green-500';
+                  iconColor = 'text-emerald-700';
                 } else if (isDenied) {
                     DocIcon = FaTimesCircle;
-                    iconColor = 'text-red-500';
+                  iconColor = 'text-red-700';
                 } else {
                     DocIcon = FaHourglassHalf;
-                    iconColor = 'text-yellow-500';
+                  iconColor = 'text-amber-700';
                 }
             }
 
@@ -253,23 +252,23 @@ const UploadDocuments = ({
                 ? "Document submitted successfully. Waiting for administrator review."
                 : "Required: Please upload the document to proceed with the lease request.";
 
-            const messageColor = isVerified ? 'text-green-400' : isDenied ? 'text-red-400' : alreadyUploaded ? 'text-yellow-400' : 'text-gray-400';
-            const messageBgColor = isVerified ? 'bg-green-900/20' : isDenied ? 'bg-red-900/20' : alreadyUploaded ? 'bg-yellow-900/20' : 'bg-neutral-800';
+            const messageColor = isVerified ? 'text-emerald-900' : isDenied ? 'text-red-900' : alreadyUploaded ? 'text-amber-900' : 'text-neutral-700';
+            const messageBgColor = isVerified ? 'bg-emerald-100' : isDenied ? 'bg-red-100' : alreadyUploaded ? 'bg-amber-100' : 'bg-neutral-100';
 
 
             return (
                 <div 
                     key={index} 
-                    className="p-5 bg-neutral-800 rounded-xl border border-neutral-700 shadow-md hover:border-pink-600/50 transition-all duration-200"
+                className="border-3 border-black bg-white p-4 shadow-[5px_5px_0px_#000] md:p-5"
                 >
                     {/* Document Header (Icon, Label, Status, Actions) */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-neutral-700/50 pb-3">
+                <div className="mb-4 flex flex-col items-start justify-between gap-3 border-b-2 border-black pb-3 sm:flex-row sm:items-center">
                         {/* ICON & LABEL */}
-                        <div className="flex items-center flex-grow mb-3 sm:mb-0">
-                            <DocIcon className={`text-2xl mr-3 ${iconColor} flex-shrink-0`} />
+                  <div className="mb-2 flex flex-grow items-center sm:mb-0">
+                    <DocIcon className={`mr-3 flex-shrink-0 text-xl ${iconColor}`} />
                             <label
                                 htmlFor={inputName}
-                                className="text-lg font-bold text-white leading-tight"
+                      className="text-base font-black uppercase tracking-[0.08em] text-neutral-950 md:text-lg"
                             >
                                 {docName}
                             </label>
@@ -278,7 +277,7 @@ const UploadDocuments = ({
                         </div>
                         
                         {/* ACTIONS & SMALL-SCREEN STATUS */}
-                        <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
                             {/* Display Status Badge on smaller screens */}
                             {alreadyUploaded && <div className="md:hidden"><StatusBadge status={currentStatus} /></div>}
 
@@ -288,11 +287,11 @@ const UploadDocuments = ({
                                     type="button"
                                     onClick={() => handlePreviewToggle(bookingId, docName)}
                                     disabled={isEditing[inputName]} 
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    className={`flex items-center gap-1.5 border-2 border-black px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] transition disabled:cursor-not-allowed disabled:opacity-50 ${
                                         isSelectedForPreview
-                                            ? 'bg-red-600 text-white hover:bg-red-500' 
-                                            : 'bg-pink-600 text-white hover:bg-pink-500' 
-                                    } shadow-md`}
+                                        ? 'bg-black text-white hover:bg-red-600' 
+                                        : 'bg-red-600 text-white hover:bg-black' 
+                                    }`}
                                 >
                                     {isSelectedForPreview ? <FaEyeSlash /> : <FaEye />}
                                     {isSelectedForPreview ? 'Hide' : 'View'}
@@ -304,18 +303,18 @@ const UploadDocuments = ({
                                 <button
                                     type="button"
                                     onClick={() => handleEditToggle(inputName, docName)}
-                                    className={`text-sm font-semibold py-1.5 px-3 rounded-lg transition duration-200 flex items-center gap-1.5 shadow-md ${
+                                  className={`flex items-center gap-1.5 border-2 border-black px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] transition ${
                                         isEditing[inputName] 
-                                            ? 'bg-red-600 text-white hover:bg-red-500' 
-                                            : 'bg-yellow-600 text-white hover:bg-yellow-500' 
+                                      ? 'bg-black text-white hover:bg-red-600' 
+                                      : 'bg-white text-neutral-950 hover:bg-neutral-950 hover:text-white' 
                                     }`}
                                 >
                                     {isEditing[inputName] ? <><FaBan className="inline" />Cancel</> : <><FaEdit className="inline" />Replace</>}
                                 </button>
                             ) : (
                                 isVerified && alreadyUploaded && (
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-500">
-                                        <FaBan className="text-lg" title="Cannot replace verified document" />
+                                  <div className="flex items-center gap-1.5 border-2 border-black bg-neutral-100 px-3 py-1 text-xs font-black uppercase tracking-[0.1em] text-neutral-600">
+                                    <FaBan className="text-sm" title="Cannot replace verified document" />
                                         <span className="hidden sm:inline">Locked</span>
                                     </div>
                                 )
@@ -325,12 +324,12 @@ const UploadDocuments = ({
                     
                     {/* Admin Denial Comment Display */}
                     {isDenied && denialComment && (
-                        <div className="mb-4 p-3 text-sm bg-red-900/30 border-l-4 border-red-500 text-red-300 rounded-lg shadow-inner">
-                            <div className="flex items-center font-bold mb-1">
-                                <FaCommentAlt className="inline mr-2 text-red-500 flex-shrink-0" />
+                      <div className="mb-4 border-2 border-black bg-red-100 p-3 text-sm text-red-900">
+                        <div className="mb-1 flex items-center text-xs font-black uppercase tracking-[0.1em]">
+                          <FaCommentAlt className="mr-2 inline flex-shrink-0 text-red-700" />
                                 Admin's Reason for Denial:
                             </div>
-                            <p className='ml-5 text-gray-200'>{denialComment}</p>
+                        <p className='ml-5 font-medium'>{denialComment}</p>
                         </div>
                     )}
 
@@ -347,9 +346,9 @@ const UploadDocuments = ({
                                     onChange={(e) => handleFileChange(e, docName)}
                                     className="opacity-0 w-full h-full absolute inset-0 cursor-pointer z-10"
                                 />
-                                <div className="flex items-center justify-center h-20 border-2 border-dashed border-pink-500/50 bg-neutral-800 rounded-lg text-gray-400 hover:border-pink-500 transition-colors duration-200 p-4">
-                                    <FaCloudUploadAlt className="text-2xl mr-3 text-pink-500" />
-                                    <span className="font-medium text-sm">
+                                  <div className="flex h-20 items-center justify-center border-2 border-dashed border-black bg-neutral-50 p-4 text-neutral-700 transition-colors hover:bg-red-50">
+                                    <FaCloudUploadAlt className="mr-3 text-xl text-red-600" />
+                                    <span className="text-xs font-black uppercase tracking-[0.08em]">
                                         {fileItem ? `Selected: ${fileItem.name}` : `Drag & Drop or Click to Upload PDF for ${docName}`}
                                     </span>
                                 </div>
@@ -360,9 +359,9 @@ const UploadDocuments = ({
 
                             {/* NEW: Tenant Comment Field (Appears only if a file is selected) */}
                             {fileItem && (
-                                <div className="mt-4 p-3 bg-neutral-900 border border-neutral-700 rounded-lg">
-                                    <label htmlFor={`comment-${inputName}`} className="flex items-center text-sm font-semibold text-gray-300 mb-2">
-                                        <FaInfoCircle className='mr-2 text-pink-500' />
+                              <div className="mt-4 border-2 border-black bg-neutral-50 p-3">
+                                <label htmlFor={`comment-${inputName}`} className="mb-2 flex items-center text-xs font-black uppercase tracking-[0.08em] text-neutral-700">
+                                  <FaInfoCircle className='mr-2 text-red-600' />
                                         Add a Note for the Administrator (Optional):
                                     </label>
                                     <textarea
@@ -371,14 +370,14 @@ const UploadDocuments = ({
                                         onChange={(e) => setUploadComment(prev => ({ ...prev, [inputName]: e.target.value }))}
                                         placeholder={isDenied ? "Explaining how you fixed the issue will speed up the review." : "Any relevant details about this document."}
                                         rows="2"
-                                        className="w-full p-2 border border-neutral-600 rounded-lg bg-neutral-800 text-white focus:ring-pink-500 focus:border-pink-500 text-sm"
+                                  className="w-full border-2 border-black bg-white p-2 text-sm text-neutral-900 outline-none focus:border-red-600"
                                     />
                                     {/* The actual data for the comment is appended in handleSubmit */}
                                 </div>
                             )}
                         </>
                     ) : (
-                        <p className={`text-sm italic mt-2 p-3 rounded-lg font-medium transition-colors duration-200 ${messageColor} ${messageBgColor}`}>
+                          <p className={`mt-2 border-2 border-black p-3 text-sm font-semibold ${messageColor} ${messageBgColor}`}>
                             {statusMessage}
                         </p>
                     )}
@@ -391,10 +390,10 @@ const UploadDocuments = ({
       <button
         type="submit"
         disabled={!isSubmitEnabled}
-        className={`w-full py-3.5 px-4 text-xl font-extrabold rounded-xl shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 ${
+        className={`flex w-full items-center justify-center space-x-2 border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition ${
             isSubmitEnabled 
-            ? 'bg-pink-600 text-white hover:bg-pink-500 shadow-pink-600/50 transform hover:scale-[1.01]'
-            : 'bg-neutral-700 text-gray-500 cursor-not-allowed'
+            ? 'bg-red-600 text-white shadow-[4px_4px_0px_#000] hover:translate-y-[2px] hover:bg-black hover:shadow-[2px_2px_0px_#000]'
+            : 'cursor-not-allowed bg-neutral-300 text-neutral-500'
         }`}
       >
         {isLoading ? (

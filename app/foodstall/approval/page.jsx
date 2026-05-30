@@ -31,7 +31,7 @@ const ApprovalPage = () => {
   
   // NEW STATE: For the main contract PDF viewer
   const [showMainPdfViewer, setShowMainPdfViewer] = useState(false); 
-  const ACCENT_BG_CLASS = 'bg-yellow-500 text-neutral-900 hover:bg-yellow-400';
+  const ACCENT_BG_CLASS = 'border-2 border-black bg-red-600 text-white hover:bg-black shadow-[4px_4px_0px_#000] hover:shadow-[2px_2px_0px_#000] hover:translate-y-[2px]';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,23 +121,33 @@ const ApprovalPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white p-4 sm:p-6">
-      {/* Header */}
-      <div className="text-center space-y-2 sm:space-y-4">
-        <h2 className="text-base sm:text-lg text-pink-600 font-light tracking-widest">
-          MY STALL
-        </h2>
-        <p className="text-2xl sm:text-4xl md:text-5xl font-extrabold">
-          Lease Management
+    <div className="min-h-screen bg-white px-2 py-5 text-neutral-950 selection:bg-red-600 selection:text-white md:px-4 md:py-8">
+      <section className="border-4 border-black bg-white px-5 py-8 shadow-[10px_10px_0px_#000] md:px-8 md:py-10">
+        <p className="text-xs font-black uppercase tracking-[0.35em] text-red-600">Food Stall Panel</p>
+        <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h1 className="text-4xl font-black uppercase leading-tight tracking-tight md:text-6xl">Lease Approval</h1>
+            <p className="mt-3 text-sm font-medium text-neutral-700 md:text-base">Review lessee submissions, upload required documents, and verify readiness in one workspace.</p>
+          </div>
+          <div className="inline-flex items-center border-2 border-black bg-red-600 px-4 py-2 text-xs font-black uppercase tracking-[0.25em] text-white">
+            {bookings.length} Leases
+          </div>
+        </div>
+      </section>
+
+      <div className="mt-6">
+        <p className="text-xs font-black uppercase tracking-[0.3em] text-neutral-700">
+          Signed in as <span className="text-red-600">{currentUser?.name || 'Stall User'}</span>
         </p>
       </div>
 
       {/* Booking List */}
-      <div className="space-y-10 mt-10 sm:mt-12">
+      <div className="mt-6 space-y-8">
         {bookings.length === 0 ? (
-          <p className="text-gray-400 text-center text-sm sm:text-base">
-            No lease found for your food stall
-          </p>
+          <div className="border-4 border-black bg-white p-10 text-center shadow-[8px_8px_0px_#000]">
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-red-600">No Lease Found</p>
+            <p className="mt-3 text-sm font-medium text-neutral-700">No lease found for your food stall.</p>
+          </div>
         ) : (
           bookings.map((booking) => {
             const expired = isExpired(booking.check_out);
@@ -159,7 +169,7 @@ const ApprovalPage = () => {
             return (
               <div
                 key={booking.$id}
-                className="space-y-5 border-b border-neutral-800 pb-10"
+                className="space-y-5 border-4 border-black bg-white p-4 shadow-[8px_8px_0px_#000] md:p-6"
               >
                 {/* Reservation Ticket */}
                 <ReservationTicket booking={booking} showActions={false} />
@@ -169,7 +179,7 @@ const ApprovalPage = () => {
                   <div className="flex flex-col sm:flex-row gap-3 mt-6">
                     <button
                       onClick={() => setShowMainPdfViewer(true)} // Toggle state
-                      className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded text-sm font-semibold transition-all ${ACCENT_BG_CLASS}`}
+                      className={`w-full flex items-center justify-center space-x-2 px-4 py-2 text-sm font-semibold transition-all ${ACCENT_BG_CLASS}`}
                     >
                       <FaFileContract />
                       <span>View Main Signed Contract</span>
@@ -179,19 +189,19 @@ const ApprovalPage = () => {
 
                 {/* Main Signed Contract PDF Viewer */}
                 {showMainPdfViewer && pdfLink && (
-                    <div className="rounded-lg p-3 bg-neutral-900 shadow-inner mt-4">
-                        <h4 className="text-sm font-bold mb-2 text-gray-300 flex justify-between items-center">
+                  <div className="mt-4 border-2 border-black bg-neutral-100 p-3 shadow-[4px_4px_0px_#000]">
+                    <h4 className="mb-2 flex items-center justify-between text-sm font-black uppercase tracking-wider text-neutral-800">
                             <span>Main Signed Contract</span>
                             <button
                                 onClick={() => setShowMainPdfViewer(false)}
-                                className="text-red-500 hover:text-red-400 text-xs font-semibold"
+                        className="border border-black bg-white px-2 py-1 text-[10px] font-black uppercase tracking-wider text-red-600 hover:bg-black hover:text-white"
                             >
                                 Close Viewer
                             </button>
                         </h4>
                         <iframe
                             src={pdfLink} 
-                            className="w-full h-[600px] rounded-md border border-neutral-700"
+                      className="h-[600px] w-full border-2 border-black bg-white"
                             title="Main Signed Contract"
                         />
                     </div>
@@ -223,19 +233,19 @@ const ApprovalPage = () => {
 
                   {/* Status Message (Kept in parent for consistency) */}
                   {documentsReady ? (
-                    <p className="flex items-center gap-2 text-green-400 text-sm bg-green-900/30 border border-green-700 px-3 py-2 rounded-md">
+                    <p className="flex items-center gap-2 border-2 border-black bg-green-200 px-3 py-2 text-sm font-semibold text-green-900">
                       <CheckMark className='text-xl' /> All required documents have been uploaded.
                     </p>
                   ) : (
-                    <p className="flex items-center gap-2 text-yellow-400 text-sm bg-yellow-900/30 border border-yellow-700 px-3 py-2 rounded-md">
+                    <p className="flex items-center gap-2 border-2 border-black bg-yellow-100 px-3 py-2 text-sm font-semibold text-yellow-900">
                       <Warning className='text-xl' /> Please upload all required documents.
                     </p>
                   )}
 
                   {/* PDF Preview (Kept in parent as it manages the iframe) */}
                   {isPreviewOpen && activePreviewDoc && previewFileId && (
-                    <div className="rounded-lg p-3 bg-neutral-900 shadow-inner">
-                      <h4 className="text-sm font-bold mb-2 text-gray-300">
+                    <div className="border-2 border-black bg-neutral-100 p-3 shadow-[4px_4px_0px_#000]">
+                      <h4 className="mb-2 text-sm font-black uppercase tracking-wider text-neutral-800">
                         Previewing: {activePreviewDoc}
                       </h4>
                       {(() => {
@@ -244,7 +254,7 @@ const ApprovalPage = () => {
                         return (
                           <iframe
                             src={previewUrl}
-                            className="w-full h-[600px] rounded-md border border-neutral-700"
+                            className="h-[600px] w-full border-2 border-black bg-white"
                             title={activePreviewDoc}
                           />
                         );
@@ -253,8 +263,8 @@ const ApprovalPage = () => {
                   )}
                   {/* Handle missing file case in preview */}
                   {isPreviewOpen && activePreviewDoc && !previewFileId && (
-                    <div className="rounded-lg p-3 bg-neutral-900 shadow-inner">
-                        <p className="text-gray-400">
+                    <div className="border-2 border-black bg-neutral-100 p-3 shadow-[4px_4px_0px_#000]">
+                        <p className="text-sm font-medium text-neutral-700">
                             File not found for this document.
                         </p>
                     </div>

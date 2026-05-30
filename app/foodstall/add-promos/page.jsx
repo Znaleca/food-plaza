@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useFormState } from 'react-dom';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import createPromos from '@/app/actions/createPromos';
 
 const AddPromosPage = () => {
-  const [state, formAction] = useFormState(createPromos, { success: false, error: null });
+  const [state, formAction] = React.useActionState(createPromos, { success: false, error: null });
   const router = useRouter();
 
   // Minimum spend state

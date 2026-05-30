@@ -3,15 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import createSession from "@/app/actions/createSession";
-import { useFormState } from "react-dom";
 import { toast } from "react-toastify";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/authContext";
 import { FaEye, FaEyeSlash, FaEnvelope, FaLock } from "react-icons/fa";
 import Headline from "@/components/Headline";
 
 const LoginPage = () => {
-  const [state, formAction] = useFormState(createSession, {});
+  const [state, formAction] = React.useActionState(createSession, {});
   const { setIsAuthenticated, checkAuthentication } = useAuth();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Heading from "@/components/Heading";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { FaChevronLeft } from "react-icons/fa6";
 import getSingleSpace from "@/app/actions/getSingleSpace";
 import getAllStalls from "@/app/actions/getAllStalls";
@@ -10,8 +11,8 @@ import LeaseForm from "@/components/LeaseForm";
 import { toast } from "react-toastify";
 import updateStallNumber from "@/app/actions/updateStallNumber";
 
-const LeaseSpace = ({ params }) => {
-  const { id } = params;
+const LeaseSpace = () => {
+  const { id } = useParams();
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [newStallNumber, setNewStallNumber] = useState('');
@@ -64,106 +65,141 @@ const LeaseSpace = ({ params }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-neutral-900">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-400"></div>
+      <div className="flex min-h-screen items-center justify-center bg-white px-6 selection:bg-red-600 selection:text-white">
+        <div className="flex flex-col items-center border-4 border-black bg-white px-10 py-10 shadow-[8px_8px_0px_#000]">
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-black border-t-red-600" />
+          <p className="mt-4 text-xs font-black uppercase tracking-[0.3em] text-neutral-900">Loading Lease Space</p>
+        </div>
       </div>
     );
   }
 
   if (!room) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center p-8 text-center">
-        <Heading title="Food Stall Not Found" />
-        <p className="mt-4 text-neutral-400">The space you are looking for does not exist.</p>
-        <Link
-          href="/lease/card"
-          className="mt-6 text-yellow-400 hover:text-pink-500 transition-colors duration-300 font-medium flex items-center"
-        >
-          <FaChevronLeft className="mr-2" />
-          Go back to stall list
-        </Link>
+      <div className="min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white">
+        <div className="flex min-h-screen w-full flex-col items-center justify-center px-3 text-center md:px-6">
+          <div className="w-full border-4 border-black bg-white p-8 shadow-[10px_10px_0px_#000] md:max-w-3xl md:p-10">
+            <p className="text-xs font-black uppercase tracking-[0.35em] text-red-600">Lease Module</p>
+            <Heading title="Food Stall Not Found" />
+            <p className="mt-4 text-neutral-700">The space you are looking for does not exist.</p>
+            <Link
+              href="/lease/card"
+              className="mt-8 inline-flex items-center border-2 border-black bg-white px-5 py-3 text-sm font-black uppercase tracking-wider text-neutral-950 shadow-[4px_4px_0px_#000] transition-all duration-200 hover:bg-black hover:text-white hover:shadow-[2px_2px_0px_#000] hover:translate-y-[2px]"
+            >
+              <FaChevronLeft className="mr-2" />
+              Go back to stall list
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
+  const selectedStallNumber = parseInt(newStallNumber, 10);
+
   return (
-    <div className="min-h-screen text-white px-4 md:px-8 py-12 font-sans">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
+    <div className="min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white">
+      <div className="w-full px-2 py-5 md:px-4 md:py-8">
         <Link
           href="/lease/card"
-          className="flex items-center text-yellow-400 hover:text-pink-500 transition-colors duration-300 mb-8"
+          className="mb-6 inline-flex items-center border-2 border-black bg-white px-4 py-2 text-sm font-black uppercase tracking-wider shadow-[4px_4px_0px_#000] transition-all duration-200 hover:bg-black hover:text-white hover:shadow-[2px_2px_0px_#000] hover:translate-y-[2px]"
         >
-          <FaChevronLeft className="mr-2 h-5 w-5" />
-          <span className="font-semibold text-lg">Back to Stalls</span>
+          <FaChevronLeft className="mr-2 h-4 w-4" />
+          Back to Stalls
         </Link>
+        <section className="border-4 border-black bg-white px-6 py-8 shadow-[10px_10px_0px_#000] md:px-10 md:py-10">
+          <p className="text-xs font-black uppercase tracking-[0.35em] text-red-600">Lease Details</p>
+          <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="text-4xl font-black uppercase tracking-tight leading-tight text-neutral-950 md:text-6xl">
+                Stall #{room.stallNumber}
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm font-medium text-neutral-700 md:text-base">Manage tenant assignment and update the stall number from one focused admin panel.</p>
+            </div>
+            <div className="inline-flex items-center gap-2 border-2 border-black bg-red-600 px-4 py-2 text-xs font-black uppercase tracking-[0.22em] text-white">
+              Active Lease Workspace
+            </div>
+          </div>
+        </section>
 
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <p className="text-white uppercase text-sm tracking-widest font-light">Lease Details</p>
-          <h1 className="text-5xl md:text-6xl font-extrabold mt-2 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-500">
-            Stall #{room.stallNumber}
-          </h1>
-        </div>
-
-        {/* Occupant Info Card */}
-        <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 md:p-8 mb-10 shadow-2xl transition-all duration-300 transform hover:scale-105 hover:border-pink-500">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <h2 className="text-xl md:text-2xl font-semibold text-white mb-2 md:mb-0">
-              Current Occupant
-            </h2>
-            <p className="text-2xl md:text-3xl font-extrabold text-yellow-400">
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_#000]">
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-red-600">Current Occupant</p>
+            <p className="mt-3 text-3xl font-black uppercase leading-tight text-neutral-950 md:text-4xl">
               {room.name || 'Vacant'}
             </p>
+            <p className="mt-2 text-sm font-medium text-neutral-700">Assigning a new lease will update this occupancy profile automatically.</p>
+          </div>
+
+          <div className="border-4 border-black bg-white p-6 shadow-[8px_8px_0px_#000]">
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-red-600">Selected Number</p>
+            <p className="mt-3 text-5xl font-black text-neutral-950">{selectedStallNumber || room.stallNumber}</p>
+            <p className="mt-2 text-sm font-medium text-neutral-700">Pick a number and confirm to update the assigned stall index.</p>
           </div>
         </div>
 
-        {/* Main Content Sections (Stacked vertically) */}
-        {/* Updated class to space-y-8 to ensure single-column stacking on all screen sizes */}
-        <div className="space-y-8">
-          
-          {/* Lease Form (MOVED UP) */}
-          <div className="bg-neutral-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-neutral-800">
-            <h2 className="text-2xl font-bold mb-6 text-white">Manage Lease</h2>
-            <LeaseForm room={room} />
-          </div>
-          
-          {/* Update Stall Number Cinema Picker (MOVED DOWN) */}
-          <div className="bg-neutral-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-neutral-800">
-            <h2 className="text-2xl font-bold mb-6 text-white">Stall Number</h2>
+        <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <section className="border-4 border-black bg-white p-6 shadow-[10px_10px_0px_#000] md:p-8">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-neutral-950">Manage Lease</h2>
+            <p className="mt-2 text-sm font-medium text-neutral-700">Complete or update tenant information for this stall.</p>
+            <div className="mt-5 border-2 border-black bg-neutral-100 p-2 md:p-4">
+              <LeaseForm room={room} />
+            </div>
+          </section>
+
+          <section className="border-4 border-black bg-white p-6 shadow-[10px_10px_0px_#000] md:p-8">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-neutral-950">Stall Number Picker</h2>
+            <p className="mt-2 text-sm font-medium text-neutral-700">Unavailable numbers are locked. Your current stall remains selectable.</p>
+
             <form onSubmit={handleStallNumberChange} className="space-y-6">
-              <div className="grid grid-cols-5 gap-4 justify-items-center">
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {Array.from({ length: 15 }, (_, i) => i + 1).map((num) => {
                   const taken = usedStalls.has(num) && num !== room.stallNumber; // allow current stall
-                  const selected = parseInt(newStallNumber, 10) === num;
+                  const selected = selectedStallNumber === num;
                   return (
                     <button
                       key={num}
                       type="button"
                       onClick={() => !taken && setNewStallNumber(num.toString())}
                       disabled={taken}
-                      className={`w-14 h-14 flex items-center justify-center rounded-lg font-bold transition-all
+                      className={`flex h-14 items-center justify-center border-2 text-sm font-black transition-all duration-200
                         ${taken
-                          ? 'bg-neutral-700 text-gray-500 cursor-not-allowed'
+                          ? 'cursor-not-allowed border-black bg-neutral-200 text-neutral-500'
                           : selected
-                            ? 'bg-pink-600 text-white shadow-lg scale-110'
-                            : 'bg-neutral-800 hover:bg-pink-700 text-white'}`}
+                            ? 'border-black bg-red-600 text-white shadow-[3px_3px_0px_#000]'
+                            : 'border-black bg-white text-black hover:bg-black hover:text-white'}`}
                     >
                       {num}
                     </button>
                   );
                 })}
               </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-xs font-black uppercase tracking-[0.2em] text-neutral-800">
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-3 w-3 border border-black bg-neutral-400" />
+                  Taken
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-3 w-3 border border-black bg-red-600" />
+                  Selected
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <span className="h-3 w-3 border border-black bg-white" />
+                  Available
+                </span>
+              </div>
+
               <input type="hidden" value={newStallNumber} readOnly />
 
               <button
                 type="submit"
-                className="w-full py-3 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-lg font-bold text-white shadow-lg transform transition-all duration-300 hover:from-yellow-500 hover:to-pink-400 hover:scale-105"
+                className="w-full border-2 border-black bg-red-600 py-3 text-sm font-black uppercase tracking-[0.22em] text-white shadow-[4px_4px_0px_#000] transition-all duration-200 hover:bg-black hover:shadow-[2px_2px_0px_#000] hover:translate-y-[2px]"
               >
                 Update Number
               </button>
             </form>
-          </div>
+          </section>
         </div>
       </div>
     </div>
