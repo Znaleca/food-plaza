@@ -38,6 +38,8 @@ const formatCurrency = (amount) => {
     }).format(amount);
 };
 
+const fallbackMenuImage = '/images/no-image.jpg';
+
 
 // --- UTILITY TO EXTRACT ALL MENU ITEMS FROM ALL STALLS (MODIFIED) ---
 const extractAllMenuItems = (stallDocuments) => {
@@ -394,20 +396,25 @@ const SalesCard = ({ roomName }) => {
   // --- RENDER LOGIC ---
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center text-white bg-neutral-900">
-      <svg className="animate-spin h-10 w-10 text-pink-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-      </svg>
+    <div className="min-h-screen flex items-center justify-center text-neutral-950 bg-white selection:bg-red-600 selection:text-white">
+      <div className="border-4 border-neutral-950 bg-white px-6 py-5 shadow-[8px_8px_0px_#000]">
+        <svg className="animate-spin h-10 w-10 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+      </div>
     </div>
   );
 
   if (error) return (
-    <div className="min-h-screen flex flex-col items-center justify-center text-red-500 space-y-4 bg-neutral-900">
-      <p>{error}</p>
+    <div className="min-h-screen flex flex-col items-center justify-center text-neutral-950 space-y-4 bg-white selection:bg-red-600 selection:text-white p-6">
+      <div className="border-4 border-neutral-950 bg-white px-6 py-5 text-center shadow-[8px_8px_0px_#000] max-w-lg w-full">
+        <p className="text-sm font-black uppercase tracking-[0.2em] text-red-600 mb-2">Sales Dashboard Error</p>
+        <p className="text-sm font-semibold text-neutral-700">{error}</p>
+      </div>
       <button
         onClick={() => window.location.reload()}
-        className="px-4 py-2 bg-pink-600 rounded hover:bg-pink-700 text-white transition duration-200"
+        className="border-4 border-neutral-950 bg-red-600 px-5 py-3 text-xs font-black uppercase tracking-[0.2em] text-white shadow-[4px_4px_0px_#000] transition hover:bg-black"
       >
         Retry
       </button>
@@ -415,57 +422,57 @@ const SalesCard = ({ roomName }) => {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-white p-6">
+    <div className="min-h-screen bg-white text-neutral-950 p-4 sm:p-6 selection:bg-red-600 selection:text-white">
 
       {/* Sales Summary & Filtered Totals */}
-      <div className="bg-neutral-900 rounded-xl p-6 mb-8">
-        <h2 className="text-xl font-bold mb-4 text-center text-pink-500">{getFilterTitle(timeFilter)}</h2>
+      <div className="border-4 border-neutral-950 bg-white p-4 sm:p-6 mb-8 shadow-[8px_8px_0px_#000]">
+        <h2 className="text-xl sm:text-2xl font-black uppercase tracking-[0.14em] mb-5 text-center text-red-600">{getFilterTitle(timeFilter)}</h2>
         
         {/* Adjusted to six columns (md:grid-cols-6) for the new card placement */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
 
           {/* Filtered Items Sold (based on item count scale) */}
-          <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
-            <FaBoxOpen className="w-6 h-6 text-pink-500 mb-1" />
-            <p className="text-xl font-semibold text-pink-400">{filteredTotalItemsSold}</p>
-            <p className="text-xs text-neutral-400">Items Sold</p>
+          <div className="border-2 border-neutral-950 bg-neutral-50 p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1 shadow-[4px_4px_0px_#000]">
+            <FaBoxOpen className="w-6 h-6 text-red-600 mb-1" />
+            <p className="text-xl font-black text-neutral-950">{filteredTotalItemsSold}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Items Sold</p>
           </div>
 
           {/* Filtered Total Gross Revenue (TRUE Gross Revenue) */}
-          <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
-            <FaMoneyBillTrendUp className="w-6 h-6 text-yellow-400 mb-1" />
-            <p className="text-xl font-semibold text-yellow-400">{filteredTotalBaseRevenueDisplay}</p>
-            <p className="text-xs text-neutral-400">Gross Revenue</p>
+          <div className="border-2 border-neutral-950 bg-white p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1 shadow-[4px_4px_0px_#000]">
+            <FaMoneyBillTrendUp className="w-6 h-6 text-neutral-950 mb-1" />
+            <p className="text-xl font-black text-neutral-950">{filteredTotalBaseRevenueDisplay}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Gross Revenue</p>
           </div>
           
           {/* Filtered Total Discount Applied */}
-          <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
-            <FaPercent className="w-6 h-6 text-orange-400 mb-1" />
-            <p className="text-xl font-semibold text-orange-400">{filteredTotalDiscountAppliedDisplay}</p>
-            <p className="text-xs text-neutral-400">Total Discount</p>
+          <div className="border-2 border-neutral-950 bg-white p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1 shadow-[4px_4px_0px_#000]">
+            <FaPercent className="w-6 h-6 text-red-600 mb-1" />
+            <p className="text-xl font-black text-neutral-950">{filteredTotalDiscountAppliedDisplay}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Total Discount</p>
           </div>
 
           {/* Filtered Total Final Revenue (True Net Revenue) */}
-          <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
-            <FaMoneyBillTrendUp className="w-6 h-6 text-pink-500 mb-1" />
-            <p className="text-xl font-semibold text-pink-400">{filteredTotalFinalRevenueDisplay}</p>
-            <p className="text-xs text-neutral-400">Final Revenue (Net)</p>
+          <div className="border-2 border-neutral-950 bg-red-600 p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1 shadow-[4px_4px_0px_#000]">
+            <FaMoneyBillTrendUp className="w-6 h-6 text-white mb-1" />
+            <p className="text-xl font-black text-white">{filteredTotalFinalRevenueDisplay}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/80">Final Revenue (Net)</p>
           </div>
 
           {/* 🟢 ALL-TIME Total Orders (Attempted) - CORRECTION */}
-          <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
-            <FaBoxOpen className="w-6 h-6 text-neutral-500 mb-1" />
+          <div className="border-2 border-neutral-950 bg-neutral-50 p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1 shadow-[4px_4px_0px_#000]">
+            <FaBoxOpen className="w-6 h-6 text-neutral-950 mb-1" />
             {/* CORRECT: Uses the actual count of attempted orders from paymentSummary */}
-            <p className="text-xl font-semibold text-neutral-400">{paymentSummary.ordersCount}</p> 
-            <p className="text-xs text-neutral-500">All-Time Orders (Attempted)</p>
+            <p className="text-xl font-black text-neutral-950">{paymentSummary.ordersCount}</p> 
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">All-Time Orders (Attempted)</p>
           </div>
           
           {/* 🟢 ALL-TIME Total Item Quantity Sold (Clarified Label) */}
-          <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center col-span-2 md:col-span-1">
-            <FaBoxOpen className="w-6 h-6 text-neutral-500 mb-1" />
-            <p className="text-xl font-semibold text-neutral-400">{totalItemsSold}</p>
+          <div className="border-2 border-neutral-950 bg-white p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1 shadow-[4px_4px_0px_#000]">
+            <FaBoxOpen className="w-6 h-6 text-red-600 mb-1" />
+            <p className="text-xl font-black text-neutral-950">{totalItemsSold}</p>
             {/* CLARIFIED LABEL */}
-            <p className="text-xs text-neutral-500">All-Time Item Quantity</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">All-Time Item Quantity</p>
           </div>
 
         </div>
@@ -477,7 +484,7 @@ const SalesCard = ({ roomName }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
         {/* DOUGHNUT CHART (Column 1) */}
-        <div className="lg:col-span-1 h-full min-h-[400px]">
+        <div className="lg:col-span-1 h-full min-h-[400px] border-4 border-neutral-950 bg-white shadow-[8px_8px_0px_#000] p-3 sm:p-4">
             <RevenueDoughnutChart 
                 items={chartItems} // Use the items array, which contains the 'baseRevenue' needed
                 filterTitle={getFilterTitle(timeFilter)}
@@ -488,22 +495,22 @@ const SalesCard = ({ roomName }) => {
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Best Seller Card */}
-            <div className="bg-neutral-800 p-4 rounded-xl flex flex-col justify-between h-full border border-neutral-700">
-                <p className="text-md font-bold text-green-400 mb-4 flex items-center">
-                    <FaStar className="w-5 h-5 mr-2" /> BEST SELLER ({timeFilter.toUpperCase().replace('-', ' ')})
+            <div className="border-4 border-neutral-950 bg-white p-4 flex flex-col justify-between h-full shadow-[8px_8px_0px_#000]">
+              <p className="text-sm font-black uppercase tracking-[0.16em] text-red-600 mb-4 flex items-center">
+                <FaStar className="w-5 h-5 mr-2 text-neutral-950" /> Best Seller ({timeFilter.toUpperCase().replace('-', ' ')})
                 </p>
                 {currentBestSeller ?
                 (
                     <>
-                        <p className="text-2xl font-bold text-white truncate mb-2">{currentBestSeller.name}</p>
+                  <p className="text-2xl font-black text-neutral-950 truncate mb-2 uppercase tracking-tight">{currentBestSeller.name}</p>
                         <div className="space-y-1">
-                          <p className="text-sm text-neutral-400">Items Sold: <span className="text-green-300 font-bold">{currentBestSeller.count} items</span></p>
-                            <p className="text-sm text-neutral-400">Gross Rev: <span className="text-yellow-300 font-bold">{formatCurrency(currentBestSeller.baseRevenue)}</span></p>
-                            <p className="text-sm text-neutral-400">Discount: <span className="text-orange-300 font-bold">{formatCurrency(currentBestSeller.totalDiscount)}</span></p>
+                    <p className="text-sm text-neutral-600">Items Sold: <span className="text-neutral-950 font-black">{currentBestSeller.count} items</span></p>
+                    <p className="text-sm text-neutral-600">Gross Rev: <span className="text-neutral-950 font-black">{formatCurrency(currentBestSeller.baseRevenue)}</span></p>
+                    <p className="text-sm text-neutral-600">Discount: <span className="text-red-600 font-black">{formatCurrency(currentBestSeller.totalDiscount)}</span></p>
                         </div>
-                        <div className="pt-3 mt-4 border-t border-neutral-700/50">
-                            <p className="text-sm text-neutral-300 font-semibold uppercase">Net Revenue</p>
-                            <p className="text-xl font-extrabold text-blue-400">{formatCurrency(currentBestSeller.totalRevenue)}</p>
+                  <div className="pt-3 mt-4 border-t-2 border-neutral-950">
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-neutral-600">Net Revenue</p>
+                    <p className="text-xl font-black text-red-600">{formatCurrency(currentBestSeller.totalRevenue)}</p>
                         </div>
                     </>
                 ) : (
@@ -512,22 +519,22 @@ const SalesCard = ({ roomName }) => {
             </div>
 
             {/* Least Seller Card */}
-            <div className="bg-neutral-800 p-4 rounded-xl flex flex-col justify-between h-full border border-neutral-700">
-                <p className="text-md font-bold text-red-400 mb-4 flex items-center">
-                    <FaArrowTrendDown className="w-5 h-5 mr-2" /> LEAST SELLER ({timeFilter.toUpperCase().replace('-', ' ')})
+            <div className="border-4 border-neutral-950 bg-white p-4 flex flex-col justify-between h-full shadow-[8px_8px_0px_#000]">
+              <p className="text-sm font-black uppercase tracking-[0.16em] text-red-600 mb-4 flex items-center">
+                <FaArrowTrendDown className="w-5 h-5 mr-2 text-neutral-950" /> Least Seller ({timeFilter.toUpperCase().replace('-', ' ')})
                 </p>
                 {currentLeastSeller ?
                 (
                     <>
-                        <p className="text-2xl font-bold text-white truncate mb-2">{currentLeastSeller.name}</p>
+                  <p className="text-2xl font-black text-neutral-950 truncate mb-2 uppercase tracking-tight">{currentLeastSeller.name}</p>
                         <div className="space-y-1">
-                          <p className="text-sm text-neutral-400">Items Sold: <span className="text-red-300 font-bold">{currentLeastSeller.count} items</span></p>
-                            <p className="text-sm text-neutral-400">Gross Rev: <span className="text-yellow-300 font-bold">{formatCurrency(currentLeastSeller.baseRevenue)}</span></p>
-                            <p className="text-sm text-neutral-400">Discount: <span className="text-orange-300 font-bold">{formatCurrency(currentLeastSeller.totalDiscount)}</span></p>
+                    <p className="text-sm text-neutral-600">Items Sold: <span className="text-neutral-950 font-black">{currentLeastSeller.count} items</span></p>
+                    <p className="text-sm text-neutral-600">Gross Rev: <span className="text-neutral-950 font-black">{formatCurrency(currentLeastSeller.baseRevenue)}</span></p>
+                    <p className="text-sm text-neutral-600">Discount: <span className="text-red-600 font-black">{formatCurrency(currentLeastSeller.totalDiscount)}</span></p>
                         </div>
-                        <div className="pt-3 mt-4 border-t border-neutral-700/50">
-                            <p className="text-sm text-neutral-300 font-semibold uppercase">Net Revenue</p>
-                            <p className="text-xl font-extrabold text-red-400">{formatCurrency(currentLeastSeller.totalRevenue)}</p>
+                  <div className="pt-3 mt-4 border-t-2 border-neutral-950">
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-neutral-600">Net Revenue</p>
+                    <p className="text-xl font-black text-red-600">{formatCurrency(currentLeastSeller.totalRevenue)}</p>
                         </div>
                     </>
                 ) : (
@@ -541,115 +548,115 @@ const SalesCard = ({ roomName }) => {
 
 
       {/* LATEST TRANSACTION SUMMARY */}
-      <div className="bg-neutral-900 rounded-xl p-6 mb-8 border-t border-b border-pink-700/50">
-        <h3 className="text-lg font-bold mb-4 text-center text-white flex items-center justify-center">
-            <FaClock className="w-5 h-5 mr-2 text-pink-500" />
-            Latest Successful Transaction <span className="text-pink-400 ml-2">({roomName})</span>
+      <div className="border-4 border-neutral-950 bg-white p-4 sm:p-6 mb-8 shadow-[8px_8px_0px_#000]">
+        <h3 className="text-lg font-black uppercase tracking-[0.14em] mb-4 text-center text-neutral-950 flex items-center justify-center">
+            <FaClock className="w-5 h-5 mr-2 text-red-600" />
+            Latest Successful Transaction <span className="text-red-600 ml-2">({roomName})</span>
         </h3>
         {latestTransaction ?
         (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             
             {/* Latest Final Amount */}
-            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center border-2 border-pink-500/50">
-                <FaMoneyBillTrendUp className="w-6 h-6 text-pink-400 mb-1" />
-                <p className="text-xl font-semibold text-pink-400">{formatCurrency(latestTransaction.finalAmount)}</p>
-                <p className="text-xs text-neutral-400">Latest Money Received (Net)</p>
+            <div className="border-2 border-neutral-950 bg-neutral-50 p-4 flex flex-col items-center justify-center shadow-[4px_4px_0px_#000]">
+              <FaMoneyBillTrendUp className="w-6 h-6 text-red-600 mb-1" />
+              <p className="text-xl font-black text-neutral-950">{formatCurrency(latestTransaction.finalAmount)}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Latest Money Received (Net)</p>
             </div>
             
             {/* Latest Discount Applied */}
-            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center border-2 border-orange-500/50">
-                <FaPercent className="w-6 h-6 text-orange-400 mb-1" />
-                <p className="text-xl font-semibold text-orange-400">{formatCurrency(latestTransaction.discountAmount)}</p>
-                <p className="text-xs text-neutral-400">Latest Discount Applied</p>
+            <div className="border-2 border-neutral-950 bg-white p-4 flex flex-col items-center justify-center shadow-[4px_4px_0px_#000]">
+              <FaPercent className="w-6 h-6 text-red-600 mb-1" />
+              <p className="text-xl font-black text-neutral-950">{formatCurrency(latestTransaction.discountAmount)}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Latest Discount Applied</p>
             </div>
             
             {/* Timestamp */}
-            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center">
-                 <FaCalendarWeek className="w-6 h-6 text-neutral-500 mb-1" />
-                <p className="text-sm font-semibold text-neutral-400">
+              <div className="border-2 border-neutral-950 bg-white p-4 flex flex-col items-center justify-center shadow-[4px_4px_0px_#000]">
+                <FaCalendarWeek className="w-6 h-6 text-neutral-950 mb-1" />
+               <p className="text-sm font-black text-neutral-950">
                      {new Date(latestTransaction.timestamp).toLocaleDateString()}
                 </p>
-                <p className="text-xs text-neutral-500">Transaction Date/Time</p>
+               <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Transaction Date/Time</p>
             </div>
           </div>
         ) : (
-          <p className="text-center text-neutral-500 bg-neutral-800 p-4 rounded-lg">No latest successful transaction found for this stall.</p>
+          <p className="text-center text-neutral-500 border-2 border-dashed border-neutral-300 bg-neutral-50 p-4">No latest successful transaction found for this stall.</p>
         )}
       </div>
       {/* ---------------------------------------------------------------- */}
 
 
       {/* PAYMENT STATUS REVENUE SUMMARY (Now stall-specific) */}
-      <div className="bg-neutral-900 rounded-xl p-6 mb-8 border-t border-neutral-700/50">
-        <h3 className="text-lg font-bold mb-4 text-center text-white flex items-center justify-center">
-          <FaMoneyBillTrendUp className="w-5 h-5 mr-2 text-green-400" />
-          All-Time Payment Status Revenue Summary <span className="text-pink-400 ml-2">({roomName})</span>
+      <div className="border-4 border-neutral-950 bg-white p-4 sm:p-6 mb-8 shadow-[8px_8px_0px_#000]">
+        <h3 className="text-lg font-black uppercase tracking-[0.14em] mb-4 text-center text-neutral-950 flex items-center justify-center">
+          <FaMoneyBillTrendUp className="w-5 h-5 mr-2 text-red-600" />
+          All-Time Payment Status Revenue Summary <span className="text-red-600 ml-2">({roomName})</span>
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             {/* Total Orders Card */}
-            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center">
-                <FaBoxOpen className="w-6 h-6 text-neutral-400 mb-1" />
-                <p className="text-xl font-semibold text-neutral-300">{paymentSummary.ordersCount}</p>
-                <p className="text-xs text-neutral-500">Total Checkout Attempted</p>
+            <div className="border-2 border-neutral-950 bg-neutral-50 p-4 flex flex-col items-center justify-center shadow-[4px_4px_0px_#000]">
+              <FaBoxOpen className="w-6 h-6 text-red-600 mb-1" />
+              <p className="text-xl font-black text-neutral-950">{paymentSummary.ordersCount}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Total Checkout Attempted</p>
             </div>
             
             {/* Paid Revenue Card (TRUE GROSS REVENUE) */}
-            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center border-2 border-green-500/50">
-                <FaMoneyBillTrendUp className="w-6 h-6 text-green-400 mb-1" />
-                <p className="text-xl font-semibold text-green-400">{formatCurrency(paymentSummary.paidRevenue)}</p>
-                <p className="text-xs text-neutral-400">Successfully Paid (True Gross)</p>
+            <div className="border-2 border-neutral-950 bg-white p-4 flex flex-col items-center justify-center shadow-[4px_4px_0px_#000]">
+              <FaMoneyBillTrendUp className="w-6 h-6 text-red-600 mb-1" />
+              <p className="text-xl font-black text-neutral-950">{formatCurrency(paymentSummary.paidRevenue)}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Successfully Paid (True Gross)</p>
             </div>
             
             {/* Failed Revenue Card */}
-            <div className="bg-neutral-800 p-4 rounded-lg flex flex-col items-center justify-center border-2 border-red-500/50">
-                <FaArrowTrendDown className="w-6 h-6 text-red-400 mb-1" />
-                <p className="text-xl font-semibold text-red-400">{formatCurrency(paymentSummary.failedRevenue)}</p>
-                <p className="text-xs text-neutral-400">Payment Failed (Lost Gross)</p>
+            <div className="border-2 border-neutral-950 bg-red-600 p-4 flex flex-col items-center justify-center shadow-[4px_4px_0px_#000]">
+              <FaArrowTrendDown className="w-6 h-6 text-white mb-1" />
+              <p className="text-xl font-black text-white">{formatCurrency(paymentSummary.failedRevenue)}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/80">Payment Failed (Lost Gross)</p>
             </div>
         </div>
       </div>
       {/* ---------------------------------------------------------------- */}
 
       {/* Sales Chart Section with Filter Control (Bar Chart - kept the logic for items sold visualization) */}
-      <div className="bg-neutral-900 rounded-xl p-6 mb-8">
+        <div className="border-4 border-neutral-950 bg-white p-4 sm:p-6 mb-8 shadow-[8px_8px_0px_#000]">
 
-        <div className="flex flex-col md:flex-row md:justify-between items-center mb-6">
+        <div className="flex flex-col md:flex-row md:justify-between items-center mb-6 gap-4">
        
-          <h3 className="text-lg font-semibold text-pink-400 flex items-center mb-3 md:mb-0">
+          <h3 className="text-lg font-black uppercase tracking-[0.14em] text-neutral-950 flex items-center mb-0">
                 {getFilterIcon(timeFilter)} Total Order Count per Menu Item
             </h3>
 
             {/* --- FILTER BUTTONS --- */}
-            <div className="flex space-x-2 bg-neutral-800 p-1 rounded-lg">
+          <div className="flex flex-wrap gap-2 bg-neutral-100 p-2 border-2 border-neutral-950 shadow-[4px_4px_0px_#000]">
                 <button
                     onClick={() => setTimeFilter('all-time')}
-                    className={`px-3 py-1 text-sm rounded-md transition duration-150 ${
-                        timeFilter === 'all-time' ? 'bg-pink-600 text-white' : 'text-neutral-400 hover:bg-neutral-700'
+              className={`px-3 py-1 text-sm font-black uppercase tracking-[0.12em] rounded-none border border-neutral-950 transition duration-150 ${
+                        timeFilter === 'all-time' ? 'bg-red-600 text-white' : 'text-neutral-700 hover:bg-white'
                     }`}
                 >
                     All Time
                 </button>
                 <button
                     onClick={() => setTimeFilter('today')}
-                    className={`px-3 py-1 text-sm rounded-md transition duration-150 ${
-                        timeFilter === 'today' ? 'bg-pink-600 text-white' : 'text-neutral-400 hover:bg-neutral-700'
+              className={`px-3 py-1 text-sm font-black uppercase tracking-[0.12em] rounded-none border border-neutral-950 transition duration-150 ${
+                        timeFilter === 'today' ? 'bg-red-600 text-white' : 'text-neutral-700 hover:bg-white'
                     }`}
                 >
                     Today
                 </button>
                 <button
                     onClick={() => setTimeFilter('week')}
-                    className={`px-3 py-1 text-sm rounded-md transition duration-150 ${
-                        timeFilter === 'week' ? 'bg-pink-600 text-white' : 'text-neutral-400 hover:bg-neutral-700'
+              className={`px-3 py-1 text-sm font-black uppercase tracking-[0.12em] rounded-none border border-neutral-950 transition duration-150 ${
+                        timeFilter === 'week' ? 'bg-red-600 text-white' : 'text-neutral-700 hover:bg-white'
                     }`}
                 >
                     Week
                 </button>
                 <button
                     onClick={() => setTimeFilter('month')}
-                    className={`px-3 py-1 text-sm rounded-md transition duration-150 ${
-                        timeFilter === 'month' ? 'bg-pink-600 text-white' : 'text-neutral-400 hover:bg-neutral-700'
+              className={`px-3 py-1 text-sm font-black uppercase tracking-[0.12em] rounded-none border border-neutral-950 transition duration-150 ${
+                        timeFilter === 'month' ? 'bg-red-600 text-white' : 'text-neutral-700 hover:bg-white'
                     }`}
                 >
                     Month
@@ -662,10 +669,10 @@ const SalesCard = ({ roomName }) => {
         (
           // --- BEGIN SCROLLABLE CONTAINER ---
           <div className="w-full overflow-x-auto">
-            <div className="h-64 flex flex-col justify-end p-2 bg-neutral-800 rounded-lg relative min-w-[1200px]">
+            <div className="h-64 flex flex-col justify-end p-4 bg-white border-2 border-neutral-950 relative min-w-[1200px] shadow-[4px_4px_0px_#000]">
                 {/* Guide Lines */}
-                <div className="absolute inset-0 p-2 border-l border-neutral-700">
-                  <div className="absolute top-1/2 w-full h-px bg-neutral-700/50"></div>
+                <div className="absolute inset-0 p-2 border-l border-neutral-200">
+                  <div className="absolute top-1/2 w-full h-px bg-neutral-200"></div>
                 </div>
 
                 <div className="flex justify-start items-end h-full pt-4 relative z-10 space-x-2">
@@ -675,13 +682,13 @@ const SalesCard = ({ roomName }) => {
                         style={{
                            height: `${(item.count / chartMaxCount) * 100}%`
                           }}
-                        className="w-full rounded-t-lg bg-pink-600 hover:bg-pink-500 transition-all duration-300 ease-out flex items-start justify-center"
+                        className="w-full rounded-t-none border-2 border-neutral-950 bg-red-600 hover:bg-black transition-all duration-300 ease-out flex items-start justify-center"
                       >
-                         <div className="absolute top-0 transform -translate-y-full text-xs font-bold text-white bg-neutral-700/80 px-2 py-1 rounded-md whitespace-nowrap">
+                         <div className="absolute top-0 transform -translate-y-full text-[10px] font-black uppercase tracking-[0.12em] text-white bg-neutral-950 px-2 py-1 whitespace-nowrap border border-white">
                             {item.count} items
                          </div>
                       </div>
-                      <div className="text-xs text-center mt-2 text-neutral-400 w-full line-clamp-2" 
+                      <div className="text-[10px] font-black uppercase tracking-[0.12em] text-center mt-2 text-neutral-700 w-full line-clamp-2" 
                         title={item.name}>
                         {item.name}
                       </div>
@@ -690,18 +697,18 @@ const SalesCard = ({ roomName }) => {
                 </div>
   
                 {/* X-Axis Base Line */}
-                <div className="h-px bg-neutral-700 mt-2"></div>
+                <div className="h-px bg-neutral-200 mt-2"></div>
             </div>
           </div>
           // --- END SCROLLABLE CONTAINER ---
         ) : (
-          <p className="text-neutral-400 text-center py-8 bg-neutral-800 rounded-lg">No sales data available for this period.</p>
+          <p className="text-neutral-500 text-center py-8 bg-neutral-50 border-2 border-dashed border-neutral-300">No sales data available for this period.</p>
         )}
       </div>
 
       {/* All Menu Items List (Detail) - Shows filtered data */}
-      <div className="bg-neutral-900 rounded-xl p-6">
-        <h3 className="text-xl font-bold mb-6 text-pink-400 border-b border-neutral-700 pb-2">
+      <div className="border-4 border-neutral-950 bg-white p-4 sm:p-6 shadow-[8px_8px_0px_#000]">
+        <h3 className="text-xl font-black uppercase tracking-[0.14em] mb-6 text-red-600 border-b-2 border-neutral-950 pb-2">
           Menu Item Sales Detail ({getFilterTitle(timeFilter)})
         </h3>
 
@@ -711,55 +718,59 @@ const SalesCard = ({ roomName }) => {
             {filteredData.items.map(item => (
               <div
                 key={item.id}
-                className="bg-neutral-800 p-5 rounded-xl shadow-lg hover:shadow-pink-500/20 transition duration-300 transform hover:scale-[1.02] border border-neutral-700"
+                className="bg-white p-5 shadow-[6px_6px_0px_#000] hover:translate-y-[-2px] transition duration-300 border-2 border-neutral-950"
               >
                 <div className="flex items-center space-x-4 mb-4">
-                  <div className="relative p-0.5 rounded-full bg-gradient-to-br from-pink-500 to-purple-600">
+                  <div className="relative p-0.5 bg-red-600">
                     <img
-                       src={item.imageURL || '/placeholder-food.png'}
+                       src={item.imageURL || fallbackMenuImage}
                       alt={item.name}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-neutral-800"
-                      crossOrigin="anonymous"
+                      className="w-16 h-16 object-cover border-2 border-neutral-950 bg-neutral-100"
+                      onError={(event) => {
+                        if (event.currentTarget.src !== window.location.origin + fallbackMenuImage) {
+                          event.currentTarget.src = fallbackMenuImage;
+                        }
+                      }}
                     />
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-lg text-white truncate">{item.name}</p>
-                    <p className="text-xs text-neutral-400 font-medium bg-neutral-700/50 inline-block px-2 py-0.5 rounded-full mt-1">
+                    <p className="font-black text-lg text-neutral-950 truncate uppercase tracking-tight">{item.name}</p>
+                    <p className="text-[10px] text-neutral-700 font-black bg-neutral-100 inline-block px-2 py-0.5 border border-neutral-300 mt-1 uppercase tracking-[0.14em]">
                       {item.type}
                     </p>
                   </div>
                 </div>
 
                 {/* Sales Metrics Grid (FIXED LAYOUT) */}
-                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-neutral-700/50">
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t-2 border-neutral-950">
           
                     {/* Units Sold (Items) */}
                     <div className="flex flex-col items-start">
-                         <p className="text-xs text-neutral-400">Items Sold</p>
-                        <p className="text-sm font-bold text-green-400">{item.count}</p>
+                         <p className="text-[10px] font-black uppercase tracking-[0.14em] text-neutral-500">Items Sold</p>
+                        <p className="text-sm font-black text-neutral-950">{item.count}</p>
                     </div>
            
                     {/* Size Prices (DYNAMIC SECTION) */}
                     {renderPriceDetails(item)}
                     
                     {/* Gross Revenue (Max Estimate) */}
-                    <div className="flex flex-col items-start pt-2 border-t border-neutral-700/50 col-span-1">
-                        <p className="text-xs text-neutral-400">Gross Rev. (Max Est.)</p>
-                        <p className="text-sm font-bold text-yellow-400">{formatCurrency(item.baseRevenue)}</p>
+                    <div className="flex flex-col items-start pt-2 border-t border-neutral-300 col-span-1">
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-neutral-500">Gross Rev. (Max Est.)</p>
+                      <p className="text-sm font-black text-neutral-950">{formatCurrency(item.baseRevenue)}</p>
                     </div>
        
                     {/* Total Discount */}
-                    <div className="flex flex-col items-end pt-2 border-t border-neutral-700/50 col-span-1">
-                         <p className="text-xs text-neutral-400">Discount</p>
-                        <p className="text-sm font-bold text-orange-400">{formatCurrency(item.totalDiscount)}</p>
+                    <div className="flex flex-col items-end pt-2 border-t border-neutral-300 col-span-1">
+                       <p className="text-[10px] font-black uppercase tracking-[0.14em] text-neutral-500">Discount</p>
+                      <p className="text-sm font-black text-red-600">{formatCurrency(item.totalDiscount)}</p>
                     </div>
                 </div>
         
                 {/* Final Revenue (NET) - Separated and Prominent */}
-                <div className="pt-4 mt-4 border-t border-neutral-700/50 flex flex-col items-center bg-neutral-700/30 p-2 rounded-lg">
-                    <p className="text-sm text-neutral-300 font-semibold uppercase">Net Revenue</p>
-                    <p className="text-xl font-extrabold text-blue-400">{formatCurrency(item.totalRevenue)}</p>
+                  <div className="pt-4 mt-4 border-t-2 border-neutral-950 flex flex-col items-center bg-neutral-50 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600">Net Revenue</p>
+                    <p className="text-xl font-black text-red-600">{formatCurrency(item.totalRevenue)}</p>
                 </div>
               </div>
             ))}

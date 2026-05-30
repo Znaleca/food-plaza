@@ -210,8 +210,8 @@ export default function EditSpacePage() {
     );
 
   return (
-    <div className="min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white px-0 py-4 md:py-6">
-      <div className="w-full">
+    <div className="min-h-screen bg-white text-neutral-950 selection:bg-red-600 selection:text-white">
+      <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 py-4 md:py-6">
         {/* Back Link - Increased py to 4 for slightly less space */}
         <Link href="/rooms/my" className="inline-flex items-center border-2 border-black bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-neutral-900 transition hover:bg-black hover:text-white">
           <FaChevronLeft className="mr-2 text-sm" />

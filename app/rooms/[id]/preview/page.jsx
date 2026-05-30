@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import getSingleSpace from '@/app/actions/getSingleSpace';
 import updateAvailability from '@/app/actions/updateAvailability';
 import adjustIngredientStock from '@/app/actions/adjustIngredientStock';
@@ -20,7 +20,9 @@ import { toast } from 'react-toastify';
 const categories = ['Drinks', 'Add-Ons', 'Meals', 'Snacks', 'Dessert'];
 
 const PreviewStallPage = ({ params }) => {
-  const { id } = params;
+  // `params` is a potential Promise provided by Next; unwrap it with React.use()
+  const resolvedParams = React.use ? React.use(params) : params;
+  const { id } = resolvedParams || {};
   const [stall, setStall] = useState(null);
   const [loading, setLoading] = useState(true);
   const [menuAvailability, setMenuAvailability] = useState([]);

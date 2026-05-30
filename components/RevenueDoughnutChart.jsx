@@ -70,9 +70,10 @@ const RevenueDoughnutChart = ({ items, filterTitle }) => {
                 label: `Gross Revenue (${filterTitle})`,
                 data: itemRevenues,
                 backgroundColor: getColors(itemNames.length),
-                borderColor: '#171717', // Neutral-900 background for separation
-                borderWidth: 1,
-                cutout: '75%', // Doughnut style
+                borderColor: '#111111',
+                borderWidth: 3,
+                hoverOffset: 8,
+                cutout: '72%',
             },
         ],
     };
@@ -82,22 +83,25 @@ const RevenueDoughnutChart = ({ items, filterTitle }) => {
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                position: 'right', // Put the legend on the right side
+                position: 'bottom',
                 labels: {
-                    color: '#a3a3a3', // Neutral-400
+                    color: '#111111',
                     font: {
-                        size: 10,
+                        size: 11,
+                        weight: '700',
                     },
+                    usePointStyle: true,
+                    pointStyle: 'circle',
                     boxWidth: 10,
-                    padding: 10,
+                    padding: 16,
                 },
             },
             tooltip: {
-                backgroundColor: '#1f2937',
-                titleColor: '#fff',
-                bodyColor: '#e5e7eb',
-                borderColor: '#374151',
-                borderWidth: 1,
+                backgroundColor: '#ffffff',
+                titleColor: '#111111',
+                bodyColor: '#111111',
+                borderColor: '#111111',
+                borderWidth: 2,
                 cornerRadius: 4,
                 callbacks: {
                     label: (context) => {
@@ -113,15 +117,27 @@ const RevenueDoughnutChart = ({ items, filterTitle }) => {
     };
 
     return (
-        <div className="bg-neutral-800 p-6 rounded-xl shadow-2xl h-full border border-neutral-700">
-            <h3 className="text-lg font-semibold text-white mb-4 text-center">
-                Top 5 Gross Revenue Breakdown ({filterTitle})
-            </h3>
+        <div className="bg-white p-4 sm:p-6 h-full border-4 border-neutral-950 shadow-[8px_8px_0px_#000]">
+            <div className="mb-4 border-b-2 border-neutral-950 pb-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-red-600 mb-2 text-center">
+                    Sales Snapshot
+                </p>
+                <h3 className="text-lg font-black uppercase tracking-[0.14em] text-neutral-950 text-center">
+                    Top 5 Gross Revenue Breakdown
+                </h3>
+                <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-neutral-600 text-center">
+                    ({filterTitle})
+                </p>
+            </div>
             <div className="h-[250px] md:h-[300px] flex justify-center items-center">
                 {totalRevenue > 0 ? (
                     <Doughnut data={data} options={options} />
                 ) : (
-                    <p className="text-neutral-500">No revenue data for this period.</p>
+                    <div className="border-2 border-dashed border-neutral-300 bg-neutral-50 px-4 py-6 text-center">
+                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-500">
+                            No revenue data for this period.
+                        </p>
+                    </div>
                 )}
             </div>
         </div>

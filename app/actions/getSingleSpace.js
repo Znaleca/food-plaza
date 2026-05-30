@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 
 async function getSingleSpace(id) {
   try {
+    if (!id) return null;
     const { databases } = await createAdminClient();
 
     // Fetch rooms
@@ -20,8 +21,19 @@ async function getSingleSpace(id) {
 
     return room;
   } catch (error) {
-    console.log('Failed to get room', error);
-    redirect('/error');
+    console.log('Failed to get room', error?.response || error);
+    // If the document was not found, return null so callers can handle it gracefully
+    if (error?.code === 404 || error?.response?.type === 'document_not_found') {
+      return null;
+    }
+
+    // For other errors, redirect to the error page
+    try {
+      redirect('/error');
+    } catch (e) {
+      // If redirect isn't available (e.g., called from client), rethrow
+      throw error;
+    }
   }
 }
 

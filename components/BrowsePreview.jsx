@@ -69,10 +69,11 @@ export default function BrowsePreview() {
         ScrollTrigger.create({
           trigger: containerRef.current,
           pin: featuredRef.current,
-          start: 'top 10%',
+          start: 'top 5%', // Brought slightly higher to maximize viewable area
           end: 'bottom bottom',
           pinSpacing: false,
           invalidateOnRefresh: true,
+          anticipatePin: 1,
         });
       });
     }, containerRef);
@@ -98,12 +99,13 @@ export default function BrowsePreview() {
       </div>
 
       <div className="w-full px-4 sm:px-6 md:px-20" ref={containerRef}>
-        <div className="w-full flex flex-col lg:flex-row lg:gap-12 gap-10 items-stretch relative">
+        {/* CHANGED: items-stretch -> items-start to allow the pinned card to auto-adjust height */}
+        <div className="w-full flex flex-col lg:flex-row lg:gap-12 gap-10 items-start relative">
           
           {/* Featured Column (Pinned) */}
           <div className="w-full lg:w-1/2 relative">
             <div
-              className="z-10 w-full border-[6px] border-neutral-950 bg-white"
+              className="z-10 w-full border-[6px] border-neutral-950 bg-white sticky-card-wrapper"
               ref={featuredRef}
             >
               <FeaturedCard

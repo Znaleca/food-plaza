@@ -107,11 +107,11 @@ const Header = () => {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 transform ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <nav className="transition-all duration-300 h-20 bg-white border-b-4 border-black">
-        <div className="grid grid-cols-3 items-center h-full w-full px-4 max-w-screen-xl mx-auto">
+      <nav className="transition-all duration-300 h-16 bg-white border-b-4 border-black">
+        <div className="flex items-center h-full w-full px-4 max-w-screen-xl mx-auto gap-6">
           
           {/* Logo Section */}
-          <div className="flex items-center col-start-1 flex-shrink-0 z-30">
+          <div className="flex items-center flex-shrink-0 z-30">
             {(isAdmin || isFoodstall) ? (
               <div className="flex items-center cursor-default group">
                 <Image src={logo} alt="Blitz Logo" className="h-10 w-10 md:h-14 md:w-14 object-contain invert" priority />
@@ -140,8 +140,8 @@ const Header = () => {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:block col-start-2 justify-self-center z-20">
-            <div className="flex items-center gap-6 text-[13px] font-black tracking-widest uppercase text-black">
+          <div className="hidden md:flex flex-1 justify-center z-20">
+            <div className="flex items-center gap-6 flex-nowrap text-[13px] font-black tracking-widest uppercase text-black whitespace-nowrap">
               {!isAuthenticated && (
                 <>
                   <Link href="/" className="hover:text-red-600 hover:-translate-y-1 transition-all duration-200">Home</Link>
@@ -192,7 +192,7 @@ const Header = () => {
           </div>
 
           {/* Account Controls */}
-          <div className="hidden md:flex items-center col-start-3 justify-end z-30">
+          <div className="hidden md:flex items-center justify-end z-30">
             {!isAuthenticated ? (
               <>
                 <Link href="/order/cart" className="relative mr-6 text-black hover:text-red-600 transition-colors duration-300">

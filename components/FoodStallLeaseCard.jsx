@@ -9,7 +9,7 @@ ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, T
 
 const FoodStallLeaseCard = ({ reservations }) => {
   return (
-    <div className="mt-20">
+    <div className="mt-20 text-neutral-950 selection:bg-red-600 selection:text-white">
       <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-6">
         {Array.isArray(reservations) && reservations.length > 0 ? (
           reservations.map((res) => {
@@ -86,35 +86,33 @@ const FoodStallLeaseCard = ({ reservations }) => {
             };
 
             return (
-              <div
-                key={res.$id}
-              >
-                <div className="flex justify-between items-start mb-4">
+              <div key={res.$id} className="border-4 border-neutral-950 bg-white p-4 sm:p-6 shadow-[8px_8px_0px_#000]">
+                <div className="flex justify-between items-start mb-4 gap-4">
                   <div>
-                    <h3 className="text-2xl font-semibold text-white">
+                    <h3 className="text-2xl font-black uppercase tracking-tight text-neutral-950">
                       {/* FIX: Use res.room?.name */}
                       {res.room?.name || 'Unnamed Stall'}
                     </h3>
-                    <p className="text-sm text-neutral-400">
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-neutral-600 mt-1">
                       {/* FIX: Use res.room?.stallNumber */}
                       Stall #{res.room?.stallNumber || 'N/A'}
                     </p>
                   </div>
                   <span
-                    className={`text-xs px-3 py-1 rounded-full font-semibold ${status.color} text-white`}
+                    className={`text-[10px] px-3 py-1 font-black uppercase tracking-[0.16em] border-2 border-neutral-950 ${status.color} text-white shadow-[3px_3px_0px_#000]`}
                   >
                     {status.label}
                   </span>
                 </div>
-                <div className="text-sm text-neutral-300 space-y-2 mt-3">
+                <div className="text-sm text-neutral-700 space-y-3 mt-3">
                   <p>
-                    <span className="font-medium text-neutral-400">Lease Status:</span>{' '}
+                    <span className="font-black uppercase tracking-[0.14em] text-neutral-950">Lease Status:</span>{' '}
                     {leaseStatus}
                   </p>
-                  <div className="h-80 w-full mt-4">
+                  <div className="h-80 w-full mt-4 border-2 border-neutral-950 bg-neutral-50 p-2">
                     <Line data={data} options={options} />
                   </div>
-                  <div className="flex justify-between mt-4 text-xs text-neutral-400">
+                  <div className="flex justify-between mt-4 text-[10px] font-black uppercase tracking-[0.14em] text-neutral-600">
                     <span>{startDate.format('MMM D, YYYY')}</span>
                     <span>{endDate.format('MMM D, YYYY')}</span>
                   </div>
@@ -123,7 +121,7 @@ const FoodStallLeaseCard = ({ reservations }) => {
             );
           })
         ) : (
-          <div className="text-white">No reservations available</div>
+          <div className="border-4 border-dashed border-neutral-300 bg-white p-6 text-center text-neutral-600 shadow-[8px_8px_0px_#000]">No reservations available</div>
         )}
       </div>
     </div>

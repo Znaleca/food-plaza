@@ -10,15 +10,17 @@ const FeaturedCard = ({
   href = "#"
 }) => {
   return (
-    <div className="w-full h-full">
+    // Replaced standard auto height with a smart viewport calculation minus minimal margins
+    <div className="w-full lg:h-[calc(100vh-5rem)] min-h-[500px] lg:min-h-[unset]">
       <Link
         href={href}
         className="group block w-full h-full bg-white"
       >
-        <div className="flex flex-col w-full h-full border-1 border-neutral-950">
+        {/* flex-col ensures image and content dynamically balance out to fill 100% height */}
+        <div className="flex flex-col w-full h-full">
 
-          {/* IMAGE */}
-          <div className="relative w-full h-[420px] md:h-[650px] overflow-hidden bg-neutral-200 border-b-2 border-neutral-950">
+          {/* IMAGE - flex-1 forces it to greedily occupy every available pixel down to the text area */}
+          <div className="relative w-full flex-1 min-h-[250px] overflow-hidden bg-neutral-200 border-b-2 border-neutral-950">
             <img
               src={imageSrc}
               alt={title}
@@ -26,31 +28,31 @@ const FeaturedCard = ({
             />
           </div>
 
-          {/* CONTENT */}
-          <div className="p-8 md:p-12 bg-white flex flex-col justify-between items-start min-h-[260px]">
+          {/* CONTENT - Snug padding and compressed layout to preserve maximum window footprint */}
+          <div className="p-6 md:p-8 bg-white flex flex-col justify-between items-start shrink-0">
             <div>
-              <span className="text-xs md:text-sm font-black tracking-[0.35em] text-red-600 uppercase mb-3 block">
+              <span className="text-xs font-black tracking-[0.35em] text-red-600 uppercase mb-2 block">
                 VENDORS CHOICE
               </span>
 
-              <h2 className="text-3xl md:text-5xl font-black leading-[0.9] text-neutral-950 uppercase tracking-tighter max-w-4xl">
+              <h2 className="text-2xl md:text-4xl font-black leading-[0.95] text-neutral-950 uppercase tracking-tighter max-w-4xl">
                 {title}
               </h2>
             </div>
 
             <div
               className="
-                mt-8
+                mt-5
                 inline-flex
                 items-center
                 justify-center
-                px-10
-                py-5
+                px-8
+                py-4
                 bg-neutral-950
                 text-white
                 font-black
                 uppercase
-                text-sm
+                text-xs
                 tracking-[0.2em]
                 transition-all
                 duration-300
